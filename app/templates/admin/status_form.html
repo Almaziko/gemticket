@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Статус — GemTicket{% endblock %}
+{% block content %}
+<h3 class="mb-3">{{ 'Новый статус' if not status else 'Редактирование статуса' }}</h3>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.name.label(class_='form-label') }}
+        {{ form.name(class_='form-control') }}
+        {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.order.label(class_='form-label') }}
+        {{ form.order(class_='form-control') }}
+    </div>
+    <div class="mb-3">
+        {{ form.color.label(class_='form-label') }}
+        {{ form.color(class_='form-control', placeholder='success, warning, danger, primary...') }}
+    </div>
+    <div class="form-check mb-2">
+        {{ form.is_default(class_='form-check-input') }}
+        {{ form.is_default.label(class_='form-check-label') }}
+    </div>
+    <div class="form-check mb-3">
+        {{ form.is_active(class_='form-check-input') }}
+        {{ form.is_active.label(class_='form-check-label') }}
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+{% endblock %}

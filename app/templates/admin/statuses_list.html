@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Статусы — GemTicket{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Статусы</h3>
+    <a href="{{ url_for('admin.status_new') }}" class="btn btn-primary">Новый статус</a>
+</div>
+<table class="table bg-white align-middle">
+    <thead><tr><th>Порядок</th><th>Название</th><th>Начальный</th><th>Активен</th><th>Используется</th><th></th></tr></thead>
+    <tbody>
+    {% for s in statuses %}
+    <tr>
+        <td>{{ s.order }}</td>
+        <td><span class="badge bg-{{ s.color or 'secondary' }}">{{ s.name }}</span></td>
+        <td>{{ '✓' if s.is_default else '' }}</td>
+        <td>{{ '✓' if s.is_active else '—' }}</td>
+        <td>{{ 'да' if s.in_use else 'нет' }}</td>
+        <td class="text-end">
+            <form method="post" action="{{ url_for('admin.status_move', status_id=s.id, direction='up') }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-secondary">&uarr;</button>
+            </form>
+            <form method="post" action="{{ url_for('admin.status_move', status_id=s.id, direction='down') }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-secondary">&darr;</button>
+            </form>
+            <a href="{{ url_for('admin.status_edit', status_id=s.id) }}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+            {% if not s.in_use and not s.is_default %}
+            <form method="post" action="{{ url_for('admin.status_delete', status_id=s.id) }}" class="d-inline" onsubmit="return confirm('Удалить статус?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger">Удалить</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

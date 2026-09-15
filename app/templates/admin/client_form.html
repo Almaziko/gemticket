@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Новый клиент' if not client else 'Клиент' }} — GemTicket{% endblock %}
+{% block content %}
+<h3 class="mb-3">{{ 'Новый клиент' if not client else 'Редактирование клиента' }}</h3>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.name.label(class_='form-label') }}
+        {{ form.name(class_='form-control') }}
+        {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.email.label(class_='form-label') }}
+        {{ form.email(class_='form-control') }}
+        {% for e in form.email.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.password.label(class_='form-label') }}
+        {{ form.password(class_='form-control') }}
+        <div class="form-text">{{ 'Оставьте пустым, чтобы не менять.' if client else 'Пароль должен быть уникальным во всей системе — отдайте его клиенту вручную.' }}</div>
+        {% for e in form.password.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Админ-исполнитель</label>
+        {% if current_user.is_superadmin %}
+            {{ form.assigned_admin_id(class_='form-select') }}
+        {% else %}
+            <input type="text" class="form-control" value="{{ current_user.name }}" disabled>
+            {{ form.assigned_admin_id(class_='d-none') }}
+            <div class="form-text">Только главный админ может назначать исполнителя.</div>
+        {% endif %}
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+{% endblock %}

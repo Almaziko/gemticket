@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Тикеты — GemTicket{% endblock %}
+{% block content %}
+<h3 class="mb-3">{{ 'Все тикеты' if current_user.is_superadmin else 'Мои тикеты' }}</h3>
+
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link {% if not status_filter %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">Все</a></li>
+    {% for s in statuses %}
+    <li class="nav-item"><a class="nav-link {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('admin.dashboard', status=s.id) }}">{{ s.name }}</a></li>
+    {% endfor %}
+</ul>
+
+{% if tickets %}
+<table class="table table-hover bg-white">
+    <thead><tr><th>#</th><th>Название</th><th>Клиент</th><th>Исполнитель</th><th>Трекер</th><th>Статус</th><th>Дедлайн</th></tr></thead>
+    <tbody>
+    {% for t in tickets %}
+    <tr onclick="location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'" style="cursor:pointer;">
+        <td>{{ t.id }}</td>
+        <td>{{ t.title }}</td>
+        <td>{{ t.client.name }}</td>
+        <td>{{ t.assignee.name }}</td>
+        <td>{{ t.tracker.name }}</td>
+        <td><span class="badge bg-{{ t.status.color or 'secondary' }}">{{ t.status.name }}</span></td>
+        <td>{{ t.deadline.strftime('%d.%m.%Y') if t.deadline else '—' }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="text-muted">Тикетов нет.</p>
+{% endif %}
+{% endblock %}

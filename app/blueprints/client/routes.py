@@ -1,0 +1,61 @@
+from flask import Blueprint, render_template, redirect, url_for, request, flash, g
+
+from ...extensions import db
+from ...models import Ticket, Status, Tracker
+from ...decorators import client_required
+from ...attachments import check_files_size, save_attachments, FileTooLargeError
+from ... import notifications as notif
+from .forms import TicketCreateForm
+
+client_bp = Blueprint('client', __name__, url_prefix='/client')
+
+
+@client_bp.route('/tickets')
+@client_required
+def tickets_list():
+    status_filter = request.args.get('status', type=int)
+    query = Ticket.query.filter_by(client_id=g.current_user.id)
+    if status_filter:
+        query = query.filter_by(status_id=status_filter)
+    tickets = query.order_by(Ticket.created_at.desc()).all()
+    statuses = Status.query.order_by(Status.order).all()
+    return render_template(
+        'client/tickets_list.html', tickets=tickets, statuses=statuses, status_filter=status_filter
+    )
+
+
+@client_bp.route('/tickets/new', methods=['GET', 'POST'])
+@client_required
+def ticket_new():
+    form = TicketCreateForm()
+    form.tracker_id.choices = [
+        (t.id, t.name) for t in Tracker.query.filter_by(is_active=True).order_by(Tracker.order).all()
+    ]
+
+    if form.validate_on_submit():
+        files = request.files.getlist('attachments')
+        try:
+            check_files_size(files)
+        except FileTooLargeError as e:
+            flash(f'Файл «{e.filename}» превышает лимит {e.limit_mb} МБ. Тикет не создан.', 'danger')
+            return render_template('client/ticket_new.html', form=form)
+
+        default_status = Status.query.filter_by(is_default=True).first()
+        ticket = Ticket(
+            title=form.title.data,
+            description=form.description.data,
+            deadline=form.deadline.data,
+            tracker_id=form.tracker_id.data,
+            status_id=default_status.id,
+            client_id=g.current_user.id,
+            assignee_id=g.current_user.assigned_admin_id,
+        )
+        db.session.add(ticket)
+        db.session.flush()
+        save_attachments(files, g.current_user, ticket=ticket)
+        db.session.commit()
+        notif.notify_ticket_created(ticket)
+        flash('Тикет создан', 'success')
+        return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+
+    return render_template('client/ticket_new.html', form=form)

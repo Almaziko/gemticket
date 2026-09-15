@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Настройки — GemTicket{% endblock %}
+{% block content %}
+<h3 class="mb-3">Настройки</h3>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">SMTP</h5>
+        <form method="post">
+            {{ form.hidden_tag() }}
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    {{ form.smtp_host.label(class_='form-label') }}
+                    {{ form.smtp_host(class_='form-control') }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    {{ form.smtp_port.label(class_='form-label') }}
+                    {{ form.smtp_port(class_='form-control') }}
+                </div>
+            </div>
+            <div class="mb-3">
+                {{ form.smtp_username.label(class_='form-label') }}
+                {{ form.smtp_username(class_='form-control') }}
+            </div>
+            <div class="mb-3">
+                {{ form.smtp_password.label(class_='form-label') }}
+                {{ form.smtp_password(class_='form-control') }}
+            </div>
+            <div class="mb-3">
+                {{ form.smtp_from_address.label(class_='form-label') }}
+                {{ form.smtp_from_address(class_='form-control') }}
+            </div>
+            <div class="form-check mb-2">
+                {{ form.smtp_use_tls(class_='form-check-input') }}
+                {{ form.smtp_use_tls.label(class_='form-check-label') }}
+            </div>
+            <div class="form-check mb-3">
+                {{ form.smtp_use_ssl(class_='form-check-input') }}
+                {{ form.smtp_use_ssl.label(class_='form-check-label') }}
+            </div>
+            <hr>
+            <div class="mb-3">
+                {{ form.base_url.label(class_='form-label') }}
+                {{ form.base_url(class_='form-control') }}
+                <div class="form-text">Используется в ссылках на тикеты в письмах-уведомлениях.</div>
+            </div>
+            <div class="mb-3">
+                {{ form.max_upload_mb.label(class_='form-label') }}
+                {{ form.max_upload_mb(class_='form-control') }}
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Тестовое письмо</h5>
+        <form method="post" action="{{ url_for('admin.settings_test_email') }}" class="row g-2 align-items-end">
+            {{ test_form.hidden_tag() }}
+            <div class="col-auto">
+                {{ test_form.to_address.label(class_='form-label') }}
+                {{ test_form.to_address(class_='form-control') }}
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-outline-primary">Отправить тестовое письмо</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

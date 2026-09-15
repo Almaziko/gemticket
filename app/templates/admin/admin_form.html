@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'Новый админ' if not admin else 'Админ' }} — GemTicket{% endblock %}
+{% block content %}
+<h3 class="mb-3">{{ 'Новый админ' if not admin else 'Редактирование админа' }}</h3>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.name.label(class_='form-label') }}
+        {{ form.name(class_='form-control') }}
+        {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.email.label(class_='form-label') }}
+        {{ form.email(class_='form-control') }}
+        {% for e in form.email.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.password.label(class_='form-label') }}
+        {{ form.password(class_='form-control') }}
+        <div class="form-text">{{ 'Оставьте пустым, чтобы не менять.' if admin else 'Пароль должен быть уникальным во всей системе.' }}</div>
+        {% for e in form.password.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+{% endblock %}

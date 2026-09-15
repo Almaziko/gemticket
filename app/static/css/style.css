@@ -1,0 +1,19 @@
+.attachment-thumb {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: .375rem;
+    border: 1px solid #dee2e6;
+}
+
+.comment-card {
+    border-left: 3px solid #6c757d;
+}
+
+.comment-card.role-client {
+    border-left-color: #0d6efd;
+}
+
+.comment-card.role-admin {
+    border-left-color: #198754;
+}

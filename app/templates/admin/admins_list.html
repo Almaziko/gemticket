@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Админы — GemTicket{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Админы</h3>
+    <a href="{{ url_for('admin.admin_new') }}" class="btn btn-primary">Новый админ</a>
+</div>
+<table class="table bg-white align-middle">
+    <thead><tr><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead>
+    <tbody>
+    {% for a in admins %}
+    <tr>
+        <td>{{ a.name }}</td>
+        <td>{{ a.email }}</td>
+        <td>{{ 'Суперадмин' if a.is_superadmin else 'Админ' }}</td>
+        <td class="text-end">
+            <a href="{{ url_for('admin.admin_edit', admin_id=a.id) }}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+            <a href="{{ url_for('admin.admin_show_password', admin_id=a.id) }}" class="btn btn-sm btn-outline-info">Показать пароль</a>
+            {% if not a.is_superadmin and a.id != current_user.id %}
+            <form method="post" action="{{ url_for('admin.admin_delete', admin_id=a.id) }}" class="d-inline" onsubmit="return confirm('Удалить админа?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger">Удалить</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

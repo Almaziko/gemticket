@@ -1,0 +1,446 @@
+from flask import (
+    Blueprint, render_template, redirect, url_for, request, flash, g, abort, current_app
+)
+
+from ...extensions import db
+from ...models import User, Admin, Client, Status, Tracker, Ticket, Attachment, Settings
+from ...decorators import admin_required, superadmin_required
+from ...security import hash_password, encrypt_secret, decrypt_secret
+from ...attachments import delete_attachment_file, refresh_max_content_length
+from ...notifications import send_test_email
+from .forms import ClientForm, AdminForm, StatusForm, TrackerForm, SettingsForm, TestEmailForm
+
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+
+def _password_taken(password, exclude_user_id=None):
+    pwd_hash = hash_password(password)
+    q = User.query.filter_by(password_hash=pwd_hash)
+    if exclude_user_id is not None:
+        q = q.filter(User.id != exclude_user_id)
+    return q.first() is not None
+
+
+# ---------- Dashboard ----------
+
+@admin_bp.route('/')
+@admin_required
+def dashboard():
+    status_filter = request.args.get('status', type=int)
+    query = Ticket.query
+    if not g.current_user.is_superadmin:
+        query = query.filter_by(assignee_id=g.current_user.id)
+    if status_filter:
+        query = query.filter_by(status_id=status_filter)
+    tickets = query.order_by(Ticket.created_at.desc()).all()
+    statuses = Status.query.order_by(Status.order).all()
+    return render_template(
+        'admin/dashboard.html', tickets=tickets, statuses=statuses, status_filter=status_filter
+    )
+
+
+# ---------- Clients CRUD ----------
+
+@admin_bp.route('/clients')
+@admin_required
+def clients_list():
+    if g.current_user.is_superadmin:
+        clients = Client.query.order_by(Client.name).all()
+    else:
+        clients = Client.query.filter_by(assigned_admin_id=g.current_user.id).order_by(Client.name).all()
+    return render_template('admin/clients_list.html', clients=clients)
+
+
+@admin_bp.route('/clients/new', methods=['GET', 'POST'])
+@admin_required
+def client_new():
+    form = ClientForm()
+    form.assigned_admin_id.choices = [(a.id, a.name) for a in Admin.query.order_by(Admin.name).all()]
+    if request.method == 'GET' and not g.current_user.is_superadmin:
+        form.assigned_admin_id.data = g.current_user.id
+
+    if form.validate_on_submit():
+        if not form.password.data:
+            form.password.errors.append('Пароль обязателен для нового клиента')
+        elif _password_taken(form.password.data):
+            form.password.errors.append('Этот пароль уже используется другим пользователем системы')
+        else:
+            assigned_admin_id = form.assigned_admin_id.data if g.current_user.is_superadmin else g.current_user.id
+            client = Client(
+                name=form.name.data,
+                email=form.email.data,
+                password_hash=hash_password(form.password.data),
+                password_encrypted=encrypt_secret(form.password.data),
+                assigned_admin_id=assigned_admin_id,
+            )
+            db.session.add(client)
+            db.session.commit()
+            flash('Клиент создан', 'success')
+            return redirect(url_for('admin.clients_list'))
+
+    return render_template('admin/client_form.html', form=form, client=None)
+
+
+@admin_bp.route('/clients/<int:client_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def client_edit(client_id):
+    client = Client.query.get_or_404(client_id)
+    if not g.current_user.is_superadmin and client.assigned_admin_id != g.current_user.id:
+        abort(403)
+
+    form = ClientForm(obj=client)
+    form.assigned_admin_id.choices = [(a.id, a.name) for a in Admin.query.order_by(Admin.name).all()]
+    if request.method == 'GET':
+        form.password.data = ''
+
+    if form.validate_on_submit():
+        if form.password.data and _password_taken(form.password.data, exclude_user_id=client.id):
+            form.password.errors.append('Этот пароль уже используется другим пользователем системы')
+        else:
+            client.name = form.name.data
+            client.email = form.email.data
+            if g.current_user.is_superadmin:
+                client.assigned_admin_id = form.assigned_admin_id.data
+            if form.password.data:
+                client.password_hash = hash_password(form.password.data)
+                client.password_encrypted = encrypt_secret(form.password.data)
+            db.session.commit()
+            flash('Клиент обновлён', 'success')
+            return redirect(url_for('admin.clients_list'))
+
+    return render_template('admin/client_form.html', form=form, client=client)
+
+
+@admin_bp.route('/clients/<int:client_id>/password')
+@admin_required
+def client_show_password(client_id):
+    client = Client.query.get_or_404(client_id)
+    if not g.current_user.is_superadmin and client.assigned_admin_id != g.current_user.id:
+        abort(403)
+    plain = decrypt_secret(client.password_encrypted)
+    flash(f'Пароль клиента «{client.name}»: {plain}', 'info')
+    return redirect(url_for('admin.clients_list'))
+
+
+@admin_bp.route('/clients/<int:client_id>/delete', methods=['POST'])
+@superadmin_required
+def client_delete(client_id):
+    client = Client.query.get_or_404(client_id)
+    if client.tickets:
+        flash('Нельзя удалить клиента, у которого есть тикеты', 'danger')
+    else:
+        db.session.delete(client)
+        db.session.commit()
+        flash('Клиент удалён', 'success')
+    return redirect(url_for('admin.clients_list'))
+
+
+# ---------- Admins CRUD (только суперадмин) ----------
+
+@admin_bp.route('/admins')
+@superadmin_required
+def admins_list():
+    admins = Admin.query.order_by(Admin.name).all()
+    return render_template('admin/admins_list.html', admins=admins)
+
+
+@admin_bp.route('/admins/new', methods=['GET', 'POST'])
+@superadmin_required
+def admin_new():
+    form = AdminForm()
+    if form.validate_on_submit():
+        if not form.password.data:
+            form.password.errors.append('Пароль обязателен')
+        elif _password_taken(form.password.data):
+            form.password.errors.append('Этот пароль уже используется другим пользователем системы')
+        else:
+            admin = Admin(
+                name=form.name.data,
+                email=form.email.data,
+                password_hash=hash_password(form.password.data),
+                password_encrypted=encrypt_secret(form.password.data),
+                is_superadmin=False,
+            )
+            db.session.add(admin)
+            db.session.commit()
+            flash('Админ создан', 'success')
+            return redirect(url_for('admin.admins_list'))
+    return render_template('admin/admin_form.html', form=form, admin=None)
+
+
+@admin_bp.route('/admins/<int:admin_id>/edit', methods=['GET', 'POST'])
+@superadmin_required
+def admin_edit(admin_id):
+    admin = Admin.query.get_or_404(admin_id)
+    form = AdminForm(obj=admin)
+    if request.method == 'GET':
+        form.password.data = ''
+
+    if form.validate_on_submit():
+        if form.password.data and _password_taken(form.password.data, exclude_user_id=admin.id):
+            form.password.errors.append('Этот пароль уже используется другим пользователем системы')
+        else:
+            admin.name = form.name.data
+            admin.email = form.email.data
+            if form.password.data:
+                admin.password_hash = hash_password(form.password.data)
+                admin.password_encrypted = encrypt_secret(form.password.data)
+            db.session.commit()
+            flash('Админ обновлён', 'success')
+            return redirect(url_for('admin.admins_list'))
+
+    return render_template('admin/admin_form.html', form=form, admin=admin)
+
+
+@admin_bp.route('/admins/<int:admin_id>/password')
+@superadmin_required
+def admin_show_password(admin_id):
+    admin = Admin.query.get_or_404(admin_id)
+    plain = decrypt_secret(admin.password_encrypted)
+    flash(f'Пароль админа «{admin.name}»: {plain}', 'info')
+    return redirect(url_for('admin.admins_list'))
+
+
+@admin_bp.route('/admins/<int:admin_id>/delete', methods=['POST'])
+@superadmin_required
+def admin_delete(admin_id):
+    admin = Admin.query.get_or_404(admin_id)
+    if admin.id == g.current_user.id:
+        flash('Нельзя удалить самого себя', 'danger')
+    elif admin.is_superadmin:
+        flash('Нельзя удалить суперадмина', 'danger')
+    elif admin.clients:
+        flash('Нельзя удалить админа с закреплёнными клиентами — сначала переназначьте их', 'danger')
+    else:
+        db.session.delete(admin)
+        db.session.commit()
+        flash('Админ удалён', 'success')
+    return redirect(url_for('admin.admins_list'))
+
+
+# ---------- Статусы ----------
+
+def _ensure_single_default(current_status):
+    if current_status.is_default:
+        Status.query.filter(Status.id != current_status.id).update({Status.is_default: False})
+        db.session.commit()
+
+
+@admin_bp.route('/statuses')
+@superadmin_required
+def statuses_list():
+    statuses = Status.query.order_by(Status.order).all()
+    return render_template('admin/statuses_list.html', statuses=statuses)
+
+
+@admin_bp.route('/statuses/new', methods=['GET', 'POST'])
+@superadmin_required
+def status_new():
+    form = StatusForm()
+    if request.method == 'GET':
+        form.order.data = (db.session.query(db.func.max(Status.order)).scalar() or 0) + 1
+        form.is_active.data = True
+    if form.validate_on_submit():
+        status = Status(
+            name=form.name.data,
+            order=form.order.data,
+            color=form.color.data or None,
+            is_default=form.is_default.data,
+            is_active=form.is_active.data,
+        )
+        db.session.add(status)
+        db.session.commit()
+        _ensure_single_default(status)
+        flash('Статус создан', 'success')
+        return redirect(url_for('admin.statuses_list'))
+    return render_template('admin/status_form.html', form=form, status=None)
+
+
+@admin_bp.route('/statuses/<int:status_id>/edit', methods=['GET', 'POST'])
+@superadmin_required
+def status_edit(status_id):
+    status = Status.query.get_or_404(status_id)
+    form = StatusForm(obj=status)
+    if form.validate_on_submit():
+        was_default = status.is_default
+        status.name = form.name.data
+        status.order = form.order.data
+        status.color = form.color.data or None
+        status.is_active = form.is_active.data
+        if was_default and not form.is_default.data:
+            flash('Нельзя снять флаг «начальный» — сначала назначьте начальным другой статус', 'warning')
+            status.is_default = True
+        else:
+            status.is_default = form.is_default.data
+        db.session.commit()
+        _ensure_single_default(status)
+        flash('Статус обновлён', 'success')
+        return redirect(url_for('admin.statuses_list'))
+    return render_template('admin/status_form.html', form=form, status=status)
+
+
+@admin_bp.route('/statuses/<int:status_id>/delete', methods=['POST'])
+@superadmin_required
+def status_delete(status_id):
+    status = Status.query.get_or_404(status_id)
+    if status.in_use:
+        flash('Нельзя удалить статус, который используется тикетами — деактивируйте его', 'danger')
+    elif status.is_default:
+        flash('Нельзя удалить начальный статус', 'danger')
+    else:
+        db.session.delete(status)
+        db.session.commit()
+        flash('Статус удалён', 'success')
+    return redirect(url_for('admin.statuses_list'))
+
+
+@admin_bp.route('/statuses/<int:status_id>/move/<direction>', methods=['POST'])
+@superadmin_required
+def status_move(status_id, direction):
+    statuses = Status.query.order_by(Status.order).all()
+    idx = next((i for i, s in enumerate(statuses) if s.id == status_id), None)
+    if idx is None:
+        abort(404)
+    swap_idx = idx - 1 if direction == 'up' else idx + 1
+    if 0 <= swap_idx < len(statuses):
+        statuses[idx].order, statuses[swap_idx].order = statuses[swap_idx].order, statuses[idx].order
+        db.session.commit()
+    return redirect(url_for('admin.statuses_list'))
+
+
+# ---------- Трекеры ----------
+
+@admin_bp.route('/trackers')
+@superadmin_required
+def trackers_list():
+    trackers = Tracker.query.order_by(Tracker.order).all()
+    return render_template('admin/trackers_list.html', trackers=trackers)
+
+
+@admin_bp.route('/trackers/new', methods=['GET', 'POST'])
+@superadmin_required
+def tracker_new():
+    form = TrackerForm()
+    if request.method == 'GET':
+        form.order.data = (db.session.query(db.func.max(Tracker.order)).scalar() or 0) + 1
+        form.is_active.data = True
+    if form.validate_on_submit():
+        tracker = Tracker(name=form.name.data, order=form.order.data, is_active=form.is_active.data)
+        db.session.add(tracker)
+        db.session.commit()
+        flash('Трекер создан', 'success')
+        return redirect(url_for('admin.trackers_list'))
+    return render_template('admin/tracker_form.html', form=form, tracker=None)
+
+
+@admin_bp.route('/trackers/<int:tracker_id>/edit', methods=['GET', 'POST'])
+@superadmin_required
+def tracker_edit(tracker_id):
+    tracker = Tracker.query.get_or_404(tracker_id)
+    form = TrackerForm(obj=tracker)
+    if form.validate_on_submit():
+        tracker.name = form.name.data
+        tracker.order = form.order.data
+        tracker.is_active = form.is_active.data
+        db.session.commit()
+        flash('Трекер обновлён', 'success')
+        return redirect(url_for('admin.trackers_list'))
+    return render_template('admin/tracker_form.html', form=form, tracker=tracker)
+
+
+@admin_bp.route('/trackers/<int:tracker_id>/delete', methods=['POST'])
+@superadmin_required
+def tracker_delete(tracker_id):
+    tracker = Tracker.query.get_or_404(tracker_id)
+    if tracker.in_use:
+        flash('Нельзя удалить трекер, который используется тикетами — деактивируйте его', 'danger')
+    else:
+        db.session.delete(tracker)
+        db.session.commit()
+        flash('Трекер удалён', 'success')
+    return redirect(url_for('admin.trackers_list'))
+
+
+@admin_bp.route('/trackers/<int:tracker_id>/move/<direction>', methods=['POST'])
+@superadmin_required
+def tracker_move(tracker_id, direction):
+    trackers = Tracker.query.order_by(Tracker.order).all()
+    idx = next((i for i, t in enumerate(trackers) if t.id == tracker_id), None)
+    if idx is None:
+        abort(404)
+    swap_idx = idx - 1 if direction == 'up' else idx + 1
+    if 0 <= swap_idx < len(trackers):
+        trackers[idx].order, trackers[swap_idx].order = trackers[swap_idx].order, trackers[idx].order
+        db.session.commit()
+    return redirect(url_for('admin.trackers_list'))
+
+
+# ---------- Файлы ----------
+
+@admin_bp.route('/files')
+@superadmin_required
+def files_list():
+    sort = request.args.get('sort', 'date')
+    query = Attachment.query
+    query = query.order_by(Attachment.size_bytes.desc()) if sort == 'size' else query.order_by(Attachment.created_at.desc())
+    attachments = query.all()
+    total_size = sum(a.size_bytes for a in attachments)
+    return render_template('admin/files_list.html', attachments=attachments, total_size=total_size, sort=sort)
+
+
+@admin_bp.route('/files/<int:attachment_id>/delete', methods=['POST'])
+@superadmin_required
+def file_delete(attachment_id):
+    attachment = Attachment.query.get_or_404(attachment_id)
+    delete_attachment_file(attachment)
+    db.session.delete(attachment)
+    db.session.commit()
+    flash('Файл удалён', 'success')
+    return redirect(url_for('admin.files_list'))
+
+
+# ---------- Настройки ----------
+
+@admin_bp.route('/settings', methods=['GET', 'POST'])
+@superadmin_required
+def settings_page():
+    settings = Settings.query.first()
+    form = SettingsForm(obj=settings)
+    test_form = TestEmailForm()
+    if request.method == 'GET':
+        form.smtp_password.data = ''
+
+    if form.validate_on_submit():
+        settings.smtp_host = form.smtp_host.data or None
+        settings.smtp_port = form.smtp_port.data
+        settings.smtp_username = form.smtp_username.data or None
+        if form.smtp_password.data:
+            settings.smtp_password_encrypted = encrypt_secret(form.smtp_password.data)
+        settings.smtp_from_address = form.smtp_from_address.data or None
+        settings.smtp_use_tls = form.smtp_use_tls.data
+        settings.smtp_use_ssl = form.smtp_use_ssl.data
+        settings.base_url = form.base_url.data
+        settings.max_upload_mb = form.max_upload_mb.data
+        db.session.commit()
+        refresh_max_content_length(current_app._get_current_object())
+        flash('Настройки сохранены', 'success')
+        return redirect(url_for('admin.settings_page'))
+
+    return render_template('admin/settings.html', form=form, test_form=test_form)
+
+
+@admin_bp.route('/settings/test-email', methods=['POST'])
+@superadmin_required
+def settings_test_email():
+    test_form = TestEmailForm()
+    settings = Settings.query.first()
+    if test_form.validate_on_submit():
+        if not settings or not settings.smtp_host:
+            flash('Сначала заполните и сохраните настройки SMTP', 'danger')
+        else:
+            try:
+                send_test_email(settings, test_form.to_address.data)
+                flash(f'Тестовое письмо отправлено на {test_form.to_address.data}', 'success')
+            except Exception as e:
+                flash(f'Не удалось отправить письмо: {e}', 'danger')
+    return redirect(url_for('admin.settings_page'))

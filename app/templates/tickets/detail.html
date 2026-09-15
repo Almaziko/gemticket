@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% from 'partials/attachments_macro.html' import render_attachments %}
+{% from 'partials/comment_macro.html' import render_comment %}
+{% block title %}Тикет #{{ ticket.id }} — GemTicket{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h3>{{ ticket.title }} <span class="text-muted">#{{ ticket.id }}</span></h3>
+
+        <div class="card mb-3">
+            <div class="card-body">
+                {% if can_edit_desc %}
+                <form method="post" action="{{ url_for('tickets.edit_description', ticket_id=ticket.id) }}">
+                    {{ description_form.hidden_tag() }}
+                    {{ description_form.description(class_='form-control mb-2', rows=6) }}
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Сохранить описание</button>
+                    <div class="form-text">Описание можно редактировать, пока тикет в начальном статусе.</div>
+                </form>
+                {% else %}
+                <div style="white-space: pre-wrap;">{{ ticket.description }}</div>
+                {% endif %}
+                {{ render_attachments(ticket.attachments) }}
+            </div>
+        </div>
+
+        <h5 id="comments">Комментарии</h5>
+        {% for c in ticket.comments %}
+            {{ render_comment(c) }}
+        {% else %}
+            <p class="text-muted">Комментариев пока нет.</p>
+        {% endfor %}
+
+        <form method="post" action="{{ url_for('tickets.add_comment', ticket_id=ticket.id) }}" enctype="multipart/form-data" class="mt-3">
+            {{ comment_form.hidden_tag() }}
+            <div class="mb-2">
+                {{ comment_form.body(class_='form-control', rows=3, placeholder='Написать комментарий...', id='comment-body-field') }}
+                {% for e in comment_form.body.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="mb-2">
+                <input type="file" name="attachments" id="comment-attachments-input" class="form-control" multiple>
+                <div class="form-text">Ctrl+V в поле комментария вставит картинку из буфера обмена как вложение.</div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Отправить</button>
+        </form>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="card-title">Сведения</h6>
+                <p class="mb-1"><strong>Постановщик:</strong> {{ ticket.client.name }}</p>
+                <p class="mb-1"><strong>Исполнитель:</strong> {{ ticket.assignee.name }}</p>
+                <p class="mb-1"><strong>Трекер:</strong> {{ ticket.tracker.name }}</p>
+                <p class="mb-1"><strong>Статус:</strong> <span class="badge bg-{{ ticket.status.color or 'secondary' }}">{{ ticket.status.name }}</span></p>
+                <p class="mb-1"><strong>Дедлайн:</strong> {{ ticket.deadline.strftime('%d.%m.%Y') if ticket.deadline else 'не задан' }}</p>
+                <p class="mb-1"><strong>Создан:</strong> {{ ticket.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                <p class="mb-0"><strong>Обновлён:</strong> {{ ticket.updated_at.strftime('%d.%m.%Y %H:%M') }}</p>
+            </div>
+        </div>
+
+        {% if can_manage %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6 class="card-title">Управление</h6>
+
+                <form method="post" action="{{ url_for('tickets.change_status', ticket_id=ticket.id) }}" class="mb-2">
+                    {{ status_form.hidden_tag() }}
+                    <label class="form-label small mb-1">Статус</label>
+                    <div class="input-group input-group-sm">
+                        {{ status_form.status_id(class_='form-select') }}
+                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
+                    </div>
+                </form>
+
+                <form method="post" action="{{ url_for('tickets.change_tracker', ticket_id=ticket.id) }}" class="mb-2">
+                    {{ tracker_form.hidden_tag() }}
+                    <label class="form-label small mb-1">Трекер</label>
+                    <div class="input-group input-group-sm">
+                        {{ tracker_form.tracker_id(class_='form-select') }}
+                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
+                    </div>
+                </form>
+
+                <form method="post" action="{{ url_for('tickets.change_deadline', ticket_id=ticket.id) }}" class="mb-2">
+                    {{ deadline_form.hidden_tag() }}
+                    <label class="form-label small mb-1">Дедлайн</label>
+                    <div class="input-group input-group-sm">
+                        {{ deadline_form.deadline(class_='form-control') }}
+                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
+                    </div>
+                </form>
+
+                {% if can_reassign %}
+                <form method="post" action="{{ url_for('tickets.change_assignee', ticket_id=ticket.id) }}">
+                    {{ assignee_form.hidden_tag() }}
+                    <label class="form-label small mb-1">Исполнитель</label>
+                    <div class="input-group input-group-sm">
+                        {{ assignee_form.assignee_id(class_='form-select') }}
+                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/paste_upload.js') }}"></script>
+<script>setupPasteUpload('#comment-body-field', '#comment-attachments-input');</script>
+{% endblock %}

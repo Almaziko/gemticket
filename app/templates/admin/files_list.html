@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Файлы — GemTicket{% endblock %}
+{% block content %}
+<h3 class="mb-3">Файлы</h3>
+<p><strong>Суммарный вес всех файлов:</strong> {{ total_size|filesizeformat }}</p>
+<div class="mb-3">
+    <a href="{{ url_for('admin.files_list', sort='date') }}" class="btn btn-sm btn-outline-secondary {{ 'active' if sort == 'date' }}">По дате</a>
+    <a href="{{ url_for('admin.files_list', sort='size') }}" class="btn btn-sm btn-outline-secondary {{ 'active' if sort == 'size' }}">По размеру</a>
+</div>
+<table class="table bg-white align-middle">
+    <thead><tr><th>Файл</th><th>Тикет</th><th>Загрузил</th><th>Дата</th><th>Размер</th><th></th></tr></thead>
+    <tbody>
+    {% for a in attachments %}
+    <tr>
+        <td>{{ a.filename_original }}</td>
+        <td>{% if a.parent_ticket %}<a href="{{ url_for('tickets.detail', ticket_id=a.parent_ticket.id) }}">#{{ a.parent_ticket.id }}</a>{% endif %}</td>
+        <td>{{ a.uploaded_by.name }}</td>
+        <td>{{ a.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+        <td>{{ a.size_bytes|filesizeformat }}</td>
+        <td class="text-end">
+            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="btn btn-sm btn-outline-secondary">Скачать</a>
+            <form method="post" action="{{ url_for('admin.file_delete', attachment_id=a.id) }}" class="d-inline" onsubmit="return confirm('Удалить файл?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger">Удалить</button>
+            </form>
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-muted">Файлов пока нет.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

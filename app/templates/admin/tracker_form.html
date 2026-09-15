@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Трекер — GemTicket{% endblock %}
+{% block content %}
+<h3 class="mb-3">{{ 'Новый трекер' if not tracker else 'Редактирование трекера' }}</h3>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.name.label(class_='form-label') }}
+        {{ form.name(class_='form-control') }}
+        {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+        {{ form.order.label(class_='form-label') }}
+        {{ form.order(class_='form-control') }}
+    </div>
+    <div class="form-check mb-3">
+        {{ form.is_active(class_='form-check-input') }}
+        {{ form.is_active.label(class_='form-check-label') }}
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+{% endblock %}
