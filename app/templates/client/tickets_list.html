@@ -1,28 +1,17 @@
 {% extends 'base.html' %}
 {% block title %}Мои тикеты — GemTicket{% endblock %}
 
-{% macro ticket_table(tickets) %}
-<div class="table-responsive">
-<table class="table table-hover table-striped bg-white align-middle shadow-sm">
-    <thead class="table-light">
-        <tr><th>#</th><th>Название</th><th>Трекер</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr>
-    </thead>
-    <tbody>
-    {% for t in tickets %}
-        {% set overdue = t.deadline and t.deadline < today and not t.status.is_final %}
-        <tr onclick="location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'"
-            class="{{ 'ticket-row-final' if t.status.is_final }}" style="cursor:pointer;">
-            <td class="text-muted">#{{ t.id }}</td>
-            <td>{{ t.title }}</td>
-            <td><span class="badge text-bg-light border">{{ t.tracker.name }}</span></td>
-            <td><span class="badge bg-{{ t.status.color or 'secondary' }}">{{ t.status.name }}</span></td>
-            <td class="{{ 'ticket-overdue' if overdue }}">{{ t.deadline.strftime('%d.%m.%Y') if t.deadline else '—' }}</td>
-            <td class="text-muted">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-</div>
+{% macro ticket_row(t) %}
+{% set overdue = t.deadline and t.deadline < today and not t.status.is_final %}
+<tr onclick="location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'"
+    class="{{ 'ticket-row-final' if t.status.is_final }}" style="cursor:pointer;">
+    <td class="text-muted">#{{ t.id }}</td>
+    <td>{{ t.title }}</td>
+    <td><span class="badge text-bg-light border">{{ t.tracker.name }}</span></td>
+    <td><span class="badge bg-{{ t.status.color or 'secondary' }}">{{ t.status.name }}</span></td>
+    <td class="{{ 'ticket-overdue' if overdue }}">{{ t.deadline.strftime('%d.%m.%Y') if t.deadline else '—' }}</td>
+    <td class="text-muted">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
+</tr>
 {% endmacro %}
 
 {% block content %}
@@ -63,16 +52,20 @@
 {% if tickets %}
     {% set active_tickets = tickets|rejectattr('status.is_final')|list %}
     {% set final_tickets = tickets|selectattr('status.is_final')|list %}
-
-    {% if active_tickets %}
-        {% if final_tickets %}<h6 class="text-muted">Активные</h6>{% endif %}
-        {{ ticket_table(active_tickets) }}
-    {% endif %}
-
-    {% if final_tickets %}
-        <h6 class="text-muted {{ 'mt-4' if active_tickets }}">Завершённые</h6>
-        {{ ticket_table(final_tickets) }}
-    {% endif %}
+    {% set both_groups = active_tickets and final_tickets %}
+    <div class="table-responsive">
+    <table class="table table-hover table-striped bg-white align-middle shadow-sm">
+        <thead class="table-light">
+            <tr><th>#</th><th>Название</th><th>Трекер</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr>
+        </thead>
+        <tbody>
+        {% if both_groups %}<tr class="table-light"><td colspan="6" class="text-muted small fw-semibold">Активные</td></tr>{% endif %}
+        {% for t in active_tickets %}{{ ticket_row(t) }}{% endfor %}
+        {% if both_groups %}<tr class="table-light"><td colspan="6" class="text-muted small fw-semibold">Завершённые</td></tr>{% endif %}
+        {% for t in final_tickets %}{{ ticket_row(t) }}{% endfor %}
+        </tbody>
+    </table>
+    </div>
 {% else %}
 <p class="text-muted">Тикетов пока нет.</p>
 {% endif %}
