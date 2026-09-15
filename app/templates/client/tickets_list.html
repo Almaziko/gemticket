@@ -45,8 +45,7 @@
         </ul>
         {% set final_statuses = statuses|selectattr('is_final')|list %}
         {% if final_statuses %}
-        <span class="text-muted small">Завершённые:</span>
-        <ul class="nav nav-pills mb-0">
+        <ul class="nav nav-pills mb-0 border-start ps-3">
             {% for s in final_statuses %}
             <li class="nav-item">
                 <a class="nav-link {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('client.tickets_list', status=s.id, q=search) }}">{{ s.name }}</a>
