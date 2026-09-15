@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Шаблоны писем — GemTicket{% endblock %}
+{% block content %}
+<h3 class="mb-3">Шаблоны писем</h3>
+<p class="text-muted">Все письма, которые система рассылает пользователям. Тема и текст поддерживают переменные вида <code>{{ '{{ ticket_title }}' }}</code> — список переменных для каждого шаблона указан на странице редактирования.</p>
+<table class="table bg-white align-middle">
+    <thead><tr><th>Название</th><th>Тема</th><th></th></tr></thead>
+    <tbody>
+    {% for t in templates %}
+    <tr>
+        <td>{{ t.name }}</td>
+        <td class="text-muted small">{{ t.subject }}</td>
+        <td class="text-end">
+            <a href="{{ url_for('admin.email_template_edit', template_id=t.id) }}" class="btn btn-sm btn-outline-secondary">Редактировать</a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -18,7 +18,7 @@
         <td>{{ a.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
         <td>{{ a.size_bytes|filesizeformat }}</td>
         <td class="text-end">
-            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="btn btn-sm btn-outline-secondary">Скачать</a>
+            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">Скачать</a>
             <form method="post" action="{{ url_for('admin.file_delete', attachment_id=a.id) }}" class="d-inline" onsubmit="return confirm('Удалить файл?');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button class="btn btn-sm btn-outline-danger">Удалить</button>

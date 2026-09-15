@@ -6,13 +6,14 @@
     <a href="{{ url_for('admin.status_new') }}" class="btn btn-primary">Новый статус</a>
 </div>
 <table class="table bg-white align-middle">
-    <thead><tr><th>Порядок</th><th>Название</th><th>Начальный</th><th>Активен</th><th>Используется</th><th></th></tr></thead>
+    <thead><tr><th>Порядок</th><th>Название</th><th>Начальный</th><th>Финальный</th><th>Активен</th><th>Используется</th><th></th></tr></thead>
     <tbody>
     {% for s in statuses %}
     <tr>
         <td>{{ s.order }}</td>
         <td><span class="badge bg-{{ s.color or 'secondary' }}">{{ s.name }}</span></td>
         <td>{{ '✓' if s.is_default else '' }}</td>
+        <td>{{ '✓' if s.is_final else '' }}</td>
         <td>{{ '✓' if s.is_active else '—' }}</td>
         <td>{{ 'да' if s.in_use else 'нет' }}</td>
         <td class="text-end">

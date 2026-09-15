@@ -9,6 +9,9 @@ from .extensions import db
 from .models import Attachment, Settings
 
 
+DEFAULT_ALLOWED_EXTENSIONS = 'zip,xlsx,xls,csv,docx,doc,pdf,jpeg,png,jpg'
+
+
 class FileTooLargeError(Exception):
     def __init__(self, filename, limit_mb):
         self.filename = filename
@@ -16,9 +19,22 @@ class FileTooLargeError(Exception):
         super().__init__(f'{filename} превышает лимит {limit_mb} МБ')
 
 
+class DisallowedExtensionError(Exception):
+    def __init__(self, filename, allowed):
+        self.filename = filename
+        self.allowed = allowed
+        super().__init__(f'{filename}: расширение не разрешено')
+
+
 def get_max_upload_mb():
     settings = Settings.query.first()
     return settings.max_upload_mb if settings else 50
+
+
+def get_allowed_extensions():
+    settings = Settings.query.first()
+    raw = (settings.allowed_extensions if settings and settings.allowed_extensions else DEFAULT_ALLOWED_EXTENSIONS)
+    return [e.strip().lower().lstrip('.') for e in raw.split(',') if e.strip()]
 
 
 def check_files_size(file_storages):
@@ -33,6 +49,17 @@ def check_files_size(file_storages):
         fs.stream.seek(0)
         if size > limit_bytes:
             raise FileTooLargeError(fs.filename, limit_mb)
+
+
+def check_files_extensions(file_storages):
+    """Проверяет расширения файлов ДО сохранения. Бросает DisallowedExtensionError."""
+    allowed = get_allowed_extensions()
+    for fs in file_storages:
+        if not fs or not fs.filename:
+            continue
+        ext = os.path.splitext(fs.filename)[1].lstrip('.').lower()
+        if ext not in allowed:
+            raise DisallowedExtensionError(fs.filename, allowed)
 
 
 def save_attachment(file_storage, uploader, ticket=None, comment=None):

@@ -17,3 +17,39 @@
 .comment-card.role-admin {
     border-left-color: #198754;
 }
+
+.richtext-editor {
+    min-height: 120px;
+    white-space: pre-wrap;
+}
+
+.richtext-editor:focus {
+    outline: none;
+}
+
+.richtext-content p {
+    margin-bottom: 0.5rem;
+}
+
+.richtext-content p:last-child {
+    margin-bottom: 0;
+}
+
+.ticket-row-final {
+    opacity: 0.75;
+}
+
+.ticket-overdue {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.history-item {
+    border-left: 2px solid #dee2e6;
+    padding-left: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.history-item:last-child {
+    padding-bottom: 0;
+}

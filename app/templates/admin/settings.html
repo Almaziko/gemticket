@@ -48,6 +48,11 @@
                 {{ form.max_upload_mb.label(class_='form-label') }}
                 {{ form.max_upload_mb(class_='form-control') }}
             </div>
+            <div class="mb-3">
+                {{ form.allowed_extensions.label(class_='form-label') }}
+                {{ form.allowed_extensions(class_='form-control', placeholder='zip,xlsx,xls,csv,docx,doc,pdf,jpeg,png,jpg') }}
+                {% for e in form.allowed_extensions.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
             <button type="submit" class="btn btn-primary">Сохранить настройки</button>
         </form>
     </div>

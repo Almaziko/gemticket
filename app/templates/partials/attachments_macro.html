@@ -3,11 +3,11 @@
 <div class="d-flex flex-wrap gap-2 mt-2">
     {% for a in attachments %}
         {% if a.is_image %}
-            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" title="{{ a.filename_original }}">
+            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" rel="noopener" title="{{ a.filename_original }}">
                 <img src="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="attachment-thumb" alt="{{ a.filename_original }}">
             </a>
         {% else %}
-            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="btn btn-outline-secondary btn-sm">
+            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
                 &#128206; {{ a.filename_original }} <span class="text-muted">({{ a.size_bytes|filesizeformat }})</span>
             </a>
         {% endif %}

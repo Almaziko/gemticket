@@ -21,9 +21,13 @@
         {{ form.is_default(class_='form-check-input') }}
         {{ form.is_default.label(class_='form-check-label') }}
     </div>
-    <div class="form-check mb-3">
+    <div class="form-check mb-2">
         {{ form.is_active(class_='form-check-input') }}
         {{ form.is_active.label(class_='form-check-label') }}
+    </div>
+    <div class="form-check mb-3">
+        {{ form.is_final(class_='form-check-input') }}
+        {{ form.is_final.label(class_='form-check-label') }}
     </div>
     <button type="submit" class="btn btn-primary">Сохранить</button>
 </form>

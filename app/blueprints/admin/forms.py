@@ -1,6 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SelectField, IntegerField, BooleanField
+from wtforms import StringField, PasswordField, SelectField, IntegerField, BooleanField, TextAreaField
 from wtforms.validators import DataRequired, Optional, Length, Email, NumberRange
+from wtforms.widgets import HiddenInput
+
+from ...richtext import validate_nonempty_richtext
 
 
 class ClientForm(FlaskForm):
@@ -22,6 +25,7 @@ class StatusForm(FlaskForm):
     color = StringField('Цвет (bootstrap-класс: success/warning/danger/...)', validators=[Optional(), Length(max=20)])
     is_default = BooleanField('Начальный статус для новых тикетов')
     is_active = BooleanField('Активен')
+    is_final = BooleanField('Финальный статус (клиент не может писать в тикет; отдельная группа в списках)')
 
 
 class TrackerForm(FlaskForm):
@@ -40,7 +44,16 @@ class SettingsForm(FlaskForm):
     smtp_use_ssl = BooleanField('SSL')
     base_url = StringField('BASE_URL', validators=[DataRequired(), Length(max=255)])
     max_upload_mb = IntegerField('Лимит размера файла (МБ)', validators=[DataRequired(), NumberRange(min=1, max=10000)])
+    allowed_extensions = StringField(
+        'Разрешённые расширения файлов (через запятую, без точки)',
+        validators=[DataRequired(), Length(max=500)],
+    )
 
 
 class TestEmailForm(FlaskForm):
     to_address = StringField('Отправить тест на адрес', validators=[DataRequired(), Email(message='Некорректный email')])
+
+
+class EmailTemplateForm(FlaskForm):
+    subject = StringField('Тема письма', validators=[DataRequired(message='Введите тему'), Length(max=300)])
+    body_html = TextAreaField('Текст письма', widget=HiddenInput(), validators=[validate_nonempty_richtext])

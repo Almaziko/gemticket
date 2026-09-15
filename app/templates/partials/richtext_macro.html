@@ -1,0 +1,15 @@
+{% macro richtext_editor(editor_id, field, initial_html='') %}
+<div class="btn-toolbar mb-1" id="{{ editor_id }}-toolbar" role="toolbar">
+    <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-secondary" data-cmd="bold" title="Жирный"><b>Ж</b></button>
+        <button type="button" class="btn btn-outline-secondary" data-cmd="italic" title="Курсив"><i>К</i></button>
+        <button type="button" class="btn btn-outline-secondary" data-cmd="underline" title="Подчёркнутый"><u>Ч</u></button>
+        <button type="button" class="btn btn-outline-secondary" data-cmd="insertUnorderedList" title="Список">&bull; список</button>
+        <button type="button" class="btn btn-outline-secondary" data-cmd="createLink" title="Вставить ссылку">Ссылка</button>
+    </div>
+</div>
+<div class="form-control richtext-editor" id="{{ editor_id }}" contenteditable="true">{{ initial_html|safe }}</div>
+{{ field(id=editor_id + '-hidden') }}
+{% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+<script>setupRichTextEditor('#{{ editor_id }}', '#{{ editor_id }}-hidden', '#{{ editor_id }}-toolbar');</script>
+{% endmacro %}

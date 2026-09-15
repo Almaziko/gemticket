@@ -3,12 +3,15 @@ from flask import (
 )
 
 from ...extensions import db
-from ...models import User, Admin, Client, Status, Tracker, Ticket, Attachment, Settings
+from ...models import User, Admin, Client, Status, Tracker, Ticket, Attachment, Settings, EmailTemplate
 from ...decorators import admin_required, superadmin_required
 from ...security import hash_password, encrypt_secret, decrypt_secret
 from ...attachments import delete_attachment_file, refresh_max_content_length
 from ...notifications import send_test_email
-from .forms import ClientForm, AdminForm, StatusForm, TrackerForm, SettingsForm, TestEmailForm
+from ...richtext import clean_html
+from .forms import (
+    ClientForm, AdminForm, StatusForm, TrackerForm, SettingsForm, TestEmailForm, EmailTemplateForm,
+)
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -27,15 +30,19 @@ def _password_taken(password, exclude_user_id=None):
 @admin_required
 def dashboard():
     status_filter = request.args.get('status', type=int)
+    search = (request.args.get('q') or '').strip()
     query = Ticket.query
     if not g.current_user.is_superadmin:
         query = query.filter_by(assignee_id=g.current_user.id)
     if status_filter:
         query = query.filter_by(status_id=status_filter)
+    if search:
+        query = query.filter(Ticket.title.ilike(f'%{search}%'))
     tickets = query.order_by(Ticket.created_at.desc()).all()
     statuses = Status.query.order_by(Status.order).all()
     return render_template(
-        'admin/dashboard.html', tickets=tickets, statuses=statuses, status_filter=status_filter
+        'admin/dashboard.html', tickets=tickets, statuses=statuses,
+        status_filter=status_filter, search=search,
     )
 
 
@@ -247,6 +254,7 @@ def status_new():
             color=form.color.data or None,
             is_default=form.is_default.data,
             is_active=form.is_active.data,
+            is_final=form.is_final.data,
         )
         db.session.add(status)
         db.session.commit()
@@ -267,6 +275,7 @@ def status_edit(status_id):
         status.order = form.order.data
         status.color = form.color.data or None
         status.is_active = form.is_active.data
+        status.is_final = form.is_final.data
         if was_default and not form.is_default.data:
             flash('Нельзя снять флаг «начальный» — сначала назначьте начальным другой статус', 'warning')
             status.is_default = True
@@ -421,6 +430,8 @@ def settings_page():
         settings.smtp_use_ssl = form.smtp_use_ssl.data
         settings.base_url = form.base_url.data
         settings.max_upload_mb = form.max_upload_mb.data
+        normalized_ext = [e.strip().lower().lstrip('.') for e in form.allowed_extensions.data.split(',') if e.strip()]
+        settings.allowed_extensions = ','.join(dict.fromkeys(normalized_ext))
         db.session.commit()
         refresh_max_content_length(current_app._get_current_object())
         flash('Настройки сохранены', 'success')
@@ -444,3 +455,26 @@ def settings_test_email():
             except Exception as e:
                 flash(f'Не удалось отправить письмо: {e}', 'danger')
     return redirect(url_for('admin.settings_page'))
+
+
+# ---------- Шаблоны писем ----------
+
+@admin_bp.route('/email-templates')
+@superadmin_required
+def email_templates_list():
+    templates = EmailTemplate.query.order_by(EmailTemplate.name).all()
+    return render_template('admin/email_templates_list.html', templates=templates)
+
+
+@admin_bp.route('/email-templates/<int:template_id>/edit', methods=['GET', 'POST'])
+@superadmin_required
+def email_template_edit(template_id):
+    template = EmailTemplate.query.get_or_404(template_id)
+    form = EmailTemplateForm(obj=template)
+    if form.validate_on_submit():
+        template.subject = form.subject.data
+        template.body_html = clean_html(form.body_html.data)
+        db.session.commit()
+        flash('Шаблон письма сохранён', 'success')
+        return redirect(url_for('admin.email_templates_list'))
+    return render_template('admin/email_template_form.html', form=form, template=template)

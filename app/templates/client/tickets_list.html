@@ -2,37 +2,62 @@
 {% block title %}Мои тикеты — GemTicket{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Мои тикеты</h3>
-    <a href="{{ url_for('client.ticket_new') }}" class="btn btn-primary">Новый тикет</a>
+    <h3 class="mb-0">Мои тикеты</h3>
+    <a href="{{ url_for('client.ticket_new') }}" class="btn btn-primary">+ Новый тикет</a>
 </div>
 
-<ul class="nav nav-pills mb-3">
-    <li class="nav-item">
-        <a class="nav-link {% if not status_filter %}active{% endif %}" href="{{ url_for('client.tickets_list') }}">Все</a>
-    </li>
-    {% for s in statuses %}
-    <li class="nav-item">
-        <a class="nav-link {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('client.tickets_list', status=s.id) }}">{{ s.name }}</a>
-    </li>
-    {% endfor %}
-</ul>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-3">
+        <ul class="nav nav-pills mb-0">
+            <li class="nav-item">
+                <a class="nav-link {% if not status_filter %}active{% endif %}" href="{{ url_for('client.tickets_list', q=search) }}">Все</a>
+            </li>
+            {% for s in statuses if not s.is_final %}
+            <li class="nav-item">
+                <a class="nav-link {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('client.tickets_list', status=s.id, q=search) }}">{{ s.name }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% set final_statuses = statuses|selectattr('is_final')|list %}
+        {% if final_statuses %}
+        <span class="text-muted small">Завершённые:</span>
+        <ul class="nav nav-pills mb-0">
+            {% for s in final_statuses %}
+            <li class="nav-item">
+                <a class="nav-link {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('client.tickets_list', status=s.id, q=search) }}">{{ s.name }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    <form method="get" class="d-flex" style="min-width: 220px;">
+        {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+        <input type="search" name="q" value="{{ search }}" class="form-control form-control-sm" placeholder="Поиск по названию...">
+    </form>
+</div>
 
 {% if tickets %}
-<table class="table table-hover bg-white">
-    <thead><tr><th>#</th><th>Название</th><th>Трекер</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr></thead>
+<div class="table-responsive">
+<table class="table table-hover table-striped bg-white align-middle shadow-sm">
+    <thead class="table-light">
+        <tr><th>#</th><th>Название</th><th>Трекер</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr>
+    </thead>
     <tbody>
     {% for t in tickets %}
-        <tr onclick="location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'" style="cursor:pointer;">
-            <td>{{ t.id }}</td>
+        {% set overdue = t.deadline and t.deadline < today and not t.status.is_final %}
+        <tr onclick="location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'"
+            class="{{ 'ticket-row-final' if t.status.is_final }}" style="cursor:pointer;">
+            <td class="text-muted">#{{ t.id }}</td>
             <td>{{ t.title }}</td>
-            <td>{{ t.tracker.name }}</td>
+            <td><span class="badge text-bg-light border">{{ t.tracker.name }}</span></td>
             <td><span class="badge bg-{{ t.status.color or 'secondary' }}">{{ t.status.name }}</span></td>
-            <td>{{ t.deadline.strftime('%d.%m.%Y') if t.deadline else '—' }}</td>
-            <td>{{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td class="{{ 'ticket-overdue' if overdue }}">{{ t.deadline.strftime('%d.%m.%Y') if t.deadline else '—' }}</td>
+            <td class="text-muted">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
         </tr>
     {% endfor %}
     </tbody>
 </table>
+</div>
 {% else %}
 <p class="text-muted">Тикетов пока нет.</p>
 {% endif %}

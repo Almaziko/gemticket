@@ -1,4 +1,5 @@
 import os
+from datetime import date
 
 from flask import Flask, g, session
 
@@ -31,12 +32,23 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-        from .seed import seed_reference_data, seed_superadmin
+
+        from .migrate import run_light_migrations
+        run_light_migrations()
+
+        from .seed import seed_reference_data, seed_email_templates, seed_superadmin
         seed_reference_data()
+        seed_email_templates()
         seed_superadmin(app.config['ADMIN_PASSWORD'])
 
         from .attachments import refresh_max_content_length
         refresh_max_content_length(app)
+
+    from .richtext import render_richtext
+    app.jinja_env.filters['richtext'] = render_richtext
+
+    from .overdue import start_overdue_checker
+    start_overdue_checker(app)
 
     @app.before_request
     def load_current_user():
@@ -49,6 +61,7 @@ def create_app():
 
     @app.context_processor
     def inject_globals():
+        from .attachments import get_allowed_extensions
         unread_count = 0
         recent_notifications = []
         if g.get('current_user'):
@@ -59,6 +72,8 @@ def create_app():
             current_user=g.get('current_user'),
             unread_notifications_count=unread_count,
             recent_notifications=recent_notifications,
+            allowed_extensions=get_allowed_extensions(),
+            today=date.today(),
         )
 
     @app.errorhandler(413)

@@ -8,9 +8,14 @@ from ...models import Ticket, Comment, Attachment, Status, Tracker, Admin, Notif
 from ...decorators import login_required
 from ...permissions import (
     can_view_ticket, can_manage_ticket_fields, can_reassign_ticket,
-    can_edit_description, can_view_attachment,
+    can_edit_description, can_view_attachment, can_comment,
 )
-from ...attachments import check_files_size, save_attachments, FileTooLargeError
+from ...attachments import (
+    check_files_size, check_files_extensions, save_attachments,
+    FileTooLargeError, DisallowedExtensionError,
+)
+from ...richtext import clean_html
+from ...history import record_event
 from ... import notifications as notif
 from .forms import (
     CommentForm, DescriptionEditForm, StatusChangeForm, AssigneeChangeForm,
@@ -62,6 +67,7 @@ def detail(ticket_id):
         can_manage=can_manage_ticket_fields(g.current_user, ticket),
         can_reassign=can_reassign_ticket(g.current_user),
         can_edit_desc=can_edit_description(g.current_user, ticket),
+        can_comment=can_comment(g.current_user, ticket),
     )
 
 
@@ -69,16 +75,22 @@ def detail(ticket_id):
 @login_required
 def add_comment(ticket_id):
     ticket = _get_ticket_or_403(ticket_id)
+    if not can_comment(g.current_user, ticket):
+        abort(403)
     form = CommentForm()
     if form.validate_on_submit():
         files = request.files.getlist('attachments')
         try:
             check_files_size(files)
+            check_files_extensions(files)
         except FileTooLargeError as e:
             flash(f'Файл «{e.filename}» превышает лимит {e.limit_mb} МБ. Комментарий не сохранён.', 'danger')
             return redirect(url_for('tickets.detail', ticket_id=ticket.id) + '#comments')
+        except DisallowedExtensionError as e:
+            flash(f'Файл «{e.filename}» имеет неразрешённое расширение. Разрешены: {", ".join(e.allowed)}.', 'danger')
+            return redirect(url_for('tickets.detail', ticket_id=ticket.id) + '#comments')
 
-        comment = Comment(ticket_id=ticket.id, author_id=g.current_user.id, body=form.body.data)
+        comment = Comment(ticket_id=ticket.id, author_id=g.current_user.id, body=clean_html(form.body.data))
         db.session.add(comment)
         db.session.flush()
         save_attachments(files, g.current_user, comment=comment)
@@ -98,9 +110,10 @@ def edit_description(ticket_id):
         abort(403)
     form = DescriptionEditForm()
     if form.validate_on_submit():
-        ticket.description = form.description.data
+        ticket.description = clean_html(form.description.data)
         db.session.commit()
         notif.notify_ticket_edited_by_client(ticket)
+        record_event(ticket, g.current_user, f'{g.current_user.name} отредактировал(а) описание')
         flash('Описание обновлено', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 
@@ -120,6 +133,7 @@ def change_status(ticket_id):
             ticket.status = new_status
             db.session.commit()
             notif.notify_status_changed(ticket, old_name, new_status.name)
+            record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) статус с «{old_name}» на «{new_status.name}»')
             flash('Статус обновлён', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 
@@ -139,6 +153,7 @@ def change_tracker(ticket_id):
             ticket.tracker = new_tracker
             db.session.commit()
             notif.notify_tracker_changed(ticket, old_name, new_tracker.name)
+            record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) трекер с «{old_name}» на «{new_tracker.name}»')
             flash('Трекер обновлён', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 
@@ -154,9 +169,11 @@ def change_deadline(ticket_id):
         old_value = ticket.deadline.strftime('%d.%m.%Y') if ticket.deadline else 'не задан'
         ticket.deadline = form.deadline.data
         new_value = ticket.deadline.strftime('%d.%m.%Y') if ticket.deadline else 'не задан'
+        ticket.overdue_notified = False
         db.session.commit()
         if old_value != new_value:
             notif.notify_deadline_changed(ticket, old_value, new_value)
+            record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) дедлайн с «{old_value}» на «{new_value}»')
         flash('Дедлайн обновлён', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 
@@ -176,6 +193,7 @@ def change_assignee(ticket_id):
             ticket.assignee = new_assignee
             db.session.commit()
             notif.notify_assignee_changed(ticket, old_name, new_assignee.name)
+            record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) исполнителя с «{old_name}» на «{new_assignee.name}»')
             flash('Исполнитель обновлён', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 
@@ -203,3 +221,11 @@ def open_notification(notification_id):
     notification.is_read = True
     db.session.commit()
     return redirect(url_for('tickets.detail', ticket_id=notification.ticket_id))
+
+
+@tickets_bp.route('/notifications/mark-all-read', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    Notification.query.filter_by(recipient_id=g.current_user.id, is_read=False).update({Notification.is_read: True})
+    db.session.commit()
+    return redirect(request.referrer or url_for('auth.index'))

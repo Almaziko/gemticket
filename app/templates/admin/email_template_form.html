@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% from 'partials/richtext_macro.html' import richtext_editor %}
+{% block title %}{{ template.name }} — GemTicket{% endblock %}
+{% block content %}
+<h3 class="mb-1">{{ template.name }}</h3>
+<p class="text-muted">Доступные переменные: {% for v in template.variables_hint.split(',') %}<code>{{ '{{ ' + v.strip() + ' }}' }}</code>{% if not loop.last %} {% endif %}{% endfor %}</p>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.subject.label(class_='form-label') }}
+        {{ form.subject(class_='form-control') }}
+        <div class="form-text">В теме тоже можно использовать переменные.</div>
+        {% for e in form.subject.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Текст письма</label>
+        {{ richtext_editor('template-body-editor', form.body_html, template.body_html) }}
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <a href="{{ url_for('admin.email_templates_list') }}" class="btn btn-outline-secondary">Отмена</a>
+</form>
+{% endblock %}

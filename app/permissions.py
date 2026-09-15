@@ -32,3 +32,13 @@ def can_edit_description(user, ticket):
 def can_view_attachment(user, attachment):
     ticket = attachment.parent_ticket
     return ticket is not None and can_view_ticket(user, ticket)
+
+
+def can_comment(user, ticket):
+    """В финальном статусе (Готов/Отменён и т.п.) клиент писать не может —
+    админ по-прежнему может добавить финальную заметку."""
+    if not can_view_ticket(user, ticket):
+        return False
+    if user.role == 'client' and ticket.status.is_final:
+        return False
+    return True

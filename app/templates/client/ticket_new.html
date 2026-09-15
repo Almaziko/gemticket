@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'partials/richtext_macro.html' import richtext_editor %}
 {% block title %}Новый тикет — GemTicket{% endblock %}
 {% block content %}
 <h3 class="mb-3">Новый тикет</h3>
@@ -10,10 +11,8 @@
         {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
     </div>
     <div class="mb-3">
-        {{ form.description.label(class_='form-label') }}
-        {{ form.description(class_='form-control', rows=6, id='description-field') }}
-        <div class="form-text">Можно вставить картинку из буфера обмена (Ctrl+V) прямо в это поле — она прикрепится файлом.</div>
-        {% for e in form.description.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        <label class="form-label">Описание</label>
+        {{ richtext_editor('description-editor', form.description) }}
     </div>
     <div class="row">
         <div class="col-md-6 mb-3">
@@ -28,12 +27,14 @@
     </div>
     <div class="mb-3">
         <label class="form-label">Вложения</label>
-        <input type="file" name="attachments" id="attachments-input" class="form-control" multiple>
+        <input type="file" name="attachments" id="attachments-input" class="form-control"
+               accept="{{ '.' + allowed_extensions|join(',.') }}" multiple>
+        <div class="form-text">Разрешены файлы: {{ allowed_extensions|join(', ') }}.</div>
+        <div id="attachments-list" class="mt-2"></div>
     </div>
     <button type="submit" class="btn btn-primary">Создать тикет</button>
 </form>
 {% endblock %}
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/paste_upload.js') }}"></script>
-<script>setupPasteUpload('#description-field', '#attachments-input');</script>
+<script>setupAttachmentsPicker('#attachments-input', '#attachments-list');</script>
 {% endblock %}

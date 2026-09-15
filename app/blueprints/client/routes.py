@@ -3,7 +3,12 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from ...extensions import db
 from ...models import Ticket, Status, Tracker
 from ...decorators import client_required
-from ...attachments import check_files_size, save_attachments, FileTooLargeError
+from ...attachments import (
+    check_files_size, check_files_extensions, save_attachments,
+    FileTooLargeError, DisallowedExtensionError,
+)
+from ...richtext import clean_html
+from ...history import record_event
 from ... import notifications as notif
 from .forms import TicketCreateForm
 
@@ -14,13 +19,17 @@ client_bp = Blueprint('client', __name__, url_prefix='/client')
 @client_required
 def tickets_list():
     status_filter = request.args.get('status', type=int)
+    search = (request.args.get('q') or '').strip()
     query = Ticket.query.filter_by(client_id=g.current_user.id)
     if status_filter:
         query = query.filter_by(status_id=status_filter)
+    if search:
+        query = query.filter(Ticket.title.ilike(f'%{search}%'))
     tickets = query.order_by(Ticket.created_at.desc()).all()
     statuses = Status.query.order_by(Status.order).all()
     return render_template(
-        'client/tickets_list.html', tickets=tickets, statuses=statuses, status_filter=status_filter
+        'client/tickets_list.html', tickets=tickets, statuses=statuses,
+        status_filter=status_filter, search=search,
     )
 
 
@@ -36,14 +45,18 @@ def ticket_new():
         files = request.files.getlist('attachments')
         try:
             check_files_size(files)
+            check_files_extensions(files)
         except FileTooLargeError as e:
             flash(f'Файл «{e.filename}» превышает лимит {e.limit_mb} МБ. Тикет не создан.', 'danger')
+            return render_template('client/ticket_new.html', form=form)
+        except DisallowedExtensionError as e:
+            flash(f'Файл «{e.filename}» имеет неразрешённое расширение. Разрешены: {", ".join(e.allowed)}.', 'danger')
             return render_template('client/ticket_new.html', form=form)
 
         default_status = Status.query.filter_by(is_default=True).first()
         ticket = Ticket(
             title=form.title.data,
-            description=form.description.data,
+            description=clean_html(form.description.data),
             deadline=form.deadline.data,
             tracker_id=form.tracker_id.data,
             status_id=default_status.id,
@@ -55,6 +68,7 @@ def ticket_new():
         save_attachments(files, g.current_user, ticket=ticket)
         db.session.commit()
         notif.notify_ticket_created(ticket)
+        record_event(ticket, g.current_user, f'{g.current_user.name} создал(а) тикет')
         flash('Тикет создан', 'success')
         return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 

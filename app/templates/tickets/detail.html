@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% from 'partials/attachments_macro.html' import render_attachments %}
 {% from 'partials/comment_macro.html' import render_comment %}
+{% from 'partials/richtext_macro.html' import richtext_editor %}
 {% block title %}Тикет #{{ ticket.id }} — GemTicket{% endblock %}
 {% block content %}
 <div class="row">
@@ -12,12 +13,12 @@
                 {% if can_edit_desc %}
                 <form method="post" action="{{ url_for('tickets.edit_description', ticket_id=ticket.id) }}">
                     {{ description_form.hidden_tag() }}
-                    {{ description_form.description(class_='form-control mb-2', rows=6) }}
-                    <button class="btn btn-sm btn-outline-primary" type="submit">Сохранить описание</button>
+                    {{ richtext_editor('description-editor', description_form.description, ticket.description) }}
+                    <button class="btn btn-sm btn-outline-primary mt-2" type="submit">Сохранить описание</button>
                     <div class="form-text">Описание можно редактировать, пока тикет в начальном статусе.</div>
                 </form>
                 {% else %}
-                <div style="white-space: pre-wrap;">{{ ticket.description }}</div>
+                <div class="richtext-content">{{ ticket.description|richtext|safe }}</div>
                 {% endif %}
                 {{ render_attachments(ticket.attachments) }}
             </div>
@@ -30,18 +31,24 @@
             <p class="text-muted">Комментариев пока нет.</p>
         {% endfor %}
 
+        {% if can_comment %}
         <form method="post" action="{{ url_for('tickets.add_comment', ticket_id=ticket.id) }}" enctype="multipart/form-data" class="mt-3">
             {{ comment_form.hidden_tag() }}
             <div class="mb-2">
-                {{ comment_form.body(class_='form-control', rows=3, placeholder='Написать комментарий...', id='comment-body-field') }}
-                {% for e in comment_form.body.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                <label class="form-label">Комментарий</label>
+                {{ richtext_editor('comment-editor', comment_form.body) }}
             </div>
             <div class="mb-2">
-                <input type="file" name="attachments" id="comment-attachments-input" class="form-control" multiple>
-                <div class="form-text">Ctrl+V в поле комментария вставит картинку из буфера обмена как вложение.</div>
+                <input type="file" name="attachments" id="comment-attachments-input" class="form-control"
+                       accept="{{ '.' + allowed_extensions|join(',.') }}" multiple>
+                <div class="form-text">Разрешены файлы: {{ allowed_extensions|join(', ') }}.</div>
+                <div id="comment-attachments-list" class="mt-2"></div>
             </div>
             <button type="submit" class="btn btn-primary btn-sm">Отправить</button>
         </form>
+        {% else %}
+        <p class="text-muted">Тикет в статусе «{{ ticket.status.name }}» — клиент не может добавлять комментарии.</p>
+        {% endif %}
     </div>
 
     <div class="col-md-4">
@@ -103,10 +110,27 @@
             </div>
         </div>
         {% endif %}
+
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">История</h6>
+                {% if ticket.events %}
+                    {% for ev in ticket.events %}
+                    <div class="history-item small">
+                        <div>{{ ev.message }}</div>
+                        <div class="text-muted">{{ ev.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted small mb-0">История пуста.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/paste_upload.js') }}"></script>
-<script>setupPasteUpload('#comment-body-field', '#comment-attachments-input');</script>
+{% if can_comment %}
+<script>setupAttachmentsPicker('#comment-attachments-input', '#comment-attachments-list');</script>
+{% endif %}
 {% endblock %}

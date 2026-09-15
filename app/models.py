@@ -66,6 +66,7 @@ class Status(db.Model):
     color = db.Column(db.String(20), nullable=True)
     is_default = db.Column(db.Boolean, nullable=False, default=False)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
+    is_final = db.Column(db.Boolean, nullable=False, default=False)
 
     tickets = db.relationship('Ticket', back_populates='status')
 
@@ -96,6 +97,7 @@ class Ticket(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False, default='')
     deadline = db.Column(db.Date, nullable=True)
+    overdue_notified = db.Column(db.Boolean, nullable=False, default=False)
 
     tracker_id = db.Column(db.Integer, db.ForeignKey('trackers.id'), nullable=False)
     status_id = db.Column(db.Integer, db.ForeignKey('statuses.id'), nullable=False)
@@ -116,6 +118,10 @@ class Ticket(db.Model):
     attachments = db.relationship(
         'Attachment', back_populates='ticket', cascade='all, delete-orphan',
         foreign_keys='Attachment.ticket_id'
+    )
+    events = db.relationship(
+        'TicketEvent', cascade='all, delete-orphan', order_by='TicketEvent.created_at',
+        primaryjoin='Ticket.id == TicketEvent.ticket_id'
     )
 
 
@@ -199,3 +205,31 @@ class Settings(db.Model):
 
     base_url = db.Column(db.String(255), nullable=False, default='http://localhost:5000')
     max_upload_mb = db.Column(db.Integer, nullable=False, default=50)
+    allowed_extensions = db.Column(db.String(500), nullable=False, default='zip,xlsx,xls,csv,docx,doc,pdf,jpeg,png,jpg')
+
+
+class TicketEvent(db.Model):
+    """Журнал истории тикета: кто и что поменял (статус, исполнитель, дедлайн, трекер, описание)."""
+    __tablename__ = 'ticket_events'
+
+    id = db.Column(db.Integer, primary_key=True)
+    ticket_id = db.Column(db.Integer, db.ForeignKey('tickets.id'), nullable=False)
+    actor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    message = db.Column(db.String(500), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    actor = db.relationship('User')
+
+
+class EmailTemplate(db.Model):
+    """Редактируемые в админке шаблоны писем-уведомлений. Тема и тело —
+    строки Jinja (те же {{ переменная }}), body_html — санитайзится тем же
+    bleach-пайплайном, что описание/комментарии (см. app/richtext.py)."""
+    __tablename__ = 'email_templates'
+
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(200), nullable=False)
+    subject = db.Column(db.String(300), nullable=False)
+    body_html = db.Column(db.Text, nullable=False)
+    variables_hint = db.Column(db.String(500), nullable=False, default='')

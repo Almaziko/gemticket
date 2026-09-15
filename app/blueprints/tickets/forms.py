@@ -1,14 +1,17 @@
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField, SelectField, DateField
 from wtforms.validators import DataRequired, Optional
+from wtforms.widgets import HiddenInput
+
+from ...richtext import validate_nonempty_richtext
 
 
 class CommentForm(FlaskForm):
-    body = TextAreaField('Комментарий', validators=[DataRequired(message='Введите текст комментария')])
+    body = TextAreaField('Комментарий', widget=HiddenInput(), validators=[validate_nonempty_richtext])
 
 
 class DescriptionEditForm(FlaskForm):
-    description = TextAreaField('Описание', validators=[DataRequired(message='Введите описание')])
+    description = TextAreaField('Описание', widget=HiddenInput(), validators=[validate_nonempty_richtext])
 
 
 class StatusChangeForm(FlaskForm):
