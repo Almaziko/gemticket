@@ -27,4 +27,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: almaziko/ticket-tracker:latest
+          tags: almaziko/gemticket:latest

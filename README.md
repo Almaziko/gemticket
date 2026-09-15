@@ -44,21 +44,21 @@ SMTP и лимит размера загружаемого файла настр
 
 ## Развёртывание
 
-CI (`.github/workflows/docker.yml`) при пуше в `master`/`main` собирает Docker-образ и пушит его в Docker Hub как `almaziko/ticket-tracker:latest`. Деплой на сервер пайплайн не делает — образ разворачивается стеком в **Portainer** (или напрямую через `docker compose up` — оба варианта равноправны).
+CI (`.github/workflows/docker.yml`) при пуше в `master`/`main` собирает Docker-образ и пушит его в Docker Hub как `almaziko/gemticket:latest`. Деплой на сервер пайплайн не делает — образ разворачивается стеком в **Portainer** (или напрямую через `docker compose up` — оба варианта равноправны).
 
-Ниже — обезличенный шаблон `docker-compose.yml`. Секреты (`SECRET_KEY`, `FERNET_KEY`, `ADMIN_PASSWORD`) в репозиторий не кладутся — подставьте свои значения при создании стека в Portainer (переменные стека) либо впишите их прямо в файл перед `docker compose up`.
+Ниже — обезличенный шаблон `docker-compose.yml`. Секреты (`SECRET_KEY`, `FERNET_KEY`, `ADMIN_PASSWORD`) в репозиторий не кладутся: в шаблоне это `${ПЕРЕМЕННЫЕ}` — Portainer подставит в них значения из раздела «Environment variables» стека (см. пошагово ниже); при запуске через голый `docker compose` эти же переменные нужно объявить в `.env`-файле рядом с `docker-compose.yml` или экспортировать в окружении перед `up`.
 
 ```yaml
 services:
   gemticket:
-    image: almaziko/ticket-tracker:latest
+    image: almaziko/gemticket:latest
     restart: unless-stopped
     ports:
       - "5000:5000"
     environment:
-      SECRET_KEY: <секретный-случайный-ключ>
-      FERNET_KEY: <ключ-fernet-см-README>
-      ADMIN_PASSWORD: <пароль-первого-суперадмина>
+      SECRET_KEY: ${SECRET_KEY}
+      FERNET_KEY: ${FERNET_KEY}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       TZ: Europe/Moscow
       PORT: 5000
       BASE_URL: https://tickets.example.com
@@ -88,9 +88,23 @@ python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 
 ### Вариант 1 — стек в Portainer
 
-Stacks → Add stack → вставить содержимое `docker-compose.yml` выше → задать переменные секретов в разделе Environment variables стека → Deploy.
+1. Заранее сгенерируйте `FERNET_KEY` и произвольный `SECRET_KEY` (команда выше) и придумайте `ADMIN_PASSWORD` для первого суперадмина.
+2. В Portainer: **Stacks → Add stack**, дайте имя (например, `gemticket`).
+3. В поле **Web editor** вставьте `docker-compose.yml` из блока выше как есть — с `${SECRET_KEY}` и т.д., ничего не редактируя.
+4. Ниже, в разделе **Environment variables**, добавьте три переменные (по кнопке *Add an environment variable*, каждая — имя/значение отдельно, без кавычек):
+   - `SECRET_KEY` = сгенерированная строка
+   - `FERNET_KEY` = ключ из `Fernet.generate_key()`
+   - `ADMIN_PASSWORD` = пароль первого суперадмина
+5. При желании поправьте `BASE_URL` прямо в тексте compose (на реальный домен/IP, под которым будет открываться приложение) — это не секрет, его можно вписать напрямую в YAML.
+6. **Deploy the stack**. Portainer подставит переменные в `${...}` и поднимет контейнер.
+7. Проверьте логи контейнера (Containers → gemticket → Logs) — должно быть видно, что gunicorn стартовал без ошибок.
+8. Откройте `http://<host>:5000` (или порт, который вы указали в `ports:`), войдите паролем из `ADMIN_PASSWORD` — это и есть суперадмин.
+
+Обновление образа: **Stacks → gemticket → Pull and redeploy** (или Re-deploy после ручного pull) — данные не потеряются, они лежат в volume’ах `gemticket_db`/`gemticket_uploads`, а не в самом контейнере.
 
 ### Вариант 2 — `docker compose` напрямую
+
+Создайте рядом с `docker-compose.yml` файл `.env` с теми же тремя переменными (`SECRET_KEY`, `FERNET_KEY`, `ADMIN_PASSWORD`), затем:
 
 ```bash
 docker compose up -d
