@@ -32,11 +32,12 @@ def _get_ticket_or_403(ticket_id):
     return ticket
 
 
-@tickets_bp.route('/tickets/<int:ticket_id>')
-@login_required
-def detail(ticket_id):
-    ticket = _get_ticket_or_403(ticket_id)
-
+def _render_detail(ticket, comment_form=None, description_form=None):
+    """Общий рендер страницы тикета. Принимает опционально уже заполненные
+    (и, возможно, содержащие ошибки валидации) comment_form/description_form —
+    так при ошибке (например, недопустимое вложение к комментарию) можно
+    перерисовать форму с тем же введённым текстом вместо редиректа, который
+    его бы стёр."""
     statuses = Status.query.filter_by(is_active=True).order_by(Status.order).all()
     if ticket.status not in statuses:
         statuses.append(ticket.status)
@@ -52,8 +53,11 @@ def detail(ticket_id):
     assignee_form = AssigneeChangeForm(assignee_id=ticket.assignee_id)
     assignee_form.assignee_id.choices = [(a.id, a.name) for a in admins]
     deadline_form = DeadlineChangeForm(deadline=ticket.deadline)
-    description_form = DescriptionEditForm(description=ticket.description)
-    comment_form = CommentForm()
+
+    if description_form is None:
+        description_form = DescriptionEditForm(description=ticket.description)
+    if comment_form is None:
+        comment_form = CommentForm()
 
     return render_template(
         'tickets/detail.html',
@@ -71,6 +75,13 @@ def detail(ticket_id):
     )
 
 
+@tickets_bp.route('/tickets/<int:ticket_id>')
+@login_required
+def detail(ticket_id):
+    ticket = _get_ticket_or_403(ticket_id)
+    return _render_detail(ticket)
+
+
 @tickets_bp.route('/tickets/<int:ticket_id>/comment', methods=['POST'])
 @login_required
 def add_comment(ticket_id):
@@ -85,10 +96,10 @@ def add_comment(ticket_id):
             check_files_extensions(files)
         except FileTooLargeError as e:
             flash(f'Файл «{e.filename}» превышает лимит {e.limit_mb} МБ. Комментарий не сохранён.', 'danger')
-            return redirect(url_for('tickets.detail', ticket_id=ticket.id) + '#comments')
+            return _render_detail(ticket, comment_form=form)
         except DisallowedExtensionError as e:
             flash(f'Файл «{e.filename}» имеет неразрешённое расширение. Разрешены: {", ".join(e.allowed)}.', 'danger')
-            return redirect(url_for('tickets.detail', ticket_id=ticket.id) + '#comments')
+            return _render_detail(ticket, comment_form=form)
 
         comment = Comment(ticket_id=ticket.id, author_id=g.current_user.id, body=clean_html(form.body.data))
         db.session.add(comment)
@@ -97,9 +108,10 @@ def add_comment(ticket_id):
         db.session.commit()
         notif.notify_comment_added(ticket, g.current_user)
         flash('Комментарий добавлен', 'success')
-    else:
-        flash('Не удалось добавить комментарий', 'danger')
-    return redirect(url_for('tickets.detail', ticket_id=ticket.id) + '#comments')
+        return redirect(url_for('tickets.detail', ticket_id=ticket.id) + '#comments')
+
+    flash('Не удалось добавить комментарий', 'danger')
+    return _render_detail(ticket, comment_form=form)
 
 
 @tickets_bp.route('/tickets/<int:ticket_id>/description', methods=['POST'])
@@ -115,7 +127,10 @@ def edit_description(ticket_id):
         notif.notify_ticket_edited_by_client(ticket)
         record_event(ticket, g.current_user, f'{g.current_user.name} отредактировал(а) описание')
         flash('Описание обновлено', 'success')
-    return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+        return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+
+    flash('Не удалось сохранить описание', 'danger')
+    return _render_detail(ticket, description_form=form)
 
 
 @tickets_bp.route('/tickets/<int:ticket_id>/status', methods=['POST'])

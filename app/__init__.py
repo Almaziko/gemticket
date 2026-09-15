@@ -7,9 +7,11 @@ from .config import Config
 from .extensions import db, csrf
 
 
-def create_app():
+def create_app(config_overrides=None):
     app = Flask(__name__)
     app.config.from_object(Config)
+    if config_overrides:
+        app.config.update(config_overrides)
 
     db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '', 1)
     os.makedirs(os.path.dirname(db_path) or '.', exist_ok=True)
@@ -47,8 +49,9 @@ def create_app():
     from .richtext import render_richtext
     app.jinja_env.filters['richtext'] = render_richtext
 
-    from .overdue import start_overdue_checker
-    start_overdue_checker(app)
+    if not app.config.get('TESTING'):
+        from .overdue import start_overdue_checker
+        start_overdue_checker(app)
 
     @app.before_request
     def load_current_user():

@@ -13,7 +13,7 @@
                 {% if can_edit_desc %}
                 <form method="post" action="{{ url_for('tickets.edit_description', ticket_id=ticket.id) }}">
                     {{ description_form.hidden_tag() }}
-                    {{ richtext_editor('description-editor', description_form.description, ticket.description) }}
+                    {{ richtext_editor('description-editor', description_form.description) }}
                     <button class="btn btn-sm btn-outline-primary mt-2" type="submit">Сохранить описание</button>
                     <div class="form-text">Описание можно редактировать, пока тикет в начальном статусе.</div>
                 </form>
