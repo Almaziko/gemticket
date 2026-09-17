@@ -11,6 +11,18 @@ def test_status_list_seeded_with_final_flags(app, db):
         assert novy.is_final is False
 
 
+def test_statuses_admin_list_groups_active_and_final(admin_client):
+    resp = admin_client.get('/admin/statuses')
+    assert resp.status_code == 200
+    text = resp.data.decode('utf-8')
+    active_idx = text.find('>Активные<')
+    final_heading_idx = text.find('>Завершённые / отменённые<')
+    novy_idx = text.find('>Новый<')
+    gotov_idx = text.find('>Готов<')
+    assert active_idx != -1 and final_heading_idx != -1
+    assert active_idx < novy_idx < final_heading_idx < gotov_idx
+
+
 def test_cannot_delete_status_in_use(admin_client, client_client, db):
     resp = client_client.post('/client/tickets/new', data={
         'title': 'For status delete test', 'description': '<p>d</p>', 'tracker_id': '1',
