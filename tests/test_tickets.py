@@ -163,3 +163,42 @@ def test_ticket_detail_forms_have_single_body_and_description_fields(client_clie
     html = resp.data.decode('utf-8')
     assert html.count('name="description"') == 1
     assert html.count('name="body"') == 1
+
+
+def test_superadmin_can_delete_ticket_with_files_and_notifications(app, admin_client, client_client, db):
+    import os
+    from app.models import Comment, Attachment, Notification, TicketEvent
+
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Ticket to delete', 'description': '<p>d</p>', 'tracker_id': '1',
+        'attachments': (BytesIO(b'ticket file content'), 'ticket_file.pdf'),
+    }, content_type='multipart/form-data', follow_redirects=False)
+    ticket_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+
+    client_client.post(f'/tickets/{ticket_id}/comment', data={
+        'body': '<p>a comment</p>',
+        'attachments': (BytesIO(b'comment file content'), 'comment_file.pdf'),
+    }, content_type='multipart/form-data', follow_redirects=False)
+
+    attachments = Attachment.query.all()
+    assert len(attachments) == 2
+    stored_paths = [os.path.join(app.config['UPLOAD_DIR'], a.filename_stored) for a in attachments]
+    assert all(os.path.exists(p) for p in stored_paths)
+
+    assert Comment.query.count() == 1
+    assert Notification.query.filter_by(ticket_id=ticket_id).count() >= 1
+    assert TicketEvent.query.filter_by(ticket_id=ticket_id).count() >= 1
+
+    resp = admin_client.post(f'/tickets/{ticket_id}/delete', follow_redirects=False)
+    assert resp.status_code == 302
+    assert resp.headers['Location'] == '/admin/'
+
+    assert Ticket.query.get(int(ticket_id)) is None
+    assert Comment.query.count() == 0
+    assert Attachment.query.count() == 0
+    assert Notification.query.filter_by(ticket_id=ticket_id).count() == 0
+    assert TicketEvent.query.filter_by(ticket_id=ticket_id).count() == 0
+    assert not any(os.path.exists(p) for p in stored_paths)
+
+    resp = client_client.get(f'/tickets/{ticket_id}', follow_redirects=False)
+    assert resp.status_code == 404

@@ -143,6 +143,10 @@ class Ticket(db.Model):
         'TicketEvent', cascade='all, delete-orphan', order_by='TicketEvent.created_at',
         primaryjoin='Ticket.id == TicketEvent.ticket_id'
     )
+    notifications = db.relationship(
+        'Notification', cascade='all, delete-orphan',
+        primaryjoin='Ticket.id == Notification.ticket_id'
+    )
 
 
 class Comment(db.Model):

@@ -5,13 +5,13 @@ from flask import (
 
 from ...extensions import db
 from ...models import Ticket, Comment, Attachment, Status, Tracker, Admin, Notification
-from ...decorators import login_required
+from ...decorators import login_required, superadmin_required
 from ...permissions import (
-    can_view_ticket, can_manage_ticket_fields, can_reassign_ticket,
+    can_view_ticket, can_manage_ticket_fields, can_reassign_ticket, can_delete_ticket,
     can_edit_description, can_view_attachment, can_comment,
 )
 from ...attachments import (
-    check_files_size, check_files_extensions, save_attachments,
+    check_files_size, check_files_extensions, save_attachments, delete_attachment_file,
     FileTooLargeError, DisallowedExtensionError,
 )
 from ...richtext import clean_html
@@ -70,6 +70,7 @@ def _render_detail(ticket, comment_form=None, description_form=None):
         comment_form=comment_form,
         can_manage=can_manage_ticket_fields(g.current_user, ticket),
         can_reassign=can_reassign_ticket(g.current_user),
+        can_delete=can_delete_ticket(g.current_user),
         can_edit_desc=can_edit_description(g.current_user, ticket),
         can_comment=can_comment(g.current_user, ticket),
     )
@@ -211,6 +212,24 @@ def change_assignee(ticket_id):
             record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) исполнителя с «{old_name}» на «{new_assignee.name}»')
             flash('Исполнитель обновлён', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+
+
+@tickets_bp.route('/tickets/<int:ticket_id>/delete', methods=['POST'])
+@superadmin_required
+def delete_ticket(ticket_id):
+    ticket = Ticket.query.get_or_404(ticket_id)
+
+    attachments = list(ticket.attachments)
+    for comment in ticket.comments:
+        attachments.extend(comment.attachments)
+    for attachment in attachments:
+        delete_attachment_file(attachment)
+
+    title = ticket.title
+    db.session.delete(ticket)
+    db.session.commit()
+    flash(f'Тикет «{title}» удалён', 'success')
+    return redirect(url_for('admin.dashboard'))
 
 
 @tickets_bp.route('/attachments/<int:attachment_id>/download')

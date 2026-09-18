@@ -107,3 +107,31 @@ def test_password_must_be_globally_unique(admin_client, client_user_password):
     }, follow_redirects=False)
     assert resp.status_code == 200
     assert 'уже используется'.encode() in resp.data
+
+
+def test_client_cannot_delete_ticket(client_client):
+    ticket_id = _create_ticket(client_client)
+    resp = client_client.post(f'/tickets/{ticket_id}/delete', follow_redirects=False)
+    assert resp.status_code == 403
+
+
+def test_regular_admin_cannot_delete_ticket(app, admin_client, client_client, db):
+    from app.models import Admin
+    from app.security import hash_password, encrypt_secret
+    from tests.conftest import login
+
+    other_admin = Admin(
+        name='Regular Admin 2', email='regular3@example.com',
+        password_hash=hash_password('regularpass789'),
+        password_encrypted=encrypt_secret('regularpass789'),
+        is_superadmin=False,
+    )
+    db.session.add(other_admin)
+    db.session.commit()
+
+    ticket_id = _create_ticket(client_client)
+
+    session = app.test_client()
+    login(session, 'regularpass789')
+    resp = session.post(f'/tickets/{ticket_id}/delete', follow_redirects=False)
+    assert resp.status_code == 403

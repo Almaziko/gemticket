@@ -126,6 +126,20 @@
                 {% endif %}
             </div>
         </div>
+
+        {% if can_delete %}
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title text-danger">Опасная зона</h6>
+                <p class="text-muted small">Удаляет тикет безвозвратно вместе со всеми комментариями, вложениями и историей.</p>
+                <form method="post" action="{{ url_for('tickets.delete_ticket', ticket_id=ticket.id) }}"
+                      onsubmit="return confirm('Удалить тикет «{{ ticket.title }}» безвозвратно? Это действие нельзя отменить.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">Удалить тикет</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -20,6 +20,10 @@ def can_reassign_ticket(user):
     return user is not None and user.role == 'admin' and user.is_superadmin
 
 
+def can_delete_ticket(user):
+    return user is not None and user.role == 'admin' and user.is_superadmin
+
+
 def can_edit_description(user, ticket):
     return (
         user is not None
