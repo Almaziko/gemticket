@@ -132,8 +132,8 @@ def test_ticket_list_shows_separate_blocks_per_status_group(admin_client, client
 
     resp = client_client.get('/client/tickets')
     text = resp.data.decode('utf-8')
-    group1_idx = text.find('>Группа 1<')
-    group2_idx = text.find('>Группа 2<')
+    group1_idx = text.find('Группа 1')
+    group2_idx = text.find('Группа 2')
     ticket1_idx = text.find('Group1 ticket')
     ticket2_idx = text.find('Group2 ticket')
 

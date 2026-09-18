@@ -3,7 +3,6 @@ from wtforms import StringField, PasswordField, SelectField, IntegerField, Boole
 from wtforms.validators import DataRequired, Optional, Length, Email, NumberRange
 from wtforms.widgets import HiddenInput
 
-from ...models import STATUS_GROUPS, STATUS_GROUP_LABELS
 from ...richtext import validate_nonempty_richtext
 
 
@@ -24,14 +23,19 @@ class StatusForm(FlaskForm):
     name = StringField('Название', validators=[DataRequired(), Length(max=80)])
     order = IntegerField('Порядок (сортировка внутри группы)', validators=[DataRequired()])
     color = StringField('Цвет (bootstrap-класс: success/warning/danger/...)', validators=[Optional(), Length(max=20)])
-    group = SelectField(
-        'Группа в списках тикетов',
-        choices=[(n, STATUS_GROUP_LABELS[n]) for n in STATUS_GROUPS],
-        coerce=int, default=1,
-    )
+    # choices проставляются в роуте из редактируемых в админке названий групп
+    group = SelectField('Группа в списках тикетов', coerce=int, default=1)
     is_default = BooleanField('Начальный статус для новых тикетов')
     is_active = BooleanField('Активен')
     is_final = BooleanField('Финальный статус (клиент не может писать в тикет)')
+
+
+class StatusGroupNamesForm(FlaskForm):
+    group_1 = StringField('Группа 1', validators=[DataRequired(), Length(max=80)])
+    group_2 = StringField('Группа 2', validators=[DataRequired(), Length(max=80)])
+    group_3 = StringField('Группа 3', validators=[DataRequired(), Length(max=80)])
+    group_4 = StringField('Группа 4', validators=[DataRequired(), Length(max=80)])
+    group_5 = StringField('Группа 5', validators=[DataRequired(), Length(max=80)])
 
 
 class TrackerForm(FlaskForm):

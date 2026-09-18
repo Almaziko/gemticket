@@ -31,25 +31,46 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Статусы</h3>
+    <h3 class="mb-0">Статусы</h3>
     <a href="{{ url_for('admin.status_new') }}" class="btn btn-primary">Новый статус</a>
 </div>
-<p class="text-muted small">
-    Группа определяет, в каком блоке статус показывается в списках тикетов у клиентов и админов —
-    группа 1 отображается первой, группа 5 последней. Порядок ниже (стрелки) сортирует статусы
-    только внутри их собственной группы.
-</p>
 
-<table class="table bg-white align-middle">
-    <thead><tr><th>Порядок</th><th>Название</th><th>Начальный</th><th>Финальный</th><th>Активен</th><th>Используется</th><th></th></tr></thead>
-    <tbody>
-    {% for g in [1, 2, 3, 4, 5] %}
-        {% set group_statuses = statuses|selectattr('group', 'equalto', g)|sort(attribute='order')|list %}
-        {% if group_statuses %}
-            <tr class="table-light"><td colspan="7" class="text-muted small fw-semibold">Группа {{ g }}</td></tr>
+<div class="card mb-4">
+    <div class="card-body">
+        <h6 class="card-title mb-1">Названия групп</h6>
+        <p class="text-muted small">
+            Группа определяет, в каком блоке статус показывается в списках тикетов — группа 1
+            отображается первой, группа 5 последней. Названия групп можно задать свои.
+        </p>
+        <form method="post" action="{{ url_for('admin.status_groups_rename') }}" class="row g-2 align-items-end">
+            {{ group_names_form.hidden_tag() }}
+            {% for field in [group_names_form.group_1, group_names_form.group_2, group_names_form.group_3, group_names_form.group_4, group_names_form.group_5] %}
+            <div class="col-md">
+                {{ field.label(class_='form-label small') }}
+                {{ field(class_='form-control form-control-sm') }}
+            </div>
+            {% endfor %}
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-outline-primary btn-sm">Сохранить названия</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% for g in [1, 2, 3, 4, 5] %}
+    {% set group_statuses = statuses|selectattr('group', 'equalto', g)|sort(attribute='order')|list %}
+    {% if group_statuses %}
+    <div class="card mb-4">
+        <div class="card-header bg-white fw-semibold">{{ group_names_form['group_' ~ g].data }}</div>
+        <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Порядок</th><th>Название</th><th>Начальный</th><th>Финальный</th><th>Активен</th><th>Используется</th><th></th></tr></thead>
+            <tbody>
             {% for s in group_statuses %}{{ status_row(s) }}{% endfor %}
-        {% endif %}
-    {% endfor %}
-    </tbody>
-</table>
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
 {% endblock %}

@@ -1,7 +1,10 @@
 from sqlalchemy.exc import IntegrityError
 
 from .extensions import db
-from .models import Admin, Status, Tracker, Settings, User, EmailTemplate
+from .models import (
+    Admin, Status, Tracker, Settings, User, EmailTemplate,
+    StatusGroup, STATUS_GROUPS, DEFAULT_STATUS_GROUP_NAMES,
+)
 from .security import hash_password, encrypt_secret
 
 DEFAULT_EMAIL_TEMPLATES = (
@@ -111,6 +114,10 @@ def seed_reference_data():
                 name=name, order=order, is_default=is_default, color=color,
                 is_active=True, is_final=is_final, group=group,
             ))
+
+    if StatusGroup.query.count() == 0:
+        for n in STATUS_GROUPS:
+            db.session.add(StatusGroup(number=n, name=DEFAULT_STATUS_GROUP_NAMES[n]))
 
     if Tracker.query.count() == 0:
         for name, order in (('Баг', 1), ('Доработка', 2), ('Задача', 3)):

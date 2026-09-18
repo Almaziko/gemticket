@@ -1,17 +1,27 @@
 {% extends 'base.html' %}
 {% block title %}Мои тикеты — GemTicket{% endblock %}
 
-{% macro ticket_row(t) %}
-{% set overdue = t.deadline and t.deadline < today and not t.status.is_final %}
-<tr onclick="location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'"
-    class="{{ 'ticket-row-final' if t.status.is_final }}" style="cursor:pointer;">
-    <td class="text-muted">#{{ t.id }}</td>
-    <td>{{ t.title }}</td>
-    <td><span class="badge text-bg-light border">{{ t.tracker.name }}</span></td>
-    <td><span class="badge bg-{{ t.status.color or 'secondary' }}">{{ t.status.name }}</span></td>
-    <td class="{{ 'ticket-overdue' if overdue }}">{{ t.deadline.strftime('%d.%m.%Y') if t.deadline else '—' }}</td>
-    <td class="text-muted">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
-</tr>
+{% macro ticket_table(group_tickets) %}
+<div class="table-responsive">
+<table class="table table-hover align-middle mb-0">
+    <thead class="table-light">
+        <tr><th>#</th><th>Название</th><th>Трекер</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr>
+    </thead>
+    <tbody>
+    {% for t in group_tickets %}
+        {% set overdue = t.deadline and t.deadline < today and not t.status.is_final %}
+        <tr onclick="location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'" style="cursor:pointer;">
+            <td class="text-muted">#{{ t.id }}</td>
+            <td>{{ t.title }}</td>
+            <td><span class="badge bg-secondary">{{ t.tracker.name }}</span></td>
+            <td><span class="badge bg-{{ t.status.color or 'secondary' }}">{{ t.status.name }}</span></td>
+            <td class="{{ 'ticket-overdue' if overdue }}">{{ t.deadline.strftime('%d.%m.%Y') if t.deadline else '—' }}</td>
+            <td class="text-muted">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
 {% endmacro %}
 
 {% block content %}
@@ -20,7 +30,7 @@
     <a href="{{ url_for('client.ticket_new') }}" class="btn btn-primary">+ Новый тикет</a>
 </div>
 
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
     <div class="d-flex flex-wrap align-items-center gap-3">
         <ul class="nav nav-pills mb-0">
             <li class="nav-item">
@@ -44,19 +54,17 @@
 </div>
 
 {% if tickets %}
-    <div class="table-responsive">
-    <table class="table table-hover table-striped bg-white align-middle shadow-sm">
-        <thead class="table-light">
-            <tr><th>#</th><th>Название</th><th>Трекер</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr>
-        </thead>
-        <tbody>
-        {% for group_number, group_tickets in ticket_groups %}
-            {% if ticket_groups|length > 1 %}<tr class="table-light"><td colspan="6" class="text-muted small fw-semibold">Группа {{ group_number }}</td></tr>{% endif %}
-            {% for t in group_tickets %}{{ ticket_row(t) }}{% endfor %}
-        {% endfor %}
-        </tbody>
-    </table>
+    {% for group_number, group_tickets in ticket_groups %}
+    <div class="card mb-4">
+        {% if ticket_groups|length > 1 %}
+        <div class="card-header bg-white fw-semibold d-flex align-items-center justify-content-between">
+            {{ group_names.get(group_number, 'Группа ' ~ group_number) }}
+            <span class="badge bg-secondary rounded-pill">{{ group_tickets|length }}</span>
+        </div>
+        {% endif %}
+        {{ ticket_table(group_tickets) }}
     </div>
+    {% endfor %}
 {% else %}
 <p class="text-muted">Тикетов пока нет.</p>
 {% endif %}

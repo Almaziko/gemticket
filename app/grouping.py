@@ -1,6 +1,13 @@
 """Разбивка тикетов/статусов по группам статусов (см. models.STATUS_GROUPS)
 для списков тикетов — общая логика для client- и admin-роутов."""
-from .models import STATUS_GROUPS
+from .models import STATUS_GROUPS, StatusGroup, DEFAULT_STATUS_GROUP_NAMES
+
+
+def get_group_names():
+    """{номер группы: название} — с фолбэком на дефолт, если строка почему-то
+    не засеялась (не должно происходить, но на всякий случай)."""
+    rows = {g.number: g.name for g in StatusGroup.query.all()}
+    return {n: rows.get(n, DEFAULT_STATUS_GROUP_NAMES[n]) for n in STATUS_GROUPS}
 
 
 def group_by_status_group(items, status_getter):

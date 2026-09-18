@@ -1,3 +1,5 @@
+import re
+
 from app.models import Status, EmailTemplate
 
 
@@ -23,12 +25,30 @@ def test_statuses_admin_list_groups_by_group_field(admin_client):
     resp = admin_client.get('/admin/statuses')
     assert resp.status_code == 200
     text = resp.data.decode('utf-8')
-    group1_idx = text.find('>Группа 1<')
-    group2_idx = text.find('>Группа 2<')
+
+    group1_header = re.search(r'card-header[^>]*>\s*Группа 1', text)
+    group2_header = re.search(r'card-header[^>]*>\s*Группа 2', text)
     novy_idx = text.find('>Новый<')
     gotov_idx = text.find('>Готов<')
-    assert group1_idx != -1 and group2_idx != -1
-    assert group1_idx < novy_idx < group2_idx < gotov_idx
+
+    assert group1_header and group2_header
+    assert group1_header.start() < novy_idx < group2_header.start() < gotov_idx
+
+
+def test_rename_status_group(admin_client, db):
+    resp = admin_client.post('/admin/status-groups/rename', data={
+        'group_1': 'В работе', 'group_2': 'Завершено',
+        'group_3': 'Группа 3', 'group_4': 'Группа 4', 'group_5': 'Группа 5',
+    }, follow_redirects=False)
+    assert resp.status_code == 302
+
+    from app.models import StatusGroup
+    assert StatusGroup.query.get(1).name == 'В работе'
+    assert StatusGroup.query.get(2).name == 'Завершено'
+
+    resp = admin_client.get('/admin/statuses')
+    assert 'В работе' in resp.data.decode('utf-8')
+    assert 'Завершено' in resp.data.decode('utf-8')
 
 
 def test_moving_status_only_reorders_within_same_group(admin_client, db):

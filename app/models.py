@@ -57,12 +57,23 @@ class Client(User):
     __mapper_args__ = {'polymorphic_identity': 'client'}
 
 
-#: Группы отображения статусов в списках тикетов и в самой админке статусов.
-#: Ровно 5 предустановленных слотов — название и порядок сортировки фиксированы
-#: системой (group 1 показывается первым, 5 — последним); админ выбирает
-#: только то, в какую группу попадает каждый статус.
+#: Ровно 5 предустановленных слотов группировки статусов — количество и
+#: порядок сортировки (1 показывается первым в списках тикетов, 5 — последним)
+#: зафиксированы системой. Названия групп при этом редактируются в админке —
+#: см. модель StatusGroup ниже.
 STATUS_GROUPS = (1, 2, 3, 4, 5)
-STATUS_GROUP_LABELS = {n: f'Группа {n}' for n in STATUS_GROUPS}
+DEFAULT_STATUS_GROUP_NAMES = {n: f'Группа {n}' for n in STATUS_GROUPS}
+
+
+class StatusGroup(db.Model):
+    """Редактируемое в админке название одной из 5 фиксированных групп.
+    Строки на все 5 номеров сидируются один раз при первом старте — сама
+    строка (номер, порядок) не создаётся и не удаляется, редактируется
+    только name."""
+    __tablename__ = 'status_groups'
+
+    number = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
 
 
 class Status(db.Model):
@@ -82,10 +93,6 @@ class Status(db.Model):
     @property
     def in_use(self):
         return len(self.tickets) > 0
-
-    @property
-    def group_label(self):
-        return STATUS_GROUP_LABELS.get(self.group, f'Группа {self.group}')
 
 
 class Tracker(db.Model):

@@ -3,15 +3,19 @@ from flask import (
 )
 
 from ...extensions import db
-from ...models import User, Admin, Client, Status, Tracker, Ticket, Attachment, Settings, EmailTemplate
+from ...models import (
+    User, Admin, Client, Status, Tracker, Ticket, Attachment, Settings, EmailTemplate,
+    StatusGroup, STATUS_GROUPS,
+)
 from ...decorators import admin_required, superadmin_required
 from ...security import hash_password, encrypt_secret, decrypt_secret
 from ...attachments import delete_attachment_file, refresh_max_content_length
 from ...notifications import send_test_email
 from ...richtext import clean_html
-from ...grouping import group_by_status_group
+from ...grouping import group_by_status_group, get_group_names
 from .forms import (
-    ClientForm, AdminForm, StatusForm, TrackerForm, SettingsForm, TestEmailForm, EmailTemplateForm,
+    ClientForm, AdminForm, StatusForm, StatusGroupNamesForm, TrackerForm, SettingsForm,
+    TestEmailForm, EmailTemplateForm,
 )
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -45,7 +49,7 @@ def dashboard():
     status_groups = group_by_status_group(statuses, lambda s: s)
     return render_template(
         'admin/dashboard.html', tickets=tickets, statuses=statuses,
-        ticket_groups=ticket_groups, status_groups=status_groups,
+        ticket_groups=ticket_groups, status_groups=status_groups, group_names=get_group_names(),
         status_filter=status_filter, search=search,
     )
 
@@ -241,13 +245,30 @@ def _ensure_single_default(current_status):
 @superadmin_required
 def statuses_list():
     statuses = Status.query.order_by(Status.order).all()
-    return render_template('admin/statuses_list.html', statuses=statuses)
+    group_names_form = StatusGroupNamesForm(data={f'group_{n}': name for n, name in get_group_names().items()})
+    return render_template('admin/statuses_list.html', statuses=statuses, group_names_form=group_names_form)
+
+
+@admin_bp.route('/status-groups/rename', methods=['POST'])
+@superadmin_required
+def status_groups_rename():
+    form = StatusGroupNamesForm()
+    if form.validate_on_submit():
+        for n in STATUS_GROUPS:
+            group_row = StatusGroup.query.get(n)
+            group_row.name = getattr(form, f'group_{n}').data
+        db.session.commit()
+        flash('Названия групп сохранены', 'success')
+    else:
+        flash('Не удалось сохранить названия групп', 'danger')
+    return redirect(url_for('admin.statuses_list'))
 
 
 @admin_bp.route('/statuses/new', methods=['GET', 'POST'])
 @superadmin_required
 def status_new():
     form = StatusForm()
+    form.group.choices = [(n, name) for n, name in get_group_names().items()]
     if request.method == 'GET':
         form.order.data = (db.session.query(db.func.max(Status.order)).scalar() or 0) + 1
         form.is_active.data = True
@@ -274,6 +295,7 @@ def status_new():
 def status_edit(status_id):
     status = Status.query.get_or_404(status_id)
     form = StatusForm(obj=status)
+    form.group.choices = [(n, name) for n, name in get_group_names().items()]
     if form.validate_on_submit():
         was_default = status.is_default
         status.name = form.name.data

@@ -1,3 +1,112 @@
+/* ---------- Design refresh: soft cards, rounded controls, muted badges ---------- */
+
+:root {
+    --gt-radius-lg: 20px;
+    --gt-radius-md: 14px;
+    --gt-radius-sm: 10px;
+    --gt-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 1px 6px rgba(16, 24, 40, .06);
+    --gt-ink: #111827;
+    --gt-bg: #f3f4f6;
+    --gt-border: #eef0f2;
+}
+
+body {
+    background: var(--gt-bg);
+    color: var(--gt-ink);
+}
+
+.card {
+    border: none;
+    border-radius: var(--gt-radius-lg);
+    box-shadow: var(--gt-shadow);
+}
+
+.card-header {
+    background: #fff;
+    border-bottom: 1px solid var(--gt-border);
+    border-radius: var(--gt-radius-lg) var(--gt-radius-lg) 0 0 !important;
+}
+
+.btn {
+    border-radius: var(--gt-radius-sm);
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: var(--gt-ink);
+    border-color: var(--gt-ink);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: #000 !important;
+    border-color: #000 !important;
+}
+
+.btn-outline-light {
+    border-radius: var(--gt-radius-sm);
+}
+
+.form-control,
+.form-select {
+    border-radius: var(--gt-radius-sm);
+    border-color: #e5e7eb;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--gt-ink);
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, .08);
+}
+
+.table {
+    --bs-table-hover-bg: #f9fafb;
+}
+
+.table thead.table-light th {
+    background: #fff;
+    color: #6b7280;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    font-weight: 600;
+    border-bottom: 1px solid var(--gt-border);
+}
+
+.table td, .table th {
+    border-color: var(--gt-border);
+}
+
+.nav-pills .nav-link {
+    border-radius: 999px;
+    color: #6b7280;
+    font-weight: 500;
+    padding: .4rem 1rem;
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--gt-ink);
+    color: #fff;
+}
+
+/* Смягчённые бейджи вместо насыщенных bootstrap-цветов — покрывает все
+   существующие bg-* бейджи по всему приложению без правки шаблонов. */
+.badge.bg-primary { background-color: #e0e7ff !important; color: #3730a3 !important; }
+.badge.bg-secondary { background-color: #f3f4f6 !important; color: #374151 !important; }
+.badge.bg-success { background-color: #dcfce7 !important; color: #166534 !important; }
+.badge.bg-warning { background-color: #fef3c7 !important; color: #92400e !important; }
+.badge.bg-danger { background-color: #fee2e2 !important; color: #991b1b !important; }
+.badge.bg-info { background-color: #cffafe !important; color: #155e75 !important; }
+.badge.bg-dark { background-color: #e5e7eb !important; color: #111827 !important; }
+.badge.text-bg-light { background-color: #f3f4f6 !important; color: #374151 !important; }
+
+.badge {
+    font-weight: 600;
+    padding: .4em .75em;
+    border-radius: 8px;
+}
+
 .attachment-thumb {
     width: 96px;
     height: 96px;

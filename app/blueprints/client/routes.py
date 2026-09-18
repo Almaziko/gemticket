@@ -9,7 +9,7 @@ from ...attachments import (
 )
 from ...richtext import clean_html
 from ...history import record_event
-from ...grouping import group_by_status_group
+from ...grouping import group_by_status_group, get_group_names
 from ... import notifications as notif
 from .forms import TicketCreateForm
 
@@ -32,7 +32,7 @@ def tickets_list():
     status_groups = group_by_status_group(statuses, lambda s: s)
     return render_template(
         'client/tickets_list.html', tickets=tickets, statuses=statuses,
-        ticket_groups=ticket_groups, status_groups=status_groups,
+        ticket_groups=ticket_groups, status_groups=status_groups, group_names=get_group_names(),
         status_filter=status_filter, search=search,
     )
 
