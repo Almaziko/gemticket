@@ -37,21 +37,26 @@
 
 <div class="card mb-4">
     <div class="card-body">
-        <h6 class="card-title mb-1">Названия групп</h6>
+        <h6 class="card-title mb-1">Настройки групп</h6>
         <p class="text-muted small">
             Группа определяет, в каком блоке статус показывается в списках тикетов — группа 1
-            отображается первой, группа 5 последней. Названия групп можно задать свои.
+            отображается первой, группа 5 последней. Название группы — своё; сортировка — чем
+            внутри блока упорядочены тикеты этой группы (по приоритету, дате создания, дате
+            закрытия или по ID).
         </p>
-        <form method="post" action="{{ url_for('admin.status_groups_rename') }}" class="row g-2 align-items-end">
-            {{ group_names_form.hidden_tag() }}
-            {% for field in [group_names_form.group_1, group_names_form.group_2, group_names_form.group_3, group_names_form.group_4, group_names_form.group_5] %}
+        <form method="post" action="{{ url_for('admin.status_groups_update') }}" class="row g-3">
+            {{ group_settings_form.hidden_tag() }}
+            {% for n in [1, 2, 3, 4, 5] %}
+            {% set name_field = group_settings_form['group_' ~ n] %}
+            {% set sort_field = group_settings_form['sort_' ~ n] %}
             <div class="col-md">
-                {{ field.label(class_='form-label small') }}
-                {{ field(class_='form-control form-control-sm') }}
+                {{ name_field.label(class_='form-label small') }}
+                {{ name_field(class_='form-control form-control-sm mb-2') }}
+                {{ sort_field(class_='form-select form-select-sm') }}
             </div>
             {% endfor %}
-            <div class="col-md-auto">
-                <button type="submit" class="btn btn-outline-primary btn-sm">Сохранить названия</button>
+            <div class="col-12">
+                <button type="submit" class="btn btn-outline-primary btn-sm">Сохранить настройки групп</button>
             </div>
         </form>
     </div>
@@ -61,7 +66,7 @@
     {% set group_statuses = statuses|selectattr('group', 'equalto', g)|sort(attribute='order')|list %}
     {% if group_statuses %}
     <div class="card mb-4">
-        <div class="card-header bg-white fw-semibold">{{ group_names_form['group_' ~ g].data }}</div>
+        <div class="card-header bg-white fw-semibold">{{ group_settings_form['group_' ~ g].data }}</div>
         <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light"><tr><th>Порядок</th><th>Название</th><th>Начальный</th><th>Финальный</th><th>Активен</th><th>Используется</th><th></th></tr></thead>

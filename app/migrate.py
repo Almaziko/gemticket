@@ -44,6 +44,16 @@ def run_light_migrations():
         # дефолт для уже существующих тикетов.
         db.session.execute(text('ALTER TABLE tickets ADD COLUMN priority INTEGER NOT NULL DEFAULT 2'))
 
+    added_closed_at = False
+    if not _has_column('tickets', 'closed_at'):
+        db.session.execute(text('ALTER TABLE tickets ADD COLUMN closed_at DATETIME'))
+        added_closed_at = True
+
+    if not _has_column('status_groups', 'sort_mode'):
+        db.session.execute(text(
+            "ALTER TABLE status_groups ADD COLUMN sort_mode VARCHAR(20) NOT NULL DEFAULT 'priority'"
+        ))
+
     db.session.commit()
 
     if added_is_final:
@@ -62,4 +72,15 @@ def run_light_migrations():
         # раскидываем уже существующие финальные статусы во 2-ю группу.
         # Дальше группировка полностью редактируется в админке.
         db.session.execute(text('UPDATE statuses SET "group" = 2 WHERE is_final = 1'))
+        db.session.commit()
+
+    if added_closed_at:
+        # Точной даты закрытия для уже накопленных тикетов у нас нет —
+        # берём updated_at как разумное приближение для тех, что уже сейчас
+        # в финальном статусе. Дальше closed_at ведётся точно, при смене
+        # статуса (см. change_status в tickets/routes.py).
+        db.session.execute(text(
+            "UPDATE tickets SET closed_at = updated_at "
+            "WHERE status_id IN (SELECT id FROM statuses WHERE is_final = 1)"
+        ))
         db.session.commit()

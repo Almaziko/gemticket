@@ -12,9 +12,9 @@ from ...security import hash_password, encrypt_secret, decrypt_secret
 from ...attachments import delete_attachment_file, refresh_max_content_length
 from ...notifications import send_test_email
 from ...richtext import clean_html
-from ...grouping import group_by_status_group, get_group_names
+from ...grouping import group_by_status_group, group_tickets_sorted, get_group_names, get_group_sort_modes
 from .forms import (
-    ClientForm, AdminForm, StatusForm, StatusGroupNamesForm, TrackerForm, SettingsForm,
+    ClientForm, AdminForm, StatusForm, StatusGroupSettingsForm, TrackerForm, SettingsForm,
     TestEmailForm, EmailTemplateForm,
 )
 
@@ -43,9 +43,9 @@ def dashboard():
         query = query.filter_by(status_id=status_filter)
     if search:
         query = query.filter(Ticket.title.ilike(f'%{search}%'))
-    tickets = query.order_by(Ticket.priority.desc(), Ticket.created_at.desc()).all()
+    tickets = query.all()
     statuses = Status.query.order_by(Status.order).all()
-    ticket_groups = group_by_status_group(tickets, lambda t: t.status)
+    ticket_groups = group_tickets_sorted(tickets)
     status_groups = group_by_status_group(statuses, lambda s: s)
     return render_template(
         'admin/dashboard.html', tickets=tickets, statuses=statuses,
@@ -245,22 +245,28 @@ def _ensure_single_default(current_status):
 @superadmin_required
 def statuses_list():
     statuses = Status.query.order_by(Status.order).all()
-    group_names_form = StatusGroupNamesForm(data={f'group_{n}': name for n, name in get_group_names().items()})
-    return render_template('admin/statuses_list.html', statuses=statuses, group_names_form=group_names_form)
+    group_names = get_group_names()
+    group_sort_modes = get_group_sort_modes()
+    group_settings_form = StatusGroupSettingsForm(data={
+        **{f'group_{n}': name for n, name in group_names.items()},
+        **{f'sort_{n}': mode for n, mode in group_sort_modes.items()},
+    })
+    return render_template('admin/statuses_list.html', statuses=statuses, group_settings_form=group_settings_form)
 
 
-@admin_bp.route('/status-groups/rename', methods=['POST'])
+@admin_bp.route('/status-groups/update', methods=['POST'])
 @superadmin_required
-def status_groups_rename():
-    form = StatusGroupNamesForm()
+def status_groups_update():
+    form = StatusGroupSettingsForm()
     if form.validate_on_submit():
         for n in STATUS_GROUPS:
             group_row = StatusGroup.query.get(n)
             group_row.name = getattr(form, f'group_{n}').data
+            group_row.sort_mode = getattr(form, f'sort_{n}').data
         db.session.commit()
-        flash('Названия групп сохранены', 'success')
+        flash('Настройки групп сохранены', 'success')
     else:
-        flash('Не удалось сохранить названия групп', 'danger')
+        flash('Не удалось сохранить настройки групп', 'danger')
     return redirect(url_for('admin.statuses_list'))
 
 

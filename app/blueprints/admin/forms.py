@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, IntegerField, BooleanField, TextAreaField
 from wtforms.validators import DataRequired, Optional, Length, Email, NumberRange
 
+from ...models import SORT_MODE_CHOICES
 from ...richtext import validate_nonempty_richtext
 
 
@@ -29,12 +30,17 @@ class StatusForm(FlaskForm):
     is_final = BooleanField('Финальный статус (постановщик не может писать в тикет)')
 
 
-class StatusGroupNamesForm(FlaskForm):
+class StatusGroupSettingsForm(FlaskForm):
     group_1 = StringField('Группа 1', validators=[DataRequired(), Length(max=80)])
     group_2 = StringField('Группа 2', validators=[DataRequired(), Length(max=80)])
     group_3 = StringField('Группа 3', validators=[DataRequired(), Length(max=80)])
     group_4 = StringField('Группа 4', validators=[DataRequired(), Length(max=80)])
     group_5 = StringField('Группа 5', validators=[DataRequired(), Length(max=80)])
+    sort_1 = SelectField('Сортировка группы 1', choices=SORT_MODE_CHOICES)
+    sort_2 = SelectField('Сортировка группы 2', choices=SORT_MODE_CHOICES)
+    sort_3 = SelectField('Сортировка группы 3', choices=SORT_MODE_CHOICES)
+    sort_4 = SelectField('Сортировка группы 4', choices=SORT_MODE_CHOICES)
+    sort_5 = SelectField('Сортировка группы 5', choices=SORT_MODE_CHOICES)
 
 
 class TrackerForm(FlaskForm):

@@ -64,16 +64,32 @@ class Client(User):
 STATUS_GROUPS = (1, 2, 3, 4, 5)
 DEFAULT_STATUS_GROUP_NAMES = {n: f'Группа {n}' for n in STATUS_GROUPS}
 
+#: Чем сортируются тикеты внутри блока конкретной группы — задаётся
+#: админом отдельно для каждой из 5 групп (см. StatusGroup.sort_mode).
+SORT_MODE_PRIORITY = 'priority'
+SORT_MODE_CREATED_AT = 'created_at'
+SORT_MODE_CLOSED_AT = 'closed_at'
+SORT_MODE_ID = 'id'
+SORT_MODE_CHOICES = [
+    (SORT_MODE_PRIORITY, 'По приоритету'),
+    (SORT_MODE_CREATED_AT, 'По дате создания'),
+    (SORT_MODE_CLOSED_AT, 'По дате закрытия'),
+    (SORT_MODE_ID, 'По ID тикета'),
+]
+SORT_MODE_LABELS = dict(SORT_MODE_CHOICES)
+DEFAULT_SORT_MODE = SORT_MODE_PRIORITY
+
 
 class StatusGroup(db.Model):
-    """Редактируемое в админке название одной из 5 фиксированных групп.
-    Строки на все 5 номеров сидируются один раз при первом старте — сама
-    строка (номер, порядок) не создаётся и не удаляется, редактируется
-    только name."""
+    """Редактируемые в админке настройки одной из 5 фиксированных групп:
+    название и то, чем внутри неё сортируются тикеты. Строки на все 5
+    номеров сидируются один раз при первом старте — сама строка (номер)
+    не создаётся и не удаляется, редактируются только name/sort_mode."""
     __tablename__ = 'status_groups'
 
     number = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
+    sort_mode = db.Column(db.String(20), nullable=False, default=DEFAULT_SORT_MODE)
 
 
 class Status(db.Model):
@@ -129,6 +145,10 @@ class Ticket(db.Model):
     deadline = db.Column(db.Date, nullable=True)
     priority = db.Column(db.Integer, nullable=False, default=PRIORITY_MEDIUM)
     overdue_notified = db.Column(db.Boolean, nullable=False, default=False)
+    #: Проставляется/сбрасывается автоматически при смене статуса — см.
+    #: change_status в tickets/routes.py. Нужно для сортировки группы "по
+    #: дате закрытия".
+    closed_at = db.Column(db.DateTime, nullable=True)
 
     tracker_id = db.Column(db.Integer, db.ForeignKey('trackers.id'), nullable=False)
     status_id = db.Column(db.Integer, db.ForeignKey('statuses.id'), nullable=False)

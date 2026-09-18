@@ -1,6 +1,6 @@
 import re
 
-from app.models import Status, EmailTemplate
+from app.models import Status, EmailTemplate, Ticket
 
 
 def test_status_list_seeded_with_final_flags(app, db):
@@ -36,19 +36,71 @@ def test_statuses_admin_list_groups_by_group_field(admin_client):
 
 
 def test_rename_status_group(admin_client, db):
-    resp = admin_client.post('/admin/status-groups/rename', data={
+    resp = admin_client.post('/admin/status-groups/update', data={
         'group_1': 'В работе', 'group_2': 'Завершено',
         'group_3': 'Группа 3', 'group_4': 'Группа 4', 'group_5': 'Группа 5',
+        'sort_1': 'priority', 'sort_2': 'closed_at',
+        'sort_3': 'priority', 'sort_4': 'priority', 'sort_5': 'priority',
     }, follow_redirects=False)
     assert resp.status_code == 302
 
     from app.models import StatusGroup
     assert StatusGroup.query.get(1).name == 'В работе'
     assert StatusGroup.query.get(2).name == 'Завершено'
+    assert StatusGroup.query.get(2).sort_mode == 'closed_at'
 
     resp = admin_client.get('/admin/statuses')
     assert 'В работе' in resp.data.decode('utf-8')
     assert 'Завершено' in resp.data.decode('utf-8')
+
+
+def test_group_sort_mode_by_created_at_ignores_priority(admin_client, client_client, db):
+    """Если для группы выбрана сортировка "по дате создания", то тикет с
+    низким приоритетом, созданный позже, всё равно должен быть выше более
+    старого с высоким приоритетом — сортировка по приоритету в этой группе
+    не применяется."""
+    from app.models import PRIORITY_LOW, PRIORITY_HIGH
+
+    admin_client.post('/admin/status-groups/update', data={
+        'group_1': 'Группа 1', 'group_2': 'Группа 2',
+        'group_3': 'Группа 3', 'group_4': 'Группа 4', 'group_5': 'Группа 5',
+        'sort_1': 'created_at', 'sort_2': 'priority',
+        'sort_3': 'priority', 'sort_4': 'priority', 'sort_5': 'priority',
+    })
+
+    client_client.post('/client/tickets/new', data={
+        'title': 'High but older', 'description': '<p>d</p>', 'tracker_id': '1',
+        'priority': str(PRIORITY_HIGH),
+    })
+    client_client.post('/client/tickets/new', data={
+        'title': 'Low but newer', 'description': '<p>d</p>', 'tracker_id': '1',
+        'priority': str(PRIORITY_LOW),
+    })
+
+    resp = client_client.get('/client/tickets')
+    html = resp.data.decode('utf-8')
+    assert html.find('Low but newer') < html.find('High but older')
+
+
+def test_ticket_closed_at_set_and_cleared_on_status_change(admin_client, client_client, db):
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Closing check', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+
+    ticket = Ticket.query.get(int(ticket_id))
+    assert ticket.closed_at is None
+
+    final_status = Status.query.filter_by(is_final=True).first()
+    non_final_status = Status.query.filter_by(is_default=True).first()
+
+    admin_client.post(f'/tickets/{ticket_id}/status', data={'status_id': str(final_status.id)})
+    db.session.refresh(ticket)
+    assert ticket.closed_at is not None
+
+    admin_client.post(f'/tickets/{ticket_id}/status', data={'status_id': str(non_final_status.id)})
+    db.session.refresh(ticket)
+    assert ticket.closed_at is None
 
 
 def test_moving_status_only_reorders_within_same_group(admin_client, db):

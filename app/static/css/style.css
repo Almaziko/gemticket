@@ -160,6 +160,7 @@ body {
    таких таблиц гарантируют это независимо от контента конкретной группы. */
 .ticket-table {
     table-layout: fixed;
+    font-size: 0.82rem;
 }
 
 .ticket-table td,
@@ -167,6 +168,13 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    padding-top: .45rem;
+    padding-bottom: .45rem;
+}
+
+.ticket-table .badge {
+    font-size: 0.72rem;
+    padding: .3em .55em;
 }
 
 .ticket-row-final {

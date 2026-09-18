@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import (
     Blueprint, render_template, redirect, url_for, request, flash, g, abort,
     send_from_directory, current_app
@@ -148,7 +150,12 @@ def change_status(ticket_id):
         new_status = Status.query.get(form.status_id.data)
         if new_status and new_status.id != ticket.status_id:
             old_name = ticket.status.name
+            was_final = ticket.status.is_final
             ticket.status = new_status
+            if new_status.is_final and not was_final:
+                ticket.closed_at = datetime.now()
+            elif not new_status.is_final and was_final:
+                ticket.closed_at = None
             db.session.commit()
             notif.notify_status_changed(ticket, old_name, new_status.name)
             record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) статус с «{old_name}» на «{new_status.name}»')
