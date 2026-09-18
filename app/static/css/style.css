@@ -14,10 +14,12 @@
        а не только там, где мы явно задаём font-family. */
     --bs-body-font-family: var(--gt-font);
     --bs-font-sans-serif: var(--gt-font);
+    --bs-body-font-size: 0.82rem;
 }
 
 body {
     font-family: var(--gt-font);
+    font-size: 0.82rem;
     background: var(--gt-bg);
     color: var(--gt-ink);
 }
@@ -229,7 +231,6 @@ body {
    таких таблиц гарантируют это независимо от контента конкретной группы. */
 .ticket-table {
     table-layout: fixed;
-    font-size: 0.82rem;
 }
 
 .ticket-table td,

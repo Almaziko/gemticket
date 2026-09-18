@@ -35,6 +35,46 @@ def test_new_ticket_defaults_to_low_priority(client_client, db):
     assert ticket.priority == PRIORITY_LOW
 
 
+def test_client_search_finds_ticket_by_cyrillic_word_regardless_of_case(client_client):
+    """Регрессия: SQLite's built-in LOWER()/UPPER() приводят регистр только
+    для ASCII-букв, а .ilike(...) компилируется в lower(x) LIKE lower(y) —
+    из-за этого поиск по кириллическому слову в другом регистре, чем в
+    названии тикета, ничего не находил (см. app/extensions.py, где
+    зарегистрированы юникодные lower/upper для SQLite)."""
+    client_client.post('/client/tickets/new', data={
+        'title': 'Ошибка в заявке', 'description': '<p>d</p>', 'tracker_id': '1',
+    })
+
+    for word in ('ошибка', 'ОШИБКА', 'Ошибка', 'заявке'):
+        resp = client_client.get(f'/client/tickets?q={word}')
+        assert 'Ошибка в заявке'.encode() in resp.data, f'search for {word!r} found nothing'
+
+
+def test_admin_search_finds_ticket_by_cyrillic_word_regardless_of_case(admin_client, client_client):
+    client_client.post('/client/tickets/new', data={
+        'title': 'Проблема с блоком', 'description': '<p>d</p>', 'tracker_id': '1',
+    })
+
+    resp = admin_client.get('/admin/?q=проблема')
+    assert 'Проблема с блоком'.encode() in resp.data
+
+
+def test_search_with_no_matches_shows_empty_state_not_stale_results(client_client):
+    client_client.post('/client/tickets/new', data={
+        'title': 'Some ticket', 'description': '<p>d</p>', 'tracker_id': '1',
+    })
+    resp = client_client.get('/client/tickets?q=nonexistentword')
+    assert b'Some ticket' not in resp.data
+
+
+def test_clearing_search_query_shows_all_tickets_again(client_client):
+    client_client.post('/client/tickets/new', data={
+        'title': 'Findable ticket', 'description': '<p>d</p>', 'tracker_id': '1',
+    })
+    resp = client_client.get('/client/tickets?q=')
+    assert b'Findable ticket' in resp.data
+
+
 def test_create_ticket_success(client_client):
     resp = client_client.post('/client/tickets/new', data={
         'title': 'My first ticket',
