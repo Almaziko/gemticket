@@ -144,6 +144,21 @@ body {
     margin-bottom: 0;
 }
 
+/* Каждая группа тикетов — отдельная <table> в своей карточке (для
+   визуального разделения блоков), но колонки между ними всё равно должны
+   совпадать. table-layout: fixed + одинаковые проценты в <colgroup> у всех
+   таких таблиц гарантируют это независимо от контента конкретной группы. */
+.ticket-table {
+    table-layout: fixed;
+}
+
+.ticket-table td,
+.ticket-table th {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .ticket-row-final {
     opacity: 0.75;
 }

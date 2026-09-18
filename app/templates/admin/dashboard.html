@@ -3,7 +3,17 @@
 
 {% macro ticket_table(group_tickets) %}
 <div class="table-responsive">
-<table class="table table-hover align-middle mb-0">
+<table class="table table-hover align-middle mb-0 ticket-table">
+    <colgroup>
+        <col style="width: 5%">
+        <col style="width: 23%">
+        <col style="width: 14%">
+        <col style="width: 14%">
+        <col style="width: 11%">
+        <col style="width: 11%">
+        <col style="width: 10%">
+        <col style="width: 12%">
+    </colgroup>
     <thead class="table-light">
         <tr><th>#</th><th>Название</th><th>Клиент</th><th>Исполнитель</th><th>Трекер</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr>
     </thead>
