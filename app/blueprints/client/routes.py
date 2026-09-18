@@ -9,6 +9,7 @@ from ...attachments import (
 )
 from ...richtext import clean_html
 from ...history import record_event
+from ...grouping import group_by_status_group
 from ... import notifications as notif
 from .forms import TicketCreateForm
 
@@ -27,8 +28,11 @@ def tickets_list():
         query = query.filter(Ticket.title.ilike(f'%{search}%'))
     tickets = query.order_by(Ticket.created_at.desc()).all()
     statuses = Status.query.order_by(Status.order).all()
+    ticket_groups = group_by_status_group(tickets, lambda t: t.status)
+    status_groups = group_by_status_group(statuses, lambda s: s)
     return render_template(
         'client/tickets_list.html', tickets=tickets, statuses=statuses,
+        ticket_groups=ticket_groups, status_groups=status_groups,
         status_filter=status_filter, search=search,
     )
 

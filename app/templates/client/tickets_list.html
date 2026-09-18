@@ -26,22 +26,16 @@
             <li class="nav-item">
                 <a class="nav-link {% if not status_filter %}active{% endif %}" href="{{ url_for('client.tickets_list', q=search) }}">Все</a>
             </li>
-            {% for s in statuses if not s.is_final %}
+        </ul>
+        {% for group_number, group_statuses in status_groups %}
+        <ul class="nav nav-pills mb-0 {{ 'border-start ps-3' if not loop.first }}">
+            {% for s in group_statuses %}
             <li class="nav-item">
                 <a class="nav-link {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('client.tickets_list', status=s.id, q=search) }}">{{ s.name }}</a>
             </li>
             {% endfor %}
         </ul>
-        {% set final_statuses = statuses|selectattr('is_final')|list %}
-        {% if final_statuses %}
-        <ul class="nav nav-pills mb-0 border-start ps-3">
-            {% for s in final_statuses %}
-            <li class="nav-item">
-                <a class="nav-link {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('client.tickets_list', status=s.id, q=search) }}">{{ s.name }}</a>
-            </li>
-            {% endfor %}
-        </ul>
-        {% endif %}
+        {% endfor %}
     </div>
     <form method="get" class="d-flex" style="min-width: 220px;">
         {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
@@ -50,19 +44,16 @@
 </div>
 
 {% if tickets %}
-    {% set active_tickets = tickets|rejectattr('status.is_final')|list %}
-    {% set final_tickets = tickets|selectattr('status.is_final')|list %}
-    {% set both_groups = active_tickets and final_tickets %}
     <div class="table-responsive">
     <table class="table table-hover table-striped bg-white align-middle shadow-sm">
         <thead class="table-light">
             <tr><th>#</th><th>Название</th><th>Трекер</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr>
         </thead>
         <tbody>
-        {% if both_groups %}<tr class="table-light"><td colspan="6" class="text-muted small fw-semibold">Активные</td></tr>{% endif %}
-        {% for t in active_tickets %}{{ ticket_row(t) }}{% endfor %}
-        {% if both_groups %}<tr class="table-light"><td colspan="6" class="text-muted small fw-semibold">Завершённые</td></tr>{% endif %}
-        {% for t in final_tickets %}{{ ticket_row(t) }}{% endfor %}
+        {% for group_number, group_tickets in ticket_groups %}
+            {% if ticket_groups|length > 1 %}<tr class="table-light"><td colspan="6" class="text-muted small fw-semibold">Группа {{ group_number }}</td></tr>{% endif %}
+            {% for t in group_tickets %}{{ ticket_row(t) }}{% endfor %}
+        {% endfor %}
         </tbody>
     </table>
     </div>

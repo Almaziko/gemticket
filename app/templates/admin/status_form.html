@@ -17,6 +17,11 @@
         {{ form.color.label(class_='form-label') }}
         {{ form.color(class_='form-control', placeholder='success, warning, danger, primary...') }}
     </div>
+    <div class="mb-3">
+        {{ form.group.label(class_='form-label') }}
+        {{ form.group(class_='form-select') }}
+        <div class="form-text">Группа 1 показывается в списках тикетов первой, группа 5 — последней.</div>
+    </div>
     <div class="form-check mb-2">
         {{ form.is_default(class_='form-check-input') }}
         {{ form.is_default.label(class_='form-check-label') }}

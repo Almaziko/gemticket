@@ -9,6 +9,7 @@ from ...security import hash_password, encrypt_secret, decrypt_secret
 from ...attachments import delete_attachment_file, refresh_max_content_length
 from ...notifications import send_test_email
 from ...richtext import clean_html
+from ...grouping import group_by_status_group
 from .forms import (
     ClientForm, AdminForm, StatusForm, TrackerForm, SettingsForm, TestEmailForm, EmailTemplateForm,
 )
@@ -40,8 +41,11 @@ def dashboard():
         query = query.filter(Ticket.title.ilike(f'%{search}%'))
     tickets = query.order_by(Ticket.created_at.desc()).all()
     statuses = Status.query.order_by(Status.order).all()
+    ticket_groups = group_by_status_group(tickets, lambda t: t.status)
+    status_groups = group_by_status_group(statuses, lambda s: s)
     return render_template(
         'admin/dashboard.html', tickets=tickets, statuses=statuses,
+        ticket_groups=ticket_groups, status_groups=status_groups,
         status_filter=status_filter, search=search,
     )
 
@@ -252,6 +256,7 @@ def status_new():
             name=form.name.data,
             order=form.order.data,
             color=form.color.data or None,
+            group=form.group.data,
             is_default=form.is_default.data,
             is_active=form.is_active.data,
             is_final=form.is_final.data,
@@ -274,6 +279,7 @@ def status_edit(status_id):
         status.name = form.name.data
         status.order = form.order.data
         status.color = form.color.data or None
+        status.group = form.group.data
         status.is_active = form.is_active.data
         status.is_final = form.is_final.data
         if was_default and not form.is_default.data:
@@ -306,13 +312,14 @@ def status_delete(status_id):
 @admin_bp.route('/statuses/<int:status_id>/move/<direction>', methods=['POST'])
 @superadmin_required
 def status_move(status_id, direction):
-    statuses = Status.query.order_by(Status.order).all()
-    idx = next((i for i, s in enumerate(statuses) if s.id == status_id), None)
-    if idx is None:
-        abort(404)
+    status = Status.query.get_or_404(status_id)
+    # Порядок переставляется только внутри той же группы — группы это
+    # отдельные блоки в списках, смешивать сортировку между ними не нужно.
+    siblings = Status.query.filter_by(group=status.group).order_by(Status.order).all()
+    idx = next(i for i, s in enumerate(siblings) if s.id == status_id)
     swap_idx = idx - 1 if direction == 'up' else idx + 1
-    if 0 <= swap_idx < len(statuses):
-        statuses[idx].order, statuses[swap_idx].order = statuses[swap_idx].order, statuses[idx].order
+    if 0 <= swap_idx < len(siblings):
+        siblings[idx].order, siblings[swap_idx].order = siblings[swap_idx].order, siblings[idx].order
         db.session.commit()
     return redirect(url_for('admin.statuses_list'))
 

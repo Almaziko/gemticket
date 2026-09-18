@@ -6,6 +6,7 @@
     <td>{{ s.order }}</td>
     <td><span class="badge bg-{{ s.color or 'secondary' }}">{{ s.name }}</span></td>
     <td>{{ '✓' if s.is_default else '' }}</td>
+    <td>{{ '✓' if s.is_final else '' }}</td>
     <td>{{ '✓' if s.is_active else '—' }}</td>
     <td>{{ 'да' if s.in_use else 'нет' }}</td>
     <td class="text-end">
@@ -33,17 +34,22 @@
     <h3>Статусы</h3>
     <a href="{{ url_for('admin.status_new') }}" class="btn btn-primary">Новый статус</a>
 </div>
-
-{% set active_statuses = statuses|rejectattr('is_final')|list %}
-{% set final_statuses = statuses|selectattr('is_final')|list %}
+<p class="text-muted small">
+    Группа определяет, в каком блоке статус показывается в списках тикетов у клиентов и админов —
+    группа 1 отображается первой, группа 5 последней. Порядок ниже (стрелки) сортирует статусы
+    только внутри их собственной группы.
+</p>
 
 <table class="table bg-white align-middle">
-    <thead><tr><th>Порядок</th><th>Название</th><th>Начальный</th><th>Активен</th><th>Используется</th><th></th></tr></thead>
+    <thead><tr><th>Порядок</th><th>Название</th><th>Начальный</th><th>Финальный</th><th>Активен</th><th>Используется</th><th></th></tr></thead>
     <tbody>
-    {% if active_statuses and final_statuses %}<tr class="table-light"><td colspan="6" class="text-muted small fw-semibold">Активные</td></tr>{% endif %}
-    {% for s in active_statuses %}{{ status_row(s) }}{% endfor %}
-    {% if active_statuses and final_statuses %}<tr class="table-light"><td colspan="6" class="text-muted small fw-semibold">Завершённые / отменённые</td></tr>{% endif %}
-    {% for s in final_statuses %}{{ status_row(s) }}{% endfor %}
+    {% for g in [1, 2, 3, 4, 5] %}
+        {% set group_statuses = statuses|selectattr('group', 'equalto', g)|sort(attribute='order')|list %}
+        {% if group_statuses %}
+            <tr class="table-light"><td colspan="7" class="text-muted small fw-semibold">Группа {{ g }}</td></tr>
+            {% for s in group_statuses %}{{ status_row(s) }}{% endfor %}
+        {% endif %}
+    {% endfor %}
     </tbody>
 </table>
 {% endblock %}

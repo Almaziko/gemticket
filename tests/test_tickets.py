@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from app.models import Ticket
+from app.models import Ticket, Status
 
 
 def test_create_ticket_success(client_client):
@@ -111,3 +111,31 @@ def test_add_comment_disallowed_attachment_preserves_comment_text(client_client)
     }, content_type='multipart/form-data', follow_redirects=False)
     assert resp.status_code == 200
     assert b'Comment text must survive' in resp.data
+
+
+def test_ticket_list_shows_separate_blocks_per_status_group(admin_client, client_client, db):
+    """Прямая проверка сценария из запроса: если два статуса относятся к
+    разным группам, тикеты с этими статусами должны попасть в разные блоки
+    списка, а не смешиваться в одном."""
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Group1 ticket', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket1_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Group2 ticket', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket2_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+
+    group2_status = Status.query.filter_by(group=2).first()
+    admin_client.post(f'/tickets/{ticket2_id}/status', data={'status_id': str(group2_status.id)})
+
+    resp = client_client.get('/client/tickets')
+    text = resp.data.decode('utf-8')
+    group1_idx = text.find('>Группа 1<')
+    group2_idx = text.find('>Группа 2<')
+    ticket1_idx = text.find('Group1 ticket')
+    ticket2_idx = text.find('Group2 ticket')
+
+    assert group1_idx != -1 and group2_idx != -1
+    assert group1_idx < ticket1_idx < group2_idx < ticket2_idx

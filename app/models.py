@@ -57,6 +57,14 @@ class Client(User):
     __mapper_args__ = {'polymorphic_identity': 'client'}
 
 
+#: Группы отображения статусов в списках тикетов и в самой админке статусов.
+#: Ровно 5 предустановленных слотов — название и порядок сортировки фиксированы
+#: системой (group 1 показывается первым, 5 — последним); админ выбирает
+#: только то, в какую группу попадает каждый статус.
+STATUS_GROUPS = (1, 2, 3, 4, 5)
+STATUS_GROUP_LABELS = {n: f'Группа {n}' for n in STATUS_GROUPS}
+
+
 class Status(db.Model):
     __tablename__ = 'statuses'
 
@@ -67,12 +75,17 @@ class Status(db.Model):
     is_default = db.Column(db.Boolean, nullable=False, default=False)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     is_final = db.Column(db.Boolean, nullable=False, default=False)
+    group = db.Column(db.Integer, nullable=False, default=1)
 
     tickets = db.relationship('Ticket', back_populates='status')
 
     @property
     def in_use(self):
         return len(self.tickets) > 0
+
+    @property
+    def group_label(self):
+        return STATUS_GROUP_LABELS.get(self.group, f'Группа {self.group}')
 
 
 class Tracker(db.Model):

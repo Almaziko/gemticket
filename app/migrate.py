@@ -34,6 +34,11 @@ def run_light_migrations():
     if not _has_column('tickets', 'overdue_notified'):
         db.session.execute(text('ALTER TABLE tickets ADD COLUMN overdue_notified BOOLEAN NOT NULL DEFAULT 0'))
 
+    added_group = False
+    if not _has_column('statuses', 'group'):
+        db.session.execute(text('ALTER TABLE statuses ADD COLUMN "group" INTEGER NOT NULL DEFAULT 1'))
+        added_group = True
+
     db.session.commit()
 
     if added_is_final:
@@ -44,4 +49,12 @@ def run_light_migrations():
         db.session.execute(text(
             "UPDATE statuses SET is_final = 1 WHERE name IN ('Готов', 'Отменён')"
         ))
+        db.session.commit()
+
+    if added_group:
+        # Все статусы попадают в колонку по умолчанию (DEFAULT 1 выше), но
+        # чтобы сразу сохранить привычное разделение "активные/финальные" —
+        # раскидываем уже существующие финальные статусы во 2-ю группу.
+        # Дальше группировка полностью редактируется в админке.
+        db.session.execute(text('UPDATE statuses SET "group" = 2 WHERE is_final = 1'))
         db.session.commit()

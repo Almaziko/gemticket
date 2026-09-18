@@ -11,16 +11,55 @@ def test_status_list_seeded_with_final_flags(app, db):
         assert novy.is_final is False
 
 
-def test_statuses_admin_list_groups_active_and_final(admin_client):
+def test_status_list_seeded_with_groups(app, db):
+    with app.app_context():
+        novy = Status.query.filter_by(name='Новый').first()
+        gotov = Status.query.filter_by(name='Готов').first()
+        assert novy.group == 1
+        assert gotov.group == 2
+
+
+def test_statuses_admin_list_groups_by_group_field(admin_client):
     resp = admin_client.get('/admin/statuses')
     assert resp.status_code == 200
     text = resp.data.decode('utf-8')
-    active_idx = text.find('>Активные<')
-    final_heading_idx = text.find('>Завершённые / отменённые<')
+    group1_idx = text.find('>Группа 1<')
+    group2_idx = text.find('>Группа 2<')
     novy_idx = text.find('>Новый<')
     gotov_idx = text.find('>Готов<')
-    assert active_idx != -1 and final_heading_idx != -1
-    assert active_idx < novy_idx < final_heading_idx < gotov_idx
+    assert group1_idx != -1 and group2_idx != -1
+    assert group1_idx < novy_idx < group2_idx < gotov_idx
+
+
+def test_moving_status_only_reorders_within_same_group(admin_client, db):
+    group1 = Status.query.filter_by(group=1).order_by(Status.order).all()
+    assert len(group1) >= 2
+    first, second = group1[0], group1[1]
+    first_order, second_order = first.order, second.order
+
+    other_group_status = Status.query.filter_by(group=2).first()
+    other_group_order_before = other_group_status.order
+
+    resp = admin_client.post(f'/admin/statuses/{second.id}/move/up', follow_redirects=False)
+    assert resp.status_code == 302
+
+    db.session.refresh(first)
+    db.session.refresh(second)
+    db.session.refresh(other_group_status)
+    assert first.order == second_order
+    assert second.order == first_order
+    assert other_group_status.order == other_group_order_before  # соседняя группа не затронута
+
+
+def test_status_group_change_moves_it_to_new_block(admin_client, db):
+    status = Status.query.filter_by(name='На проверке').first()
+    resp = admin_client.post(f'/admin/statuses/{status.id}/edit', data={
+        'name': status.name, 'order': str(status.order), 'color': status.color or '',
+        'group': '3', 'is_active': 'y',
+    }, follow_redirects=False)
+    assert resp.status_code == 302
+    db.session.refresh(status)
+    assert status.group == 3
 
 
 def test_cannot_delete_status_in_use(admin_client, client_client, db):

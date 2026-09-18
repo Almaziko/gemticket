@@ -100,16 +100,16 @@ DEFAULT_EMAIL_TEMPLATES = (
 
 def seed_reference_data():
     if Status.query.count() == 0:
-        for name, order, is_default, color, is_final in (
-            ('Новый', 1, True, 'secondary', False),
-            ('В работе', 2, False, 'primary', False),
-            ('На проверке', 3, False, 'warning', False),
-            ('Готов', 4, False, 'success', True),
-            ('Отменён', 5, False, 'danger', True),
+        for name, order, is_default, color, is_final, group in (
+            ('Новый', 1, True, 'secondary', False, 1),
+            ('В работе', 2, False, 'primary', False, 1),
+            ('На проверке', 3, False, 'warning', False, 1),
+            ('Готов', 4, False, 'success', True, 2),
+            ('Отменён', 5, False, 'danger', True, 2),
         ):
             db.session.add(Status(
                 name=name, order=order, is_default=is_default, color=color,
-                is_active=True, is_final=is_final,
+                is_active=True, is_final=is_final, group=group,
             ))
 
     if Tracker.query.count() == 0:
