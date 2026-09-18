@@ -17,7 +17,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
     password_encrypted = db.Column(db.LargeBinary, nullable=False)
     role = db.Column(db.String(20), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
     __mapper_args__ = {
         'polymorphic_identity': 'user',
@@ -124,8 +124,8 @@ class Ticket(db.Model):
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
     assignee_id = db.Column(db.Integer, db.ForeignKey('admins.id'), nullable=False)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
 
     tracker = db.relationship('Tracker', back_populates='tickets')
     status = db.relationship('Status', back_populates='tickets')
@@ -152,7 +152,7 @@ class Comment(db.Model):
     ticket_id = db.Column(db.Integer, db.ForeignKey('tickets.id'), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     body = db.Column(db.Text, nullable=False, default='')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
     ticket = db.relationship('Ticket', back_populates='comments')
     author = db.relationship('User')
@@ -178,7 +178,7 @@ class Attachment(db.Model):
     size_bytes = db.Column(db.Integer, nullable=False)
     mime_type = db.Column(db.String(120), nullable=False)
     uploaded_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
     ticket_id = db.Column(db.Integer, db.ForeignKey('tickets.id'), nullable=True)
     comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'), nullable=True)
@@ -204,7 +204,7 @@ class Notification(db.Model):
     ticket_id = db.Column(db.Integer, db.ForeignKey('tickets.id'), nullable=False)
     message = db.Column(db.String(500), nullable=False)
     is_read = db.Column(db.Boolean, nullable=False, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
     recipient = db.relationship('User')
     ticket = db.relationship('Ticket')
@@ -236,7 +236,7 @@ class TicketEvent(db.Model):
     ticket_id = db.Column(db.Integer, db.ForeignKey('tickets.id'), nullable=False)
     actor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     message = db.Column(db.String(500), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
     actor = db.relationship('User')
 

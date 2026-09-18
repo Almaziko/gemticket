@@ -5,6 +5,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# tzdata нужен, чтобы переменная TZ (см. docker-compose, обычно
+# Europe/Moscow) реально применялась — без базы часовых поясов libc
+# просто игнорирует TZ и время в контейнере остаётся в UTC.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
