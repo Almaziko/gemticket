@@ -8,9 +8,16 @@
     --gt-ink: #111827;
     --gt-bg: #f3f4f6;
     --gt-border: #eef0f2;
+    --gt-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    /* Переопределяем переменные самого Bootstrap, чтобы шрифт подхватился
+       во всех его компонентах (кнопки, формы, таблицы, навбар и т.д.),
+       а не только там, где мы явно задаём font-family. */
+    --bs-body-font-family: var(--gt-font);
+    --bs-font-sans-serif: var(--gt-font);
 }
 
 body {
+    font-family: var(--gt-font);
     background: var(--gt-bg);
     color: var(--gt-ink);
 }
