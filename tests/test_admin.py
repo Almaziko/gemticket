@@ -210,3 +210,68 @@ def test_email_template_edit_form_has_single_body_field(admin_client, db):
     resp = admin_client.get(f'/admin/email-templates/{tpl.id}/edit')
     html = resp.data.decode('utf-8')
     assert html.count('name="body_html"') == 1
+
+
+def test_superadmin_can_create_ticket_on_behalf_of_client(admin_client, client_user_password, db):
+    from app.models import Client, Ticket, TicketEvent
+
+    client_user = Client.query.first()
+
+    resp = admin_client.get('/admin/tickets/new')
+    assert resp.status_code == 200
+
+    resp = admin_client.post('/admin/tickets/new', data={
+        'client_id': str(client_user.id),
+        'assignee_id': '1',
+        'title': 'Заведено по звонку',
+        'description': '<p>Клиент попросил по телефону</p>',
+        'tracker_id': '1',
+        'priority': '2',
+    }, follow_redirects=False)
+    assert resp.status_code == 302
+
+    ticket = Ticket.query.filter_by(title='Заведено по звонку').first()
+    assert ticket is not None
+    assert ticket.client_id == client_user.id
+    assert ticket.assignee_id == 1
+    assert ticket.status.is_default is True
+
+    event = TicketEvent.query.filter_by(ticket_id=ticket.id).first()
+    assert event is not None
+    assert 'от имени постановщика' in event.message
+
+
+def test_ticket_created_by_admin_appears_in_clients_own_list(app, admin_client, client_user_password, db):
+    from app.models import Client
+    from tests.conftest import login
+
+    client_user = Client.query.first()
+    admin_client.post('/admin/tickets/new', data={
+        'client_id': str(client_user.id), 'assignee_id': '1',
+        'title': 'Тикет со стороны админа', 'description': '<p>d</p>', 'tracker_id': '1',
+    })
+
+    client_session = app.test_client()
+    login(client_session, client_user_password)
+    resp = client_session.get('/client/tickets')
+    assert 'Тикет со стороны админа' in resp.data.decode('utf-8')
+
+
+def test_regular_admin_cannot_create_ticket_on_behalf_of_client(app, db):
+    from app.models import Admin
+    from app.security import hash_password, encrypt_secret
+    from tests.conftest import login
+
+    regular = Admin(
+        name='Regular Ticket Creator', email='regularticket@example.com',
+        password_hash=hash_password('regularpassabc'),
+        password_encrypted=encrypt_secret('regularpassabc'),
+        is_superadmin=False,
+    )
+    db.session.add(regular)
+    db.session.commit()
+
+    session = app.test_client()
+    login(session, 'regularpassabc')
+    resp = session.get('/admin/tickets/new', follow_redirects=False)
+    assert resp.status_code == 403

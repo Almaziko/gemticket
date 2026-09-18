@@ -9,13 +9,19 @@ from ...models import (
 )
 from ...decorators import admin_required, superadmin_required
 from ...security import hash_password, encrypt_secret, decrypt_secret
-from ...attachments import delete_attachment_file, refresh_max_content_length
+from ...attachments import (
+    delete_attachment_file, refresh_max_content_length,
+    check_files_size, check_files_extensions, save_attachments,
+    FileTooLargeError, DisallowedExtensionError,
+)
 from ...notifications import send_test_email
+from ... import notifications as notif
 from ...richtext import clean_html
+from ...history import record_event
 from ...grouping import group_by_status_group, group_tickets_sorted, get_group_names, get_group_sort_modes
 from .forms import (
     ClientForm, AdminForm, StatusForm, StatusGroupSettingsForm, TrackerForm, SettingsForm,
-    TestEmailForm, EmailTemplateForm,
+    TestEmailForm, EmailTemplateForm, AdminTicketCreateForm,
 )
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -52,6 +58,65 @@ def dashboard():
         ticket_groups=ticket_groups, status_groups=status_groups, group_names=get_group_names(),
         status_filter=status_filter, search=search,
     )
+
+
+@admin_bp.route('/tickets/new', methods=['GET', 'POST'])
+@superadmin_required
+def ticket_new():
+    """Тикет заводит суперадмин от имени клиента — например, клиент попросил
+    об этом по телефону/в чате, пока сам зайти в систему не может. Дальше
+    такой тикет ничем не отличается от созданного самим клиентом: постановщик
+    — выбранный клиент, статус — стартовый по умолчанию."""
+    form = AdminTicketCreateForm()
+    form.client_id.choices = [(c.id, f'{c.name} ({c.email})') for c in Client.query.order_by(Client.name).all()]
+    form.assignee_id.choices = [(a.id, a.name) for a in Admin.query.order_by(Admin.name).all()]
+    form.tracker_id.choices = [
+        (t.id, t.name) for t in Tracker.query.filter_by(is_active=True).order_by(Tracker.order).all()
+    ]
+
+    if not form.client_id.choices:
+        flash('Сначала заведите хотя бы одного постановщика', 'danger')
+        return redirect(url_for('admin.clients_list'))
+
+    if form.validate_on_submit():
+        files = request.files.getlist('attachments')
+        try:
+            check_files_size(files)
+            check_files_extensions(files)
+        except FileTooLargeError as e:
+            flash(f'Файл «{e.filename}» превышает лимит {e.limit_mb} МБ. Тикет не создан.', 'danger')
+            return render_template('admin/ticket_new.html', form=form)
+        except DisallowedExtensionError as e:
+            flash(f'Файл «{e.filename}» имеет неразрешённое расширение. Разрешены: {", ".join(e.allowed)}.', 'danger')
+            return render_template('admin/ticket_new.html', form=form)
+
+        client = Client.query.get_or_404(form.client_id.data)
+        default_status = Status.query.filter_by(is_default=True).first()
+        ticket = Ticket(
+            title=form.title.data,
+            description=clean_html(form.description.data),
+            deadline=form.deadline.data,
+            tracker_id=form.tracker_id.data,
+            priority=form.priority.data,
+            status_id=default_status.id,
+            client_id=client.id,
+            assignee_id=form.assignee_id.data,
+        )
+        db.session.add(ticket)
+        db.session.flush()
+        save_attachments(files, g.current_user, ticket=ticket)
+        db.session.commit()
+
+        if ticket.assignee_id != g.current_user.id:
+            notif.notify_ticket_created(ticket)
+        record_event(
+            ticket, g.current_user,
+            f'{g.current_user.name} создал(а) тикет от имени постановщика «{client.name}»',
+        )
+        flash('Тикет создан', 'success')
+        return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+
+    return render_template('admin/ticket_new.html', form=form)
 
 
 # ---------- Clients CRUD ----------

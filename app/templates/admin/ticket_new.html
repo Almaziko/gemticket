@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% from 'partials/richtext_macro.html' import richtext_editor %}
+{% block title %}Новый тикет от имени постановщика — GemTicket{% endblock %}
+{% block content %}
+<h3 class="mb-1">Новый тикет от имени постановщика</h3>
+<p class="text-muted">
+    Для случаев, когда постановщик попросил завести тикет по другому каналу связи (звонок,
+    чат и т.п.) и пока не может сделать это сам. Тикет будет выглядеть так же, как если бы его
+    создал выбранный постановщик.
+</p>
+<form method="post" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form.client_id.label(class_='form-label') }}
+            {{ form.client_id(class_='form-select') }}
+            {% for e in form.client_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form.assignee_id.label(class_='form-label') }}
+            {{ form.assignee_id(class_='form-select') }}
+            {% for e in form.assignee_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+    </div>
+    <div class="mb-3">
+        {{ form.title.label(class_='form-label') }}
+        {{ form.title(class_='form-control') }}
+        {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Описание</label>
+        {{ richtext_editor('description-editor', form.description) }}
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            {{ form.tracker_id.label(class_='form-label') }}
+            {{ form.tracker_id(class_='form-select') }}
+            {% for e in form.tracker_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="col-md-4 mb-3">
+            {{ form.priority.label(class_='form-label') }}
+            {{ form.priority(class_='form-select') }}
+        </div>
+        <div class="col-md-4 mb-3">
+            {{ form.deadline.label(class_='form-label') }}
+            {{ form.deadline(class_='form-control') }}
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Вложения</label>
+        <input type="file" name="attachments" id="attachments-input" class="form-control"
+               accept="{{ '.' + allowed_extensions|join(',.') }}" multiple>
+        <div class="form-text">Разрешены файлы: {{ allowed_extensions|join(', ') }}.</div>
+        <div id="attachments-list" class="mt-2"></div>
+    </div>
+    <button type="submit" class="btn btn-primary">Создать тикет</button>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>setupAttachmentsPicker('#attachments-input', '#attachments-list');</script>
+{% endblock %}

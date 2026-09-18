@@ -39,7 +39,12 @@
 {% endmacro %}
 
 {% block content %}
-<h3 class="mb-3">{{ 'Все тикеты' if current_user.is_superadmin else 'Мои тикеты' }}</h3>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">{{ 'Все тикеты' if current_user.is_superadmin else 'Мои тикеты' }}</h3>
+    {% if current_user.is_superadmin %}
+    <a href="{{ url_for('admin.ticket_new') }}" class="btn btn-primary">+ Новый тикет от имени постановщика</a>
+    {% endif %}
+</div>
 
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
     <div class="d-flex flex-wrap align-items-center gap-3">
