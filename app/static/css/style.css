@@ -248,9 +248,18 @@ body {
     text-overflow: ellipsis;
     padding-top: .45rem;
     padding-bottom: .45rem;
-    padding-left: .4rem;
-    padding-right: .4rem;
+    /* 20px с обеих сторон у соседних колонок в сумме дают ровно 40px
+       отступа между ними (правый паддинг одной + левый паддинг другой). */
+    padding-left: 20px;
+    padding-right: 20px;
     text-align: right;
+}
+
+/* "Обновлён" — последняя колонка, её правый паддинг ни с кем не складывается
+   (справа только край карточки), поэтому одних 20px маловато — увеличиваем. */
+.ticket-table td:last-child,
+.ticket-table th:last-child {
+    padding-right: 32px;
 }
 
 /* Название — единственная колонка, читаемая как текст слева направо,
