@@ -16,6 +16,15 @@ def can_manage_ticket_fields(user, ticket):
     return user is not None and user.role == 'admin' and (user.is_superadmin or ticket.assignee_id == user.id)
 
 
+def can_change_priority(user, ticket):
+    """Приоритет, в отличие от статуса/дедлайна/категории, может менять и
+    сам постановщик — причём в любой момент, независимо от статуса тикета
+    (без ограничения "только в начальном статусе", как у описания)."""
+    if can_manage_ticket_fields(user, ticket):
+        return True
+    return user is not None and user.role == 'client' and ticket.client_id == user.id
+
+
 def can_reassign_ticket(user):
     return user is not None and user.role == 'admin' and user.is_superadmin
 

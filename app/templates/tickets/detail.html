@@ -66,11 +66,12 @@
             </div>
         </div>
 
-        {% if can_manage %}
+        {% if can_manage or can_change_priority %}
         <div class="card mb-3">
             <div class="card-body">
                 <h6 class="card-title">Управление</h6>
 
+                {% if can_manage %}
                 <form method="post" action="{{ url_for('tickets.change_status', ticket_id=ticket.id) }}" class="mb-2">
                     {{ status_form.hidden_tag() }}
                     <label class="form-label small mb-1">Статус</label>
@@ -97,7 +98,9 @@
                         <button class="btn btn-outline-primary" type="submit">&#10003;</button>
                     </div>
                 </form>
+                {% endif %}
 
+                {% if can_change_priority %}
                 <form method="post" action="{{ url_for('tickets.change_priority', ticket_id=ticket.id) }}" class="mb-2">
                     {{ priority_form.hidden_tag() }}
                     <label class="form-label small mb-1">Приоритет</label>
@@ -106,8 +109,9 @@
                         <button class="btn btn-outline-primary" type="submit">&#10003;</button>
                     </div>
                 </form>
+                {% endif %}
 
-                {% if can_reassign %}
+                {% if can_manage and can_reassign %}
                 <form method="post" action="{{ url_for('tickets.change_assignee', ticket_id=ticket.id) }}">
                     {{ assignee_form.hidden_tag() }}
                     <label class="form-label small mb-1">Исполнитель</label>

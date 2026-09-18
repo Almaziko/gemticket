@@ -324,15 +324,60 @@ def test_admin_can_change_ticket_priority(admin_client, client_client, db):
     assert ticket.priority == PRIORITY_LOW
 
 
-def test_client_cannot_change_ticket_priority(client_client, db):
-    from app.models import PRIORITY_LOW
+def test_client_can_change_own_ticket_priority(client_client, db):
+    from app.models import PRIORITY_HIGH
 
     resp = client_client.post('/client/tickets/new', data={
         'title': 'Client priority check', 'description': '<p>d</p>', 'tracker_id': '1',
     }, follow_redirects=False)
     ticket_id = resp.headers['Location'].rstrip('/').split('/')[-1]
 
-    resp = client_client.post(f'/tickets/{ticket_id}/priority', data={'priority': str(PRIORITY_LOW)},
+    resp = client_client.post(f'/tickets/{ticket_id}/priority', data={'priority': str(PRIORITY_HIGH)},
+                               follow_redirects=False)
+    assert resp.status_code == 302
+
+    ticket = Ticket.query.get(int(ticket_id))
+    assert ticket.priority == PRIORITY_HIGH
+
+
+def test_client_can_change_priority_even_on_final_status_ticket(admin_client, client_client, db):
+    """Приоритет постановщик может менять "в любое время" — в отличие от
+    описания (только в начальном статусе), ограничения по статусу тут нет."""
+    from app.models import Status, PRIORITY_HIGH
+
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Final status priority check', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+
+    final_status = Status.query.filter_by(is_final=True).first()
+    admin_client.post(f'/tickets/{ticket_id}/status', data={'status_id': str(final_status.id)})
+
+    resp = client_client.post(f'/tickets/{ticket_id}/priority', data={'priority': str(PRIORITY_HIGH)},
+                               follow_redirects=False)
+    assert resp.status_code == 302
+    ticket = Ticket.query.get(int(ticket_id))
+    assert ticket.priority == PRIORITY_HIGH
+
+
+def test_client_cannot_change_priority_on_others_ticket(app, admin_client, client_user_password, db):
+    from tests.conftest import create_client_user, login
+    from app.models import PRIORITY_HIGH, Client
+
+    owner_client_id = Client.query.first().id
+    resp = admin_client.post('/admin/tickets/new', data={
+        'client_id': str(owner_client_id), 'assignee_id': '1',
+        'title': 'Owner-only priority check', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+
+    other_password = create_client_user(
+        admin_client, name='Other Client', email='otherclient@example.com', password='otherclientpass456',
+    )
+    other_session = app.test_client()
+    login(other_session, other_password)
+
+    resp = other_session.post(f'/tickets/{ticket_id}/priority', data={'priority': str(PRIORITY_HIGH)},
                                follow_redirects=False)
     assert resp.status_code == 403
 

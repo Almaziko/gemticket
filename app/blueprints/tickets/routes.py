@@ -10,7 +10,7 @@ from ...models import Ticket, Comment, Attachment, Status, Tracker, Admin, Notif
 from ...decorators import login_required, superadmin_required
 from ...permissions import (
     can_view_ticket, can_manage_ticket_fields, can_reassign_ticket, can_delete_ticket,
-    can_edit_description, can_view_attachment, can_comment,
+    can_edit_description, can_view_attachment, can_comment, can_change_priority,
 )
 from ...attachments import (
     check_files_size, check_files_extensions, save_attachments, delete_attachment_file,
@@ -73,6 +73,7 @@ def _render_detail(ticket, comment_form=None, description_form=None):
         description_form=description_form,
         comment_form=comment_form,
         can_manage=can_manage_ticket_fields(g.current_user, ticket),
+        can_change_priority=can_change_priority(g.current_user, ticket),
         can_reassign=can_reassign_ticket(g.current_user),
         can_delete=can_delete_ticket(g.current_user),
         can_edit_desc=can_edit_description(g.current_user, ticket),
@@ -187,7 +188,7 @@ def change_tracker(ticket_id):
 @login_required
 def change_priority(ticket_id):
     ticket = _get_ticket_or_403(ticket_id)
-    if not can_manage_ticket_fields(g.current_user, ticket):
+    if not can_change_priority(g.current_user, ticket):
         abort(403)
     form = PriorityChangeForm()
     if form.validate_on_submit():
