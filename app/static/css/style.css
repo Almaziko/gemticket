@@ -78,11 +78,9 @@ body {
 
 .table thead.table-light th {
     background: #fff;
-    color: #6b7280;
-    font-size: .78rem;
-    text-transform: uppercase;
-    letter-spacing: .03em;
-    font-weight: 600;
+    color: var(--gt-ink);
+    font-size: inherit;
+    font-weight: 700;
     border-bottom: 1px solid var(--gt-border);
 }
 
