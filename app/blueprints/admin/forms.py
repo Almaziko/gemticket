@@ -27,7 +27,7 @@ class StatusForm(FlaskForm):
     group = SelectField('Группа в списках тикетов', coerce=int, default=1)
     is_default = BooleanField('Начальный статус для новых тикетов')
     is_active = BooleanField('Активен')
-    is_final = BooleanField('Финальный статус (клиент не может писать в тикет)')
+    is_final = BooleanField('Финальный статус (постановщик не может писать в тикет)')
 
 
 class StatusGroupNamesForm(FlaskForm):

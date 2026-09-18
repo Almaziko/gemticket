@@ -76,7 +76,7 @@ def client_new():
 
     if form.validate_on_submit():
         if not form.password.data:
-            form.password.errors.append('Пароль обязателен для нового клиента')
+            form.password.errors.append('Пароль обязателен для нового постановщика')
         elif _password_taken(form.password.data):
             form.password.errors.append('Этот пароль уже используется другим пользователем системы')
         else:
@@ -90,7 +90,7 @@ def client_new():
             )
             db.session.add(client)
             db.session.commit()
-            flash('Клиент создан', 'success')
+            flash('Постановщик создан', 'success')
             return redirect(url_for('admin.clients_list'))
 
     return render_template('admin/client_form.html', form=form, client=None)
@@ -120,7 +120,7 @@ def client_edit(client_id):
                 client.password_hash = hash_password(form.password.data)
                 client.password_encrypted = encrypt_secret(form.password.data)
             db.session.commit()
-            flash('Клиент обновлён', 'success')
+            flash('Постановщик обновлён', 'success')
             return redirect(url_for('admin.clients_list'))
 
     return render_template('admin/client_form.html', form=form, client=client)
@@ -133,7 +133,7 @@ def client_show_password(client_id):
     if not g.current_user.is_superadmin and client.assigned_admin_id != g.current_user.id:
         abort(403)
     plain = decrypt_secret(client.password_encrypted)
-    flash(f'Пароль клиента «{client.name}»: {plain}', 'info')
+    flash(f'Пароль постановщика «{client.name}»: {plain}', 'info')
     return redirect(url_for('admin.clients_list'))
 
 
@@ -142,11 +142,11 @@ def client_show_password(client_id):
 def client_delete(client_id):
     client = Client.query.get_or_404(client_id)
     if client.tickets:
-        flash('Нельзя удалить клиента, у которого есть тикеты', 'danger')
+        flash('Нельзя удалить постановщика, у которого есть тикеты', 'danger')
     else:
         db.session.delete(client)
         db.session.commit()
-        flash('Клиент удалён', 'success')
+        flash('Постановщик удалён', 'success')
     return redirect(url_for('admin.clients_list'))
 
 
@@ -225,7 +225,7 @@ def admin_delete(admin_id):
     elif admin.is_superadmin:
         flash('Нельзя удалить суперадмина', 'danger')
     elif admin.clients:
-        flash('Нельзя удалить админа с закреплёнными клиентами — сначала переназначьте их', 'danger')
+        flash('Нельзя удалить админа с закреплёнными постановщиками — сначала переназначьте их', 'danger')
     else:
         db.session.delete(admin)
         db.session.commit()

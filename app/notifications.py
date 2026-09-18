@@ -95,7 +95,7 @@ def _create(recipient, ticket, bell_message, template_key, context):
 
 def notify_ticket_created(ticket):
     _create(
-        ticket.assignee, ticket, f'Клиент {ticket.client.name} создал новый тикет',
+        ticket.assignee, ticket, f'Постановщик {ticket.client.name} создал новый тикет',
         'ticket_created', {'client_name': ticket.client.name},
     )
 
@@ -113,7 +113,7 @@ def notify_comment_added(ticket, author):
 
 def notify_ticket_edited_by_client(ticket):
     _create(
-        ticket.assignee, ticket, f'Клиент {ticket.client.name} отредактировал(а) тикет',
+        ticket.assignee, ticket, f'Постановщик {ticket.client.name} отредактировал(а) тикет',
         'ticket_edited_by_client', {'client_name': ticket.client.name},
     )
 

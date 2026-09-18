@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% block title %}{{ 'Новый клиент' if not client else 'Клиент' }} — GemTicket{% endblock %}
+{% block title %}{{ 'Новый постановщик' if not client else 'Постановщик' }} — GemTicket{% endblock %}
 {% block content %}
-<h3 class="mb-3">{{ 'Новый клиент' if not client else 'Редактирование клиента' }}</h3>
+<h3 class="mb-3">{{ 'Новый постановщик' if not client else 'Редактирование постановщика' }}</h3>
 <form method="post">
     {{ form.hidden_tag() }}
     <div class="mb-3">
@@ -17,7 +17,7 @@
     <div class="mb-3">
         {{ form.password.label(class_='form-label') }}
         {{ form.password(class_='form-control') }}
-        <div class="form-text">{{ 'Оставьте пустым, чтобы не менять.' if client else 'Пароль должен быть уникальным во всей системе — отдайте его клиенту вручную.' }}</div>
+        <div class="form-text">{{ 'Оставьте пустым, чтобы не менять.' if client else 'Пароль должен быть уникальным во всей системе — отдайте его постановщику вручную.' }}</div>
         {% for e in form.password.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
     </div>
     <div class="mb-3">

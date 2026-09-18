@@ -29,7 +29,7 @@
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('client.ticket_new') }}">Новый тикет</a></li>
                 {% else %}
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">Тикеты</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.clients_list') }}">Клиенты</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.clients_list') }}">Постановщики</a></li>
                     {% if current_user.is_superadmin %}
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.admins_list') }}">Админы</a></li>
                         <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.statuses_list') }}">Статусы</a></li>

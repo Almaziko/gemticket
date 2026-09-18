@@ -26,7 +26,7 @@ class User(db.Model):
 
     @property
     def role_label(self):
-        return {'admin': 'Админ', 'client': 'Клиент'}.get(self.role, self.role)
+        return {'admin': 'Админ', 'client': 'Постановщик'}.get(self.role, self.role)
 
 
 class Admin(User):

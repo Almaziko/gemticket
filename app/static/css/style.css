@@ -19,6 +19,9 @@ body {
     border: none;
     border-radius: var(--gt-radius-lg);
     box-shadow: var(--gt-shadow);
+    /* Без этого содержимое (например, таблица с прямыми углами) торчит
+       за скруглённые края карточки внизу/по бокам. */
+    overflow: hidden;
 }
 
 .card-header {

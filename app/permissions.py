@@ -35,7 +35,7 @@ def can_view_attachment(user, attachment):
 
 
 def can_comment(user, ticket):
-    """В финальном статусе (Готов/Отменён и т.п.) клиент писать не может —
+    """В финальном статусе (Готов/Отменён и т.п.) постановщик писать не может —
     админ по-прежнему может добавить финальную заметку."""
     if not can_view_ticket(user, ticket):
         return False

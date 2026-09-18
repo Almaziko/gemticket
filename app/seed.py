@@ -10,10 +10,10 @@ from .security import hash_password, encrypt_secret
 DEFAULT_EMAIL_TEMPLATES = (
     dict(
         key='ticket_created',
-        name='Клиент создал тикет (админу)',
+        name='Постановщик создал тикет (админу)',
         subject='GemTicket: тикет «{{ ticket_title }}»',
         body_html=(
-            '<p>Клиент {{ client_name }} создал(а) новый тикет.</p>'
+            '<p>Постановщик {{ client_name }} создал(а) новый тикет.</p>'
             '<p>Тикет: {{ ticket_title }}</p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
@@ -32,10 +32,10 @@ DEFAULT_EMAIL_TEMPLATES = (
     ),
     dict(
         key='ticket_edited_by_client',
-        name='Клиент отредактировал тикет',
+        name='Постановщик отредактировал тикет',
         subject='GemTicket: тикет «{{ ticket_title }}» отредактирован',
         body_html=(
-            '<p>Клиент {{ client_name }} отредактировал(а) тикет.</p>'
+            '<p>Постановщик {{ client_name }} отредактировал(а) тикет.</p>'
             '<p>Тикет: {{ ticket_title }}</p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
@@ -92,7 +92,7 @@ DEFAULT_EMAIL_TEMPLATES = (
         body_html=(
             '<p>Дедлайн тикета истёк {{ deadline }}, но тикет ещё не завершён.</p>'
             '<p>Исполнитель: {{ assignee_name }}</p>'
-            '<p>Клиент: {{ client_name }}</p>'
+            '<p>Постановщик: {{ client_name }}</p>'
             '<p>Тикет: {{ ticket_title }}</p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),

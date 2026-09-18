@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}Клиенты — GemTicket{% endblock %}
+{% block title %}Постановщики — GemTicket{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Клиенты</h3>
-    <a href="{{ url_for('admin.client_new') }}" class="btn btn-primary">Новый клиент</a>
+    <h3>Постановщики</h3>
+    <a href="{{ url_for('admin.client_new') }}" class="btn btn-primary">Новый постановщик</a>
 </div>
 <table class="table bg-white align-middle">
     <thead><tr><th>Имя</th><th>Email</th><th>Админ-исполнитель</th><th></th></tr></thead>
@@ -17,7 +17,7 @@
             <a href="{{ url_for('admin.client_edit', client_id=c.id) }}" class="btn btn-sm btn-outline-secondary">Изменить</a>
             <a href="{{ url_for('admin.client_show_password', client_id=c.id) }}" class="btn btn-sm btn-outline-info">Показать пароль</a>
             {% if current_user.is_superadmin %}
-            <form method="post" action="{{ url_for('admin.client_delete', client_id=c.id) }}" class="d-inline" onsubmit="return confirm('Удалить клиента?');">
+            <form method="post" action="{{ url_for('admin.client_delete', client_id=c.id) }}" class="d-inline" onsubmit="return confirm('Удалить постановщика?');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button class="btn btn-sm btn-outline-danger">Удалить</button>
             </form>
@@ -25,7 +25,7 @@
         </td>
     </tr>
     {% else %}
-    <tr><td colspan="4" class="text-muted">Клиентов пока нет.</td></tr>
+    <tr><td colspan="4" class="text-muted">Постановщиков пока нет.</td></tr>
     {% endfor %}
     </tbody>
 </table>
