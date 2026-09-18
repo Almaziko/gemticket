@@ -202,3 +202,22 @@ def test_superadmin_can_delete_ticket_with_files_and_notifications(app, admin_cl
 
     resp = client_client.get(f'/tickets/{ticket_id}', follow_redirects=False)
     assert resp.status_code == 404
+
+
+def test_comment_badge_shows_executor_for_admin_author(admin_client, client_client):
+    """В ленте комментариев роль автора-админа подписана "Исполнитель",
+    а не общим role_label ("Админ") — иначе смешивается с тем, как сам
+    админ видит свою роль в шапке."""
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Badge check', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+
+    admin_client.post(f'/tickets/{ticket_id}/comment', data={'body': '<p>admin reply</p>'})
+
+    resp = client_client.get(f'/tickets/{ticket_id}')
+    html = resp.data.decode('utf-8')
+    idx = html.find('admin reply')
+    surrounding = html[max(0, idx - 400):idx]
+    assert 'Исполнитель' in surrounding
+    assert '>Админ<' not in surrounding
