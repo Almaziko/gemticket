@@ -1,7 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SelectField, IntegerField, BooleanField, TextAreaField
 from wtforms.validators import DataRequired, Optional, Length, Email, NumberRange
-from wtforms.widgets import HiddenInput
 
 from ...richtext import validate_nonempty_richtext
 
@@ -66,4 +65,6 @@ class TestEmailForm(FlaskForm):
 
 class EmailTemplateForm(FlaskForm):
     subject = StringField('Тема письма', validators=[DataRequired(message='Введите тему'), Length(max=300)])
-    body_html = TextAreaField('Текст письма', widget=HiddenInput(), validators=[validate_nonempty_richtext])
+    # Без widget=HiddenInput() — см. комментарий в tickets/forms.py: иначе
+    # form.hidden_tag() рендерит поле повторно, и сервер читает пустой дубль.
+    body_html = TextAreaField('Текст письма', validators=[validate_nonempty_richtext])

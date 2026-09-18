@@ -151,3 +151,10 @@ def test_regular_admin_cannot_access_superadmin_pages(app, admin_client, db):
     for path in ('/admin/statuses', '/admin/trackers', '/admin/admins', '/admin/settings', '/admin/email-templates'):
         resp = session.get(path, follow_redirects=False)
         assert resp.status_code == 403, f'{path} should be superadmin-only'
+
+
+def test_email_template_edit_form_has_single_body_field(admin_client, db):
+    tpl = EmailTemplate.query.first()
+    resp = admin_client.get(f'/admin/email-templates/{tpl.id}/edit')
+    html = resp.data.decode('utf-8')
+    assert html.count('name="body_html"') == 1

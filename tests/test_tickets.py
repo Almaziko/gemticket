@@ -139,3 +139,27 @@ def test_ticket_list_shows_separate_blocks_per_status_group(admin_client, client
 
     assert group1_idx != -1 and group2_idx != -1
     assert group1_idx < ticket1_idx < group2_idx < ticket2_idx
+
+
+def test_ticket_new_form_has_single_description_field(client_client):
+    """Регрессия: form.hidden_tag() без аргументов рендерит ЛЮБОЕ поле с
+    виджетом HiddenInput (в т.ч. наше WYSIWYG-поле description), а оно же
+    рендерится вручную через richtext_editor — получались два <input
+    name="description">, и сервер брал первый (всегда пустой), из-за чего
+    реальный пользователь в браузере не мог создать тикет: JS правильно
+    синхронизировал свой скрытый инпут, но сервер читал чужой, пустой."""
+    resp = client_client.get('/client/tickets/new')
+    html = resp.data.decode('utf-8')
+    assert html.count('name="description"') == 1
+
+
+def test_ticket_detail_forms_have_single_body_and_description_fields(client_client):
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Field count check', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+
+    resp = client_client.get(f'/tickets/{ticket_id}')
+    html = resp.data.decode('utf-8')
+    assert html.count('name="description"') == 1
+    assert html.count('name="body"') == 1

@@ -1,17 +1,22 @@
 from flask_wtf import FlaskForm
 from wtforms import TextAreaField, SelectField, DateField
 from wtforms.validators import DataRequired, Optional
-from wtforms.widgets import HiddenInput
 
 from ...richtext import validate_nonempty_richtext
 
+# Без widget=HiddenInput() на body/description — иначе form.hidden_tag()
+# (без аргументов сканирует все поля формы) рендерит их ещё раз сам по
+# себе, вторым <input> с тем же name, всегда пустым, который сервер читает
+# вместо настоящего значения из richtext-редактора (см. richtext_macro.html,
+# где скрытый инпут для этих полей рисуется вручную).
+
 
 class CommentForm(FlaskForm):
-    body = TextAreaField('Комментарий', widget=HiddenInput(), validators=[validate_nonempty_richtext])
+    body = TextAreaField('Комментарий', validators=[validate_nonempty_richtext])
 
 
 class DescriptionEditForm(FlaskForm):
-    description = TextAreaField('Описание', widget=HiddenInput(), validators=[validate_nonempty_richtext])
+    description = TextAreaField('Описание', validators=[validate_nonempty_richtext])
 
 
 class StatusChangeForm(FlaskForm):
