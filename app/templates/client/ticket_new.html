@@ -15,12 +15,16 @@
         {{ richtext_editor('description-editor', form.description) }}
     </div>
     <div class="row">
-        <div class="col-md-6 mb-3">
+        <div class="col-md-4 mb-3">
             {{ form.tracker_id.label(class_='form-label') }}
             {{ form.tracker_id(class_='form-select') }}
             {% for e in form.tracker_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
         </div>
-        <div class="col-md-6 mb-3">
+        <div class="col-md-4 mb-3">
+            {{ form.priority.label(class_='form-label') }}
+            {{ form.priority(class_='form-select') }}
+        </div>
+        <div class="col-md-4 mb-3">
             {{ form.deadline.label(class_='form-label') }}
             {{ form.deadline(class_='form-control') }}
         </div>

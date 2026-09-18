@@ -43,7 +43,7 @@ def dashboard():
         query = query.filter_by(status_id=status_filter)
     if search:
         query = query.filter(Ticket.title.ilike(f'%{search}%'))
-    tickets = query.order_by(Ticket.created_at.desc()).all()
+    tickets = query.order_by(Ticket.priority.desc(), Ticket.created_at.desc()).all()
     statuses = Status.query.order_by(Status.order).all()
     ticket_groups = group_by_status_group(tickets, lambda t: t.status)
     status_groups = group_by_status_group(statuses, lambda s: s)

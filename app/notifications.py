@@ -146,6 +146,13 @@ def notify_tracker_changed(ticket, old_name, new_name):
     )
 
 
+def notify_priority_changed(ticket, old_name, new_name):
+    _create(
+        ticket.client, ticket, f'Приоритет тикета изменён с «{old_name}» на «{new_name}»',
+        'priority_changed', {'old_priority': old_name, 'new_priority': new_name},
+    )
+
+
 def notify_deadline_overdue(ticket, recipient):
     deadline_str = ticket.deadline.strftime('%d.%m.%Y') if ticket.deadline else ''
     _create(

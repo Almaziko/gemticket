@@ -110,6 +110,16 @@ class Tracker(db.Model):
         return len(self.tickets) > 0
 
 
+#: Три фиксированных приоритета тикета. Числовые значения подобраны так,
+#: чтобы сортировка "высокий приоритет выше" была простым ORDER BY DESC.
+PRIORITY_HIGH = 3
+PRIORITY_MEDIUM = 2
+PRIORITY_LOW = 1
+PRIORITY_CHOICES = [(PRIORITY_HIGH, 'Высокий'), (PRIORITY_MEDIUM, 'Средний'), (PRIORITY_LOW, 'Низкий')]
+PRIORITY_LABELS = dict(PRIORITY_CHOICES)
+PRIORITY_COLORS = {PRIORITY_HIGH: 'danger', PRIORITY_MEDIUM: 'warning', PRIORITY_LOW: 'secondary'}
+
+
 class Ticket(db.Model):
     __tablename__ = 'tickets'
 
@@ -117,6 +127,7 @@ class Ticket(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False, default='')
     deadline = db.Column(db.Date, nullable=True)
+    priority = db.Column(db.Integer, nullable=False, default=PRIORITY_MEDIUM)
     overdue_notified = db.Column(db.Boolean, nullable=False, default=False)
 
     tracker_id = db.Column(db.Integer, db.ForeignKey('trackers.id'), nullable=False)
@@ -147,6 +158,14 @@ class Ticket(db.Model):
         'Notification', cascade='all, delete-orphan',
         primaryjoin='Ticket.id == Notification.ticket_id'
     )
+
+    @property
+    def priority_label(self):
+        return PRIORITY_LABELS.get(self.priority, str(self.priority))
+
+    @property
+    def priority_color(self):
+        return PRIORITY_COLORS.get(self.priority, 'secondary')
 
 
 class Comment(db.Model):

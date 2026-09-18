@@ -19,7 +19,7 @@ from ...history import record_event
 from ... import notifications as notif
 from .forms import (
     CommentForm, DescriptionEditForm, StatusChangeForm, AssigneeChangeForm,
-    DeadlineChangeForm, TrackerChangeForm,
+    DeadlineChangeForm, TrackerChangeForm, PriorityChangeForm,
 )
 
 tickets_bp = Blueprint('tickets', __name__)
@@ -53,6 +53,7 @@ def _render_detail(ticket, comment_form=None, description_form=None):
     assignee_form = AssigneeChangeForm(assignee_id=ticket.assignee_id)
     assignee_form.assignee_id.choices = [(a.id, a.name) for a in admins]
     deadline_form = DeadlineChangeForm(deadline=ticket.deadline)
+    priority_form = PriorityChangeForm(priority=ticket.priority)
 
     if description_form is None:
         description_form = DescriptionEditForm(description=ticket.description)
@@ -66,6 +67,7 @@ def _render_detail(ticket, comment_form=None, description_form=None):
         tracker_form=tracker_form,
         assignee_form=assignee_form,
         deadline_form=deadline_form,
+        priority_form=priority_form,
         description_form=description_form,
         comment_form=comment_form,
         can_manage=can_manage_ticket_fields(g.current_user, ticket),
@@ -171,6 +173,24 @@ def change_tracker(ticket_id):
             notif.notify_tracker_changed(ticket, old_name, new_tracker.name)
             record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) трекер с «{old_name}» на «{new_tracker.name}»')
             flash('Трекер обновлён', 'success')
+    return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+
+
+@tickets_bp.route('/tickets/<int:ticket_id>/priority', methods=['POST'])
+@login_required
+def change_priority(ticket_id):
+    ticket = _get_ticket_or_403(ticket_id)
+    if not can_manage_ticket_fields(g.current_user, ticket):
+        abort(403)
+    form = PriorityChangeForm()
+    if form.validate_on_submit():
+        if form.priority.data != ticket.priority:
+            old_label = ticket.priority_label
+            ticket.priority = form.priority.data
+            db.session.commit()
+            notif.notify_priority_changed(ticket, old_label, ticket.priority_label)
+            record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) приоритет с «{old_label}» на «{ticket.priority_label}»')
+            flash('Приоритет обновлён', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 
 

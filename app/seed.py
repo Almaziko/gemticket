@@ -86,6 +86,17 @@ DEFAULT_EMAIL_TEMPLATES = (
         variables_hint='ticket_title, ticket_link, old_tracker, new_tracker',
     ),
     dict(
+        key='priority_changed',
+        name='Смена приоритета',
+        subject='GemTicket: приоритет тикета «{{ ticket_title }}» изменён',
+        body_html=(
+            '<p>Приоритет тикета изменён с «{{ old_priority }}» на «{{ new_priority }}».</p>'
+            '<p>Тикет: {{ ticket_title }}</p>'
+            '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
+        ),
+        variables_hint='ticket_title, ticket_link, old_priority, new_priority',
+    ),
+    dict(
         key='deadline_overdue',
         name='Просрочен дедлайн (суперадмину)',
         subject='GemTicket: просрочен дедлайн тикета «{{ ticket_title }}»',

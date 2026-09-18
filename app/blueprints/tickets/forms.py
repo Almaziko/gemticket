@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import TextAreaField, SelectField, DateField
 from wtforms.validators import DataRequired, Optional
 
+from ...models import PRIORITY_CHOICES
 from ...richtext import validate_nonempty_richtext
 
 # Без widget=HiddenInput() на body/description — иначе form.hidden_tag()
@@ -33,3 +34,7 @@ class DeadlineChangeForm(FlaskForm):
 
 class TrackerChangeForm(FlaskForm):
     tracker_id = SelectField('Трекер', coerce=int, validators=[DataRequired()])
+
+
+class PriorityChangeForm(FlaskForm):
+    priority = SelectField('Приоритет', choices=PRIORITY_CHOICES, coerce=int, validators=[DataRequired()])

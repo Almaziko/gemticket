@@ -58,6 +58,7 @@
                 <p class="mb-1"><strong>Постановщик:</strong> {{ ticket.client.name }}</p>
                 <p class="mb-1"><strong>Исполнитель:</strong> {{ ticket.assignee.name }}</p>
                 <p class="mb-1"><strong>Трекер:</strong> {{ ticket.tracker.name }}</p>
+                <p class="mb-1"><strong>Приоритет:</strong> <span class="badge bg-{{ ticket.priority_color }}">{{ ticket.priority_label }}</span></p>
                 <p class="mb-1"><strong>Статус:</strong> <span class="badge bg-{{ ticket.status.color or 'secondary' }}">{{ ticket.status.name }}</span></p>
                 <p class="mb-1"><strong>Дедлайн:</strong> {{ ticket.deadline.strftime('%d.%m.%Y') if ticket.deadline else 'не задан' }}</p>
                 <p class="mb-1"><strong>Создан:</strong> {{ ticket.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
@@ -93,6 +94,15 @@
                     <label class="form-label small mb-1">Дедлайн</label>
                     <div class="input-group input-group-sm">
                         {{ deadline_form.deadline(class_='form-control') }}
+                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
+                    </div>
+                </form>
+
+                <form method="post" action="{{ url_for('tickets.change_priority', ticket_id=ticket.id) }}" class="mb-2">
+                    {{ priority_form.hidden_tag() }}
+                    <label class="form-label small mb-1">Приоритет</label>
+                    <div class="input-group input-group-sm">
+                        {{ priority_form.priority(class_='form-select') }}
                         <button class="btn btn-outline-primary" type="submit">&#10003;</button>
                     </div>
                 </form>

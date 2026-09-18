@@ -26,7 +26,7 @@ def tickets_list():
         query = query.filter_by(status_id=status_filter)
     if search:
         query = query.filter(Ticket.title.ilike(f'%{search}%'))
-    tickets = query.order_by(Ticket.created_at.desc()).all()
+    tickets = query.order_by(Ticket.priority.desc(), Ticket.created_at.desc()).all()
     statuses = Status.query.order_by(Status.order).all()
     ticket_groups = group_by_status_group(tickets, lambda t: t.status)
     status_groups = group_by_status_group(statuses, lambda s: s)
@@ -63,6 +63,7 @@ def ticket_new():
             description=clean_html(form.description.data),
             deadline=form.deadline.data,
             tracker_id=form.tracker_id.data,
+            priority=form.priority.data,
             status_id=default_status.id,
             client_id=g.current_user.id,
             assignee_id=g.current_user.assigned_admin_id,

@@ -221,3 +221,81 @@ def test_comment_badge_shows_executor_for_admin_author(admin_client, client_clie
     surrounding = html[max(0, idx - 400):idx]
     assert 'Исполнитель' in surrounding
     assert '>Админ<' not in surrounding
+
+
+def test_ticket_created_with_chosen_priority(client_client, db):
+    from app.models import PRIORITY_HIGH
+
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'High priority ticket', 'description': '<p>d</p>', 'tracker_id': '1',
+        'priority': str(PRIORITY_HIGH),
+    }, follow_redirects=False)
+    assert resp.status_code == 302
+    ticket = Ticket.query.filter_by(title='High priority ticket').first()
+    assert ticket.priority == PRIORITY_HIGH
+    assert ticket.priority_label == 'Высокий'
+
+
+def test_ticket_defaults_to_medium_priority_when_not_specified(client_client, db):
+    from app.models import PRIORITY_MEDIUM
+
+    client_client.post('/client/tickets/new', data={
+        'title': 'Default priority ticket', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket = Ticket.query.filter_by(title='Default priority ticket').first()
+    assert ticket.priority == PRIORITY_MEDIUM
+
+
+def test_admin_can_change_ticket_priority(admin_client, client_client, db):
+    from app.models import PRIORITY_LOW
+
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Priority change check', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+
+    resp = admin_client.post(f'/tickets/{ticket_id}/priority', data={'priority': str(PRIORITY_LOW)},
+                              follow_redirects=False)
+    assert resp.status_code == 302
+
+    ticket = Ticket.query.get(int(ticket_id))
+    assert ticket.priority == PRIORITY_LOW
+
+
+def test_client_cannot_change_ticket_priority(client_client, db):
+    from app.models import PRIORITY_LOW
+
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Client priority check', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+
+    resp = client_client.post(f'/tickets/{ticket_id}/priority', data={'priority': str(PRIORITY_LOW)},
+                               follow_redirects=False)
+    assert resp.status_code == 403
+
+
+def test_tickets_sorted_by_priority_then_creation_date(client_client, db):
+    """Внутри одного блока (группы статуса) высокий приоритет должен идти
+    выше среднего/низкого, а при равном приоритете — новее выше."""
+    from app.models import PRIORITY_HIGH, PRIORITY_LOW
+
+    def create(title, priority):
+        client_client.post('/client/tickets/new', data={
+            'title': title, 'description': '<p>d</p>', 'tracker_id': '1', 'priority': str(priority),
+        }, follow_redirects=False)
+
+    create('Low first', PRIORITY_LOW)
+    create('Low second (newer)', PRIORITY_LOW)
+    create('High but created last', PRIORITY_HIGH)
+
+    resp = client_client.get('/client/tickets')
+    html = resp.data.decode('utf-8')
+
+    idx_high = html.find('High but created last')
+    idx_low_second = html.find('Low second (newer)')
+    idx_low_first = html.find('Low first')
+
+    assert idx_high != -1 and idx_low_second != -1 and idx_low_first != -1
+    # высокий приоритет — выше обоих низких, несмотря на то что создан позже
+    assert idx_high < idx_low_second < idx_low_first

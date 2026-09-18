@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, DateField, SelectField
 from wtforms.validators import DataRequired, Optional, Length
 
+from ...models import PRIORITY_CHOICES, PRIORITY_MEDIUM
 from ...richtext import validate_nonempty_richtext
 
 
@@ -15,3 +16,4 @@ class TicketCreateForm(FlaskForm):
     description = TextAreaField('Описание', validators=[validate_nonempty_richtext])
     deadline = DateField('Дедлайн', validators=[Optional()])
     tracker_id = SelectField('Трекер', coerce=int, validators=[DataRequired(message='Выберите трекер')])
+    priority = SelectField('Приоритет', choices=PRIORITY_CHOICES, coerce=int, default=PRIORITY_MEDIUM)

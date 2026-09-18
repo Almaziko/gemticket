@@ -39,6 +39,11 @@ def run_light_migrations():
         db.session.execute(text('ALTER TABLE statuses ADD COLUMN "group" INTEGER NOT NULL DEFAULT 1'))
         added_group = True
 
+    if not _has_column('tickets', 'priority'):
+        # 2 = средний приоритет (см. models.PRIORITY_MEDIUM) — разумный
+        # дефолт для уже существующих тикетов.
+        db.session.execute(text('ALTER TABLE tickets ADD COLUMN priority INTEGER NOT NULL DEFAULT 2'))
+
     db.session.commit()
 
     if added_is_final:
