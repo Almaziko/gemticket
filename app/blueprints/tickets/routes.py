@@ -140,10 +140,13 @@ def edit_description(ticket_id):
     return _render_detail(ticket, description_form=form)
 
 
-def _apply_status_change(ticket, new_status, actor):
+def _apply_status_change(ticket, new_status, actor, notify_recipient=None):
     """Общая логика смены статуса — используется и ручным выбором статуса
     исполнителем, и кнопкой автоперехода у постановщика. Инициатором в
-    уведомлении/истории всегда становится actor (тот, кто нажал/выбрал)."""
+    истории всегда становится actor (тот, кто нажал/выбрал). notify_recipient
+    переопределяет получателя email/колокольчика (по умолчанию — постановщик);
+    кнопка автоперехода передаёт сюда исполнителя, т.к. иначе постановщик
+    получал бы письмо о своём же собственном действии."""
     old_name = ticket.status.name
     was_final = ticket.status.is_final
     ticket.status = new_status
@@ -152,7 +155,7 @@ def _apply_status_change(ticket, new_status, actor):
     elif not new_status.is_final and was_final:
         ticket.closed_at = None
     db.session.commit()
-    notif.notify_status_changed(ticket, old_name, new_status.name)
+    notif.notify_status_changed(ticket, old_name, new_status.name, recipient=notify_recipient)
     record_event(ticket, actor, f'{actor.name} изменил(а) статус с «{old_name}» на «{new_status.name}»')
 
 
@@ -185,7 +188,7 @@ def advance_status(ticket_id):
     if next_status is None:
         flash('Следующий статус не найден — обратитесь к администратору', 'danger')
         return redirect(url_for('tickets.detail', ticket_id=ticket.id))
-    _apply_status_change(ticket, next_status, g.current_user)
+    _apply_status_change(ticket, next_status, g.current_user, notify_recipient=ticket.assignee)
     flash('Статус обновлён', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 

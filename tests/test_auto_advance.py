@@ -1,4 +1,4 @@
-from app.models import Status, Ticket, TicketEvent, get_next_status
+from app.models import Status, Ticket, TicketEvent, Notification, get_next_status
 
 
 def test_get_next_status_follows_group_then_order(app, db):
@@ -72,6 +72,49 @@ def test_client_sees_and_can_click_advance_button(admin_client, client_client, d
     event = TicketEvent.query.filter_by(ticket_id=ticket_id).order_by(TicketEvent.id.desc()).first()
     assert 'изменил(а) статус с' in event.message
     assert 'Готов' in event.message
+
+
+def test_advance_status_notifies_assignee_not_client(admin_client, client_client, db):
+    """Регрессия: при смене статуса кнопкой автоперехода инициатор — сам
+    постановщик, поэтому письмо/колокольчик о смене статуса должны уходить
+    исполнителю, а не самому постановщику (иначе он получал бы уведомление
+    о собственном же действии). Ручная смена статуса исполнителем по-прежнему
+    уведомляет постановщика — это не должно измениться."""
+    status = Status.query.filter_by(name='На проверке').first()
+    admin_client.post(f'/admin/statuses/{status.id}/edit', data={
+        'name': status.name, 'order': str(status.order), 'color': status.color or '',
+        'group': '1', 'is_active': 'y', 'auto_advance_enabled': 'y', 'auto_advance_button_text': 'Проверено',
+    })
+    ticket_id = _create_ticket_and_move_to_na_proverke(admin_client, client_client, db)
+    ticket = Ticket.query.get(ticket_id)
+    client_id = ticket.client_id
+    assignee_id = ticket.assignee_id
+
+    Notification.query.filter_by(ticket_id=ticket_id).delete()
+    db.session.commit()
+
+    client_client.post(f'/tickets/{ticket_id}/advance-status')
+
+    notifications = Notification.query.filter_by(ticket_id=ticket_id).all()
+    assert len(notifications) == 1
+    assert notifications[0].recipient_id == assignee_id
+    assert notifications[0].recipient_id != client_id
+
+
+def test_manual_status_change_still_notifies_client(admin_client, client_client, db):
+    ticket_id = _create_ticket_and_move_to_na_proverke(admin_client, client_client, db)
+    ticket = Ticket.query.get(ticket_id)
+    client_id = ticket.client_id
+
+    Notification.query.filter_by(ticket_id=ticket_id).delete()
+    db.session.commit()
+
+    gotov = Status.query.filter_by(name='Готов').first()
+    admin_client.post(f'/tickets/{ticket_id}/status', data={'status_id': str(gotov.id)})
+
+    notifications = Notification.query.filter_by(ticket_id=ticket_id).all()
+    assert len(notifications) == 1
+    assert notifications[0].recipient_id == client_id
 
 
 def test_advance_button_not_shown_when_disabled(admin_client, client_client, db):

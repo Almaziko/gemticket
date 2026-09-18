@@ -118,9 +118,13 @@ def notify_ticket_edited_by_client(ticket):
     )
 
 
-def notify_status_changed(ticket, old_name, new_name):
+def notify_status_changed(ticket, old_name, new_name, recipient=None):
+    """recipient по умолчанию — постановщик (обычная ручная смена статуса
+    исполнителем). Кнопка автоперехода передаёт recipient=ticket.assignee
+    явно: там инициатор — сам постановщик, и слать ему письмо о его же
+    собственном действии бессмысленно."""
     _create(
-        ticket.client, ticket, f'Статус тикета изменён с «{old_name}» на «{new_name}»',
+        recipient or ticket.client, ticket, f'Статус тикета изменён с «{old_name}» на «{new_name}»',
         'status_changed', {'old_status': old_name, 'new_status': new_name},
     )
 
