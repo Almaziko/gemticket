@@ -34,6 +34,21 @@
         {{ form.is_final(class_='form-check-input') }}
         {{ form.is_final.label(class_='form-check-label') }}
     </div>
+    <hr>
+    <div class="form-check mb-2">
+        {{ form.auto_advance_enabled(class_='form-check-input') }}
+        {{ form.auto_advance_enabled.label(class_='form-check-label') }}
+    </div>
+    <div class="mb-3">
+        {{ form.auto_advance_button_text.label(class_='form-label') }}
+        {{ form.auto_advance_button_text(class_='form-control', placeholder='Проверено') }}
+        {% for e in form.auto_advance_button_text.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        <div class="form-text">
+            Пока тикет в этом статусе, постановщик увидит эту кнопку на странице тикета.
+            По нажатию тикет сам перейдёт на следующий статус по общему порядку списка статусов
+            (сначала группа 1..5, внутри группы — по полю «Порядок»).
+        </div>
+    </div>
     <button type="submit" class="btn btn-primary">Сохранить</button>
 </form>
 {% endblock %}

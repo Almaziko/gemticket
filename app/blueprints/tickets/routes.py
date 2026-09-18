@@ -6,11 +6,11 @@ from flask import (
 )
 
 from ...extensions import db
-from ...models import Ticket, Comment, Attachment, Status, Tracker, Admin, Notification
+from ...models import Ticket, Comment, Attachment, Status, Tracker, Admin, Notification, get_next_status
 from ...decorators import login_required, superadmin_required
 from ...permissions import (
     can_view_ticket, can_manage_ticket_fields, can_reassign_ticket, can_delete_ticket,
-    can_edit_description, can_view_attachment, can_comment, can_change_priority,
+    can_edit_description, can_view_attachment, can_comment, can_change_priority, can_advance_status,
 )
 from ...attachments import (
     check_files_size, check_files_extensions, save_attachments, delete_attachment_file,
@@ -74,6 +74,7 @@ def _render_detail(ticket, comment_form=None, description_form=None):
         comment_form=comment_form,
         can_manage=can_manage_ticket_fields(g.current_user, ticket),
         can_change_priority=can_change_priority(g.current_user, ticket),
+        can_advance_status=can_advance_status(g.current_user, ticket),
         can_reassign=can_reassign_ticket(g.current_user),
         can_delete=can_delete_ticket(g.current_user),
         can_edit_desc=can_edit_description(g.current_user, ticket),
@@ -139,6 +140,22 @@ def edit_description(ticket_id):
     return _render_detail(ticket, description_form=form)
 
 
+def _apply_status_change(ticket, new_status, actor):
+    """Общая логика смены статуса — используется и ручным выбором статуса
+    исполнителем, и кнопкой автоперехода у постановщика. Инициатором в
+    уведомлении/истории всегда становится actor (тот, кто нажал/выбрал)."""
+    old_name = ticket.status.name
+    was_final = ticket.status.is_final
+    ticket.status = new_status
+    if new_status.is_final and not was_final:
+        ticket.closed_at = datetime.now()
+    elif not new_status.is_final and was_final:
+        ticket.closed_at = None
+    db.session.commit()
+    notif.notify_status_changed(ticket, old_name, new_status.name)
+    record_event(ticket, actor, f'{actor.name} изменил(а) статус с «{old_name}» на «{new_status.name}»')
+
+
 @tickets_bp.route('/tickets/<int:ticket_id>/status', methods=['POST'])
 @login_required
 def change_status(ticket_id):
@@ -150,17 +167,26 @@ def change_status(ticket_id):
     if form.validate_on_submit():
         new_status = Status.query.get(form.status_id.data)
         if new_status and new_status.id != ticket.status_id:
-            old_name = ticket.status.name
-            was_final = ticket.status.is_final
-            ticket.status = new_status
-            if new_status.is_final and not was_final:
-                ticket.closed_at = datetime.now()
-            elif not new_status.is_final and was_final:
-                ticket.closed_at = None
-            db.session.commit()
-            notif.notify_status_changed(ticket, old_name, new_status.name)
-            record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) статус с «{old_name}» на «{new_status.name}»')
+            _apply_status_change(ticket, new_status, g.current_user)
             flash('Статус обновлён', 'success')
+    return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+
+
+@tickets_bp.route('/tickets/<int:ticket_id>/advance-status', methods=['POST'])
+@login_required
+def advance_status(ticket_id):
+    """Кнопка автоперехода у постановщика ("Проверено" и т.п.) — переводит
+    тикет на следующий статус по общему порядку списка статусов, без выбора
+    конкретного статуса вручную."""
+    ticket = _get_ticket_or_403(ticket_id)
+    if not can_advance_status(g.current_user, ticket):
+        abort(403)
+    next_status = get_next_status(ticket.status)
+    if next_status is None:
+        flash('Следующий статус не найден — обратитесь к администратору', 'danger')
+        return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+    _apply_status_change(ticket, next_status, g.current_user)
+    flash('Статус обновлён', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 
 

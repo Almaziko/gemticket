@@ -25,6 +25,14 @@ def can_change_priority(user, ticket):
     return user is not None and user.role == 'client' and ticket.client_id == user.id
 
 
+def can_advance_status(user, ticket):
+    """Кнопка автоперехода статуса ("Проверено" и т.п.) — видна только
+    постановщику, и только пока текущий статус тикета её предусматривает."""
+    if user is None or user.role != 'client' or ticket.client_id != user.id:
+        return False
+    return ticket.status.auto_advance_enabled and bool(ticket.status.auto_advance_button_text)
+
+
 def can_reassign_ticket(user):
     return user is not None and user.role == 'admin' and user.is_superadmin
 

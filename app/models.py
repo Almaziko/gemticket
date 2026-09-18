@@ -103,12 +103,33 @@ class Status(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     is_final = db.Column(db.Boolean, nullable=False, default=False)
     group = db.Column(db.Integer, nullable=False, default=1)
+    # Кнопка автоперехода ("Проверено" и т.п.): постановщик видит её на
+    # странице тикета, пока тикет в этом статусе, и по нажатию тикет сам
+    # переходит на следующий статус по общему порядку (группа -> order).
+    auto_advance_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    auto_advance_button_text = db.Column(db.String(80), nullable=True)
 
     tickets = db.relationship('Ticket', back_populates='status')
 
     @property
     def in_use(self):
         return len(self.tickets) > 0
+
+
+def get_next_status(current_status):
+    """Следующий статус по общему порядку списка статусов: сначала группа
+    1..5, внутри группы — по order (это ровно тот порядок, в котором статусы
+    показаны на /admin/statuses). Используется кнопкой автоперехода. None,
+    если текущий статус последний по этому порядку."""
+    ordered = Status.query.order_by(Status.group, Status.order).all()
+    ids = [s.id for s in ordered]
+    try:
+        idx = ids.index(current_status.id)
+    except ValueError:
+        return None
+    if idx + 1 < len(ordered):
+        return ordered[idx + 1]
+    return None
 
 
 class Tracker(db.Model):

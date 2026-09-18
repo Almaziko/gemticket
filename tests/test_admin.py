@@ -170,6 +170,18 @@ def test_email_templates_seeded(app, db):
     } <= keys
 
 
+def test_seeded_email_templates_bold_their_variables(app, db):
+    """Значения переменных ({{ ticket_title }} и т.п.) должны быть обёрнуты в
+    <strong>, чтобы в письме на почту они визуально выделялись жирным."""
+    tpl = EmailTemplate.query.filter_by(key='status_changed').first()
+    assert '<strong>{{ old_status }}</strong>' in tpl.body_html
+    assert '<strong>{{ new_status }}</strong>' in tpl.body_html
+    assert '<strong>{{ ticket_title }}</strong>' in tpl.body_html
+
+    tpl2 = EmailTemplate.query.filter_by(key='ticket_created').first()
+    assert '<strong>{{ client_name }}</strong>' in tpl2.body_html
+
+
 def test_edit_email_template_sanitizes_html(admin_client, db):
     tpl = EmailTemplate.query.filter_by(key='ticket_created').first()
     resp = admin_client.post(f'/admin/email-templates/{tpl.id}/edit', data={

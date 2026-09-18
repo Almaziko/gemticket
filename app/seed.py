@@ -13,8 +13,8 @@ DEFAULT_EMAIL_TEMPLATES = (
         name='Постановщик создал тикет (админу)',
         subject='GemTicket: тикет «{{ ticket_title }}»',
         body_html=(
-            '<p>Постановщик {{ client_name }} создал(а) новый тикет.</p>'
-            '<p>Тикет: {{ ticket_title }}</p>'
+            '<p>Постановщик <strong>{{ client_name }}</strong> создал(а) новый тикет.</p>'
+            '<p>Тикет: <strong>{{ ticket_title }}</strong></p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
         variables_hint='ticket_title, ticket_link, client_name',
@@ -24,8 +24,8 @@ DEFAULT_EMAIL_TEMPLATES = (
         name='Новый комментарий',
         subject='GemTicket: комментарий в тикете «{{ ticket_title }}»',
         body_html=(
-            '<p>{{ author_role }} {{ author_name }} оставил(а) комментарий к тикету.</p>'
-            '<p>Тикет: {{ ticket_title }}</p>'
+            '<p><strong>{{ author_role }} {{ author_name }}</strong> оставил(а) комментарий к тикету.</p>'
+            '<p>Тикет: <strong>{{ ticket_title }}</strong></p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
         variables_hint='ticket_title, ticket_link, author_name, author_role',
@@ -35,8 +35,8 @@ DEFAULT_EMAIL_TEMPLATES = (
         name='Постановщик отредактировал тикет',
         subject='GemTicket: тикет «{{ ticket_title }}» отредактирован',
         body_html=(
-            '<p>Постановщик {{ client_name }} отредактировал(а) тикет.</p>'
-            '<p>Тикет: {{ ticket_title }}</p>'
+            '<p>Постановщик <strong>{{ client_name }}</strong> отредактировал(а) тикет.</p>'
+            '<p>Тикет: <strong>{{ ticket_title }}</strong></p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
         variables_hint='ticket_title, ticket_link, client_name',
@@ -46,8 +46,8 @@ DEFAULT_EMAIL_TEMPLATES = (
         name='Смена статуса',
         subject='GemTicket: статус тикета «{{ ticket_title }}» изменён',
         body_html=(
-            '<p>Статус тикета изменён с «{{ old_status }}» на «{{ new_status }}».</p>'
-            '<p>Тикет: {{ ticket_title }}</p>'
+            '<p>Статус тикета изменён с «<strong>{{ old_status }}</strong>» на «<strong>{{ new_status }}</strong>».</p>'
+            '<p>Тикет: <strong>{{ ticket_title }}</strong></p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
         variables_hint='ticket_title, ticket_link, old_status, new_status',
@@ -57,8 +57,8 @@ DEFAULT_EMAIL_TEMPLATES = (
         name='Смена исполнителя',
         subject='GemTicket: исполнитель тикета «{{ ticket_title }}» изменён',
         body_html=(
-            '<p>Исполнитель тикета изменён с «{{ old_assignee }}» на «{{ new_assignee }}».</p>'
-            '<p>Тикет: {{ ticket_title }}</p>'
+            '<p>Исполнитель тикета изменён с «<strong>{{ old_assignee }}</strong>» на «<strong>{{ new_assignee }}</strong>».</p>'
+            '<p>Тикет: <strong>{{ ticket_title }}</strong></p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
         variables_hint='ticket_title, ticket_link, old_assignee, new_assignee',
@@ -68,8 +68,8 @@ DEFAULT_EMAIL_TEMPLATES = (
         name='Смена дедлайна',
         subject='GemTicket: дедлайн тикета «{{ ticket_title }}» изменён',
         body_html=(
-            '<p>Дедлайн тикета изменён с «{{ old_deadline }}» на «{{ new_deadline }}».</p>'
-            '<p>Тикет: {{ ticket_title }}</p>'
+            '<p>Дедлайн тикета изменён с «<strong>{{ old_deadline }}</strong>» на «<strong>{{ new_deadline }}</strong>».</p>'
+            '<p>Тикет: <strong>{{ ticket_title }}</strong></p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
         variables_hint='ticket_title, ticket_link, old_deadline, new_deadline',
@@ -79,8 +79,8 @@ DEFAULT_EMAIL_TEMPLATES = (
         name='Смена категории',
         subject='GemTicket: категория тикета «{{ ticket_title }}» изменена',
         body_html=(
-            '<p>Категория тикета изменена с «{{ old_tracker }}» на «{{ new_tracker }}».</p>'
-            '<p>Тикет: {{ ticket_title }}</p>'
+            '<p>Категория тикета изменена с «<strong>{{ old_tracker }}</strong>» на «<strong>{{ new_tracker }}</strong>».</p>'
+            '<p>Тикет: <strong>{{ ticket_title }}</strong></p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
         variables_hint='ticket_title, ticket_link, old_tracker, new_tracker',
@@ -90,8 +90,8 @@ DEFAULT_EMAIL_TEMPLATES = (
         name='Смена приоритета',
         subject='GemTicket: приоритет тикета «{{ ticket_title }}» изменён',
         body_html=(
-            '<p>Приоритет тикета изменён с «{{ old_priority }}» на «{{ new_priority }}».</p>'
-            '<p>Тикет: {{ ticket_title }}</p>'
+            '<p>Приоритет тикета изменён с «<strong>{{ old_priority }}</strong>» на «<strong>{{ new_priority }}</strong>».</p>'
+            '<p>Тикет: <strong>{{ ticket_title }}</strong></p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
         variables_hint='ticket_title, ticket_link, old_priority, new_priority',
@@ -101,10 +101,10 @@ DEFAULT_EMAIL_TEMPLATES = (
         name='Просрочен дедлайн (суперадмину)',
         subject='GemTicket: просрочен дедлайн тикета «{{ ticket_title }}»',
         body_html=(
-            '<p>Дедлайн тикета истёк {{ deadline }}, но тикет ещё не завершён.</p>'
-            '<p>Исполнитель: {{ assignee_name }}</p>'
-            '<p>Постановщик: {{ client_name }}</p>'
-            '<p>Тикет: {{ ticket_title }}</p>'
+            '<p>Дедлайн тикета истёк <strong>{{ deadline }}</strong>, но тикет ещё не завершён.</p>'
+            '<p>Исполнитель: <strong>{{ assignee_name }}</strong></p>'
+            '<p>Постановщик: <strong>{{ client_name }}</strong></p>'
+            '<p>Тикет: <strong>{{ ticket_title }}</strong></p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),
         variables_hint='ticket_title, ticket_link, assignee_name, client_name, deadline',

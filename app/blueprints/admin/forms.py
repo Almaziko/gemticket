@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SelectField, IntegerField, BooleanField, TextAreaField, DateField
-from wtforms.validators import DataRequired, Optional, Length, Email, NumberRange
+from wtforms.validators import DataRequired, Optional, Length, Email, NumberRange, ValidationError
 
 from ...models import SORT_MODE_CHOICES, PRIORITY_CHOICES, PRIORITY_LOW
 from ...richtext import validate_nonempty_richtext
@@ -29,6 +29,19 @@ class StatusForm(FlaskForm):
     is_default = BooleanField('Начальный статус для новых тикетов')
     is_active = BooleanField('Активен')
     is_final = BooleanField('Финальный статус (постановщик не может писать в тикет)')
+    auto_advance_enabled = BooleanField(
+        'Кнопка автоперехода на следующий статус (постановщик нажимает и тикет '
+        'сам переходит на следующий статус по общему порядку списка)'
+    )
+    # Без Optional(): при пустом значении она бы бросала StopValidation и
+    # обрывала цепочку до нашего кастомного validate_auto_advance_button_text
+    # ниже, из-за чего проверка "текст обязателен, если автопереход включён"
+    # никогда бы не сработала.
+    auto_advance_button_text = StringField('Текст кнопки', validators=[Length(max=80)])
+
+    def validate_auto_advance_button_text(self, field):
+        if self.auto_advance_enabled.data and not (field.data or '').strip():
+            raise ValidationError('Укажите текст кнопки — иначе автопереход включить нельзя')
 
 
 class StatusGroupSettingsForm(FlaskForm):
