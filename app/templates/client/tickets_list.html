@@ -15,7 +15,7 @@
         {% set overdue = t.deadline and t.deadline < today and not t.status.is_final %}
         <tr onclick="location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'" style="cursor:pointer;">
             <td class="text-muted">#{{ t.id }}</td>
-            <td>{{ t.title }}</td>
+            <td title="{{ t.title }}">{{ t.title }}</td>
             <td><span class="badge bg-{{ t.priority_color }}">{{ t.priority_label }}</span></td>
             <td><span class="badge bg-secondary">{{ t.tracker.name }}</span></td>
             <td><span class="badge bg-{{ t.status.color or 'secondary' }}">{{ t.status.name }}</span></td>
