@@ -54,6 +54,14 @@ def run_light_migrations():
             "ALTER TABLE status_groups ADD COLUMN sort_mode VARCHAR(20) NOT NULL DEFAULT 'priority'"
         ))
 
+    if not _has_column('settings', 'site_name'):
+        db.session.execute(text(
+            "ALTER TABLE settings ADD COLUMN site_name VARCHAR(120) NOT NULL DEFAULT 'GemTicket'"
+        ))
+
+    if not _has_column('settings', 'favicon_filename'):
+        db.session.execute(text('ALTER TABLE settings ADD COLUMN favicon_filename VARCHAR(255)'))
+
     db.session.commit()
 
     if added_is_final:

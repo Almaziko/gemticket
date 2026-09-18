@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% block title %}Трекер — GemTicket{% endblock %}
+{% block title %}Категория — {{ site_name }}{% endblock %}
 {% block content %}
-<h3 class="mb-3">{{ 'Новый трекер' if not tracker else 'Редактирование трекера' }}</h3>
+<h3 class="mb-3">{{ 'Новая категория' if not tracker else 'Редактирование категории' }}</h3>
 <form method="post">
     {{ form.hidden_tag() }}
     <div class="mb-3">

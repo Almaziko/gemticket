@@ -141,7 +141,7 @@ def notify_deadline_changed(ticket, old_value, new_value):
 
 def notify_tracker_changed(ticket, old_name, new_name):
     _create(
-        ticket.client, ticket, f'Трекер тикета изменён с «{old_name}» на «{new_name}»',
+        ticket.client, ticket, f'Категория тикета изменена с «{old_name}» на «{new_name}»',
         'tracker_changed', {'old_tracker': old_name, 'new_tracker': new_name},
     )
 

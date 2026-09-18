@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Тикеты — GemTicket{% endblock %}
+{% block title %}Тикеты — {{ site_name }}{% endblock %}
 
 {% macro ticket_table(group_tickets) %}
 <div class="table-responsive">
@@ -16,7 +16,7 @@
         <col style="width: 12%">
     </colgroup>
     <thead class="table-light">
-        <tr><th>#</th><th>Название</th><th>Постановщик</th><th>Исполнитель</th><th>Приоритет</th><th>Трекер</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr>
+        <tr><th>#</th><th>Название</th><th>Постановщик</th><th>Исполнитель</th><th>Приоритет</th><th>Категория</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr>
     </thead>
     <tbody>
     {% for t in group_tickets %}

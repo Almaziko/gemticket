@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}Вход — GemTicket{% endblock %}
+{% block title %}Вход — {{ site_name }}{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-4 mt-5">
         <div class="card shadow-sm">
             <div class="card-body">
-                <h4 class="card-title mb-3 text-center">GemTicket</h4>
+                <h4 class="card-title mb-3 text-center">{{ site_name }}</h4>
                 <form method="post">
                     {{ form.hidden_tag() }}
                     <div class="mb-3">

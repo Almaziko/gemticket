@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
-{% block title %}Трекеры — GemTicket{% endblock %}
+{% block title %}Категории — {{ site_name }}{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Трекеры</h3>
-    <a href="{{ url_for('admin.tracker_new') }}" class="btn btn-primary">Новый трекер</a>
+    <h3>Категории</h3>
+    <a href="{{ url_for('admin.tracker_new') }}" class="btn btn-primary">Новая категория</a>
 </div>
 <table class="table bg-white align-middle">
-    <thead><tr><th>Порядок</th><th>Название</th><th>Активен</th><th>Используется</th><th></th></tr></thead>
+    <thead><tr><th>Порядок</th><th>Название</th><th>Активна</th><th>Используется</th><th></th></tr></thead>
     <tbody>
     {% for t in trackers %}
     <tr>
@@ -25,7 +25,7 @@
             </form>
             <a href="{{ url_for('admin.tracker_edit', tracker_id=t.id) }}" class="btn btn-sm btn-outline-secondary">Изменить</a>
             {% if not t.in_use %}
-            <form method="post" action="{{ url_for('admin.tracker_delete', tracker_id=t.id) }}" class="d-inline" onsubmit="return confirm('Удалить трекер?');">
+            <form method="post" action="{{ url_for('admin.tracker_delete', tracker_id=t.id) }}" class="d-inline" onsubmit="return confirm('Удалить категорию?');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button class="btn btn-sm btn-outline-danger">Удалить</button>
             </form>

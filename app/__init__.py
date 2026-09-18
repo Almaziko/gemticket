@@ -1,7 +1,7 @@
 import os
 from datetime import date
 
-from flask import Flask, g, session
+from flask import Flask, g, session, url_for
 
 from .config import Config
 from .extensions import db, csrf
@@ -65,18 +65,27 @@ def create_app(config_overrides=None):
     @app.context_processor
     def inject_globals():
         from .attachments import get_allowed_extensions
+        from .models import Settings
         unread_count = 0
         recent_notifications = []
         if g.get('current_user'):
             base_q = Notification.query.filter_by(recipient_id=g.current_user.id)
             unread_count = base_q.filter_by(is_read=False).count()
             recent_notifications = base_q.order_by(Notification.created_at.desc()).limit(10).all()
+        settings = Settings.query.first()
+        site_name = settings.site_name if settings and settings.site_name else 'GemTicket'
+        favicon_url = (
+            url_for('auth.favicon', filename=settings.favicon_filename)
+            if settings and settings.favicon_filename else None
+        )
         return dict(
             current_user=g.get('current_user'),
             unread_notifications_count=unread_count,
             recent_notifications=recent_notifications,
             allowed_extensions=get_allowed_extensions(),
             today=date.today(),
+            site_name=site_name,
+            favicon_url=favicon_url,
         )
 
     @app.errorhandler(413)

@@ -1,24 +1,35 @@
-{% macro richtext_editor(editor_id, field) %}
-<div class="btn-toolbar mb-1" id="{{ editor_id }}-toolbar" role="toolbar">
-    <div class="btn-group btn-group-sm">
-        <button type="button" class="btn btn-outline-secondary" data-cmd="bold" title="Жирный"><b>Ж</b></button>
-        <button type="button" class="btn btn-outline-secondary" data-cmd="italic" title="Курсив"><i>К</i></button>
-        <button type="button" class="btn btn-outline-secondary" data-cmd="underline" title="Подчёркнутый"><u>Ч</u></button>
-        <button type="button" class="btn btn-outline-secondary" data-cmd="insertUnorderedList" title="Список">&bull; список</button>
-        <button type="button" class="btn btn-outline-secondary" data-cmd="createLink" title="Вставить ссылку">Ссылка</button>
+{% macro richtext_editor(editor_id, field, submit_selector=None) %}
+<div class="richtext-wrap">
+    <div class="richtext-toolbar" id="{{ editor_id }}-toolbar" role="toolbar">
+        <button type="button" class="richtext-btn" data-cmd="bold" title="Жирный">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M3.8 2.2h4.1a3 3 0 0 1 1.8 5.4 3.2 3.2 0 0 1-1.4 6.2H3.8a.6.6 0 0 1-.6-.6V2.8a.6.6 0 0 1 .6-.6Zm1.4 1.6v3.4h2.5a1.7 1.7 0 0 0 0-3.4H5.2Zm0 5v3.6h2.9a1.8 1.8 0 0 0 0-3.6H5.2Z"/></svg>
+        </button>
+        <button type="button" class="richtext-btn" data-cmd="italic" title="Курсив">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6.8 2.6h4.6v1.5H9.7L7.5 11.9h1.7v1.5H4.6v-1.5h1.7L8.5 4.1H6.8V2.6Z"/></svg>
+        </button>
+        <button type="button" class="richtext-btn" data-cmd="underline" title="Подчёркнутый">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4.2 2.4v5.4a3.8 3.8 0 0 0 7.6 0V2.4h-1.6v5.4a2.2 2.2 0 0 1-4.4 0V2.4H4.2ZM3 12.6h10v1.2H3v-1.2Z"/></svg>
+        </button>
+        <span class="richtext-sep"></span>
+        <button type="button" class="richtext-btn" data-cmd="insertUnorderedList" title="Маркированный список">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="2.2" cy="4" r="1.1"/><circle cx="2.2" cy="8" r="1.1"/><circle cx="2.2" cy="12" r="1.1"/><rect x="5.3" y="3.2" width="9" height="1.5" rx="0.6"/><rect x="5.3" y="7.2" width="9" height="1.5" rx="0.6"/><rect x="5.3" y="11.2" width="9" height="1.5" rx="0.6"/></svg>
+        </button>
+        <button type="button" class="richtext-btn" data-cmd="createLink" title="Вставить ссылку">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6.7 9.3a1 1 0 0 1 0-1.4l1.9-1.9a2.6 2.6 0 1 1 3.7 3.7l-1.2 1.2-1.1-1.1 1.2-1.2a1.1 1.1 0 1 0-1.5-1.5L8 8.8a1 1 0 0 1-1.3.5ZM9.3 6.7a1 1 0 0 1 0 1.4L7.4 10a2.6 2.6 0 1 1-3.7-3.7l1.2-1.2 1.1 1.1-1.2 1.2a1.1 1.1 0 1 0 1.5 1.5L8 6.7a1 1 0 0 1 1.3-.5Z"/></svg>
+        </button>
     </div>
+    {# Единственный источник контента — данные самого поля (field.data), а не
+       отдельный параметр: иначе при повторном рендере формы после ошибки
+       валидации (например, недопустимый файл) видимый редактор перерисовывается
+       пустым и JS тут же затирает этим пустым значением скрытое поле — именно
+       так терялся набранный текст. #}
+    <div class="form-control richtext-editor" id="{{ editor_id }}" contenteditable="true">{{ (field.data or '')|safe }}</div>
 </div>
-{# Единственный источник контента — данные самого поля (field.data), а не
-   отдельный параметр: иначе при повторном рендере формы после ошибки
-   валидации (например, недопустимый файл) видимый редактор перерисовывается
-   пустым и JS тут же затирает этим пустым значением скрытое поле — именно
-   так терялся набранный текст. #}
-<div class="form-control richtext-editor" id="{{ editor_id }}" contenteditable="true">{{ (field.data or '')|safe }}</div>
 {# Рисуем hidden-инпут вручную, а не через {{ field(...) }}: поле нарочно
    держит обычный (не HiddenInput) виджет, иначе form.hidden_tag() выше по
    форме подхватил бы его сам и продублировал бы этот input вторым, с
    name="{{ field.name }}", но пустым — сервер читал бы именно его. #}
 <input type="hidden" name="{{ field.name }}" id="{{ editor_id }}-hidden" value="{{ field.data or '' }}">
 {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-<script>setupRichTextEditor('#{{ editor_id }}', '#{{ editor_id }}-hidden', '#{{ editor_id }}-toolbar');</script>
+<script>setupRichTextEditor('#{{ editor_id }}', '#{{ editor_id }}-hidden', '#{{ editor_id }}-toolbar'{% if submit_selector %}, '{{ submit_selector }}'{% endif %});</script>
 {% endmacro %}

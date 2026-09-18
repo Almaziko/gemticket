@@ -1,8 +1,9 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SelectField, IntegerField, BooleanField, TextAreaField, DateField
 from wtforms.validators import DataRequired, Optional, Length, Email, NumberRange
 
-from ...models import SORT_MODE_CHOICES, PRIORITY_CHOICES, PRIORITY_MEDIUM
+from ...models import SORT_MODE_CHOICES, PRIORITY_CHOICES, PRIORITY_LOW
 from ...richtext import validate_nonempty_richtext
 
 
@@ -63,6 +64,11 @@ class SettingsForm(FlaskForm):
         'Разрешённые расширения файлов (через запятую, без точки)',
         validators=[DataRequired(), Length(max=500)],
     )
+    site_name = StringField('Название сайта', validators=[DataRequired(), Length(max=120)])
+    favicon = FileField(
+        'Иконка сайта (favicon)',
+        validators=[FileAllowed(['png', 'jpg', 'jpeg', 'ico', 'svg', 'gif', 'webp'], 'Только изображения')],
+    )
 
 
 class TestEmailForm(FlaskForm):
@@ -81,8 +87,8 @@ class AdminTicketCreateForm(FlaskForm):
     по другому каналу связи), но постановщиком остаётся выбранный клиент."""
     client_id = SelectField('Постановщик', coerce=int, validators=[DataRequired(message='Выберите постановщика')])
     assignee_id = SelectField('Исполнитель', coerce=int, validators=[DataRequired(message='Выберите исполнителя')])
-    title = StringField('Название', validators=[DataRequired(message='Введите название'), Length(max=200)])
+    title = StringField('Название', validators=[DataRequired(message='Введите название'), Length(max=80)])
     description = TextAreaField('Описание', validators=[validate_nonempty_richtext])
     deadline = DateField('Дедлайн', validators=[Optional()])
-    tracker_id = SelectField('Трекер', coerce=int, validators=[DataRequired(message='Выберите трекер')])
-    priority = SelectField('Приоритет', choices=PRIORITY_CHOICES, coerce=int, default=PRIORITY_MEDIUM)
+    tracker_id = SelectField('Категория', coerce=int, validators=[DataRequired(message='Выберите категорию')])
+    priority = SelectField('Приоритет', choices=PRIORITY_CHOICES, coerce=int, default=PRIORITY_LOW)

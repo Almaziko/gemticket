@@ -143,7 +143,7 @@ class Ticket(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=False, default='')
     deadline = db.Column(db.Date, nullable=True)
-    priority = db.Column(db.Integer, nullable=False, default=PRIORITY_MEDIUM)
+    priority = db.Column(db.Integer, nullable=False, default=PRIORITY_LOW)
     overdue_notified = db.Column(db.Boolean, nullable=False, default=False)
     #: Проставляется/сбрасывается автоматически при смене статуса — см.
     #: change_status в tickets/routes.py. Нужно для сортировки группы "по
@@ -269,6 +269,8 @@ class Settings(db.Model):
     base_url = db.Column(db.String(255), nullable=False, default='http://localhost:5000')
     max_upload_mb = db.Column(db.Integer, nullable=False, default=50)
     allowed_extensions = db.Column(db.String(500), nullable=False, default='zip,xlsx,xls,csv,docx,doc,pdf,jpeg,png,jpg')
+    site_name = db.Column(db.String(120), nullable=False, default='GemTicket')
+    favicon_filename = db.Column(db.String(255), nullable=True)
 
 
 class TicketEvent(db.Model):

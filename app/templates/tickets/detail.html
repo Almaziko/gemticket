@@ -2,7 +2,7 @@
 {% from 'partials/attachments_macro.html' import render_attachments %}
 {% from 'partials/comment_macro.html' import render_comment %}
 {% from 'partials/richtext_macro.html' import richtext_editor %}
-{% block title %}Тикет #{{ ticket.id }} — GemTicket{% endblock %}
+{% block title %}Тикет #{{ ticket.id }} — {{ site_name }}{% endblock %}
 {% block content %}
 <div class="row">
     <div class="col-md-8">
@@ -36,7 +36,7 @@
             {{ comment_form.hidden_tag() }}
             <div class="mb-2">
                 <label class="form-label">Комментарий</label>
-                {{ richtext_editor('comment-editor', comment_form.body) }}
+                {{ richtext_editor('comment-editor', comment_form.body, '#comment-submit-btn') }}
             </div>
             <div class="mb-2">
                 <input type="file" name="attachments" id="comment-attachments-input" class="form-control"
@@ -44,7 +44,7 @@
                 <div class="form-text">Разрешены файлы: {{ allowed_extensions|join(', ') }}.</div>
                 <div id="comment-attachments-list" class="mt-2"></div>
             </div>
-            <button type="submit" class="btn btn-primary btn-sm">Отправить</button>
+            <button type="submit" class="btn btn-primary btn-sm" id="comment-submit-btn" disabled>Отправить</button>
         </form>
         {% else %}
         <p class="text-muted">Тикет в статусе «{{ ticket.status.name }}» — постановщик не может добавлять комментарии.</p>
@@ -57,7 +57,7 @@
                 <h6 class="card-title">Сведения</h6>
                 <p class="mb-1"><strong>Постановщик:</strong> {{ ticket.client.name }}</p>
                 <p class="mb-1"><strong>Исполнитель:</strong> {{ ticket.assignee.name }}</p>
-                <p class="mb-1"><strong>Трекер:</strong> {{ ticket.tracker.name }}</p>
+                <p class="mb-1"><strong>Категория:</strong> {{ ticket.tracker.name }}</p>
                 <p class="mb-1"><strong>Приоритет:</strong> <span class="badge bg-{{ ticket.priority_color }}">{{ ticket.priority_label }}</span></p>
                 <p class="mb-1"><strong>Статус:</strong> <span class="badge bg-{{ ticket.status.color or 'secondary' }}">{{ ticket.status.name }}</span></p>
                 <p class="mb-1"><strong>Дедлайн:</strong> {{ ticket.deadline.strftime('%d.%m.%Y') if ticket.deadline else 'не задан' }}</p>
@@ -82,7 +82,7 @@
 
                 <form method="post" action="{{ url_for('tickets.change_tracker', ticket_id=ticket.id) }}" class="mb-2">
                     {{ tracker_form.hidden_tag() }}
-                    <label class="form-label small mb-1">Трекер</label>
+                    <label class="form-label small mb-1">Категория</label>
                     <div class="input-group input-group-sm">
                         {{ tracker_form.tracker_id(class_='form-select') }}
                         <button class="btn btn-outline-primary" type="submit">&#10003;</button>
@@ -93,7 +93,7 @@
                     {{ deadline_form.hidden_tag() }}
                     <label class="form-label small mb-1">Дедлайн</label>
                     <div class="input-group input-group-sm">
-                        {{ deadline_form.deadline(class_='form-control') }}
+                        {{ deadline_form.deadline(class_='form-control', data_empty_text='Не определён') }}
                         <button class="btn btn-outline-primary" type="submit">&#10003;</button>
                     </div>
                 </form>

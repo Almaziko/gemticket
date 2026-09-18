@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}{{ 'Новый админ' if not admin else 'Админ' }} — GemTicket{% endblock %}
+{% block title %}{{ 'Новый админ' if not admin else 'Админ' }} — {{ site_name }}{% endblock %}
 {% block content %}
 <h3 class="mb-3">{{ 'Новый админ' if not admin else 'Редактирование админа' }}</h3>
 <form method="post">

@@ -76,10 +76,10 @@ DEFAULT_EMAIL_TEMPLATES = (
     ),
     dict(
         key='tracker_changed',
-        name='Смена трекера',
-        subject='GemTicket: трекер тикета «{{ ticket_title }}» изменён',
+        name='Смена категории',
+        subject='GemTicket: категория тикета «{{ ticket_title }}» изменена',
         body_html=(
-            '<p>Трекер тикета изменён с «{{ old_tracker }}» на «{{ new_tracker }}».</p>'
+            '<p>Категория тикета изменена с «{{ old_tracker }}» на «{{ new_tracker }}».</p>'
             '<p>Тикет: {{ ticket_title }}</p>'
             '<p><a href="{{ ticket_link }}">Открыть тикет</a></p>'
         ),

@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% from 'partials/richtext_macro.html' import richtext_editor %}
-{% block title %}Новый тикет — GemTicket{% endblock %}
+{% block title %}Новый тикет — {{ site_name }}{% endblock %}
 {% block content %}
 <h3 class="mb-3">Новый тикет</h3>
 <form method="post" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     <div class="mb-3">
         {{ form.title.label(class_='form-label') }}
-        {{ form.title(class_='form-control') }}
+        {{ form.title(class_='form-control', maxlength=80) }}
         {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
     </div>
     <div class="mb-3">
@@ -26,7 +26,7 @@
         </div>
         <div class="col-md-4 mb-3">
             {{ form.deadline.label(class_='form-label') }}
-            {{ form.deadline(class_='form-control') }}
+            {{ form.deadline(class_='form-control', data_empty_text='Не определён') }}
         </div>
     </div>
     <div class="mb-3">

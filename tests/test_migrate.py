@@ -87,6 +87,8 @@ def test_light_migration_backfills_new_columns_on_legacy_db(tmp_path):
         settings = Settings.query.first()
         assert settings.base_url == 'https://old.example.com'  # не затёрто
         assert settings.allowed_extensions  # дефолт подставлен
+        assert settings.site_name == 'GemTicket'  # дефолт подставлен
+        assert settings.favicon_filename is None
 
         from app.models import Admin
         assert Admin.query.filter_by(is_superadmin=True).count() == 1

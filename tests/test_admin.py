@@ -275,3 +275,21 @@ def test_regular_admin_cannot_create_ticket_on_behalf_of_client(app, db):
     login(session, 'regularpassabc')
     resp = session.get('/admin/tickets/new', follow_redirects=False)
     assert resp.status_code == 403
+
+
+def test_tracker_renamed_to_category_in_ui(admin_client, client_client, db):
+    """Регрессия: сущность "Трекер" переименована в "Категория" по всему
+    UI, при этом внутренние Python/URL-имена (Tracker, /admin/trackers,
+    tracker_id) намеренно не менялись."""
+    resp = admin_client.get('/admin/trackers')
+    html = resp.data.decode('utf-8')
+    assert 'Категории' in html
+    assert 'Трекер' not in html
+
+    client_client.post('/client/tickets/new', data={
+        'title': 'Category label check', 'description': '<p>d</p>', 'tracker_id': '1',
+    })
+    resp = admin_client.get('/admin/')
+    html = resp.data.decode('utf-8')
+    assert '>Категория<' in html
+    assert 'Трекер' not in html

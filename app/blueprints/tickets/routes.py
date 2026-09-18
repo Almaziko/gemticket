@@ -178,8 +178,8 @@ def change_tracker(ticket_id):
             ticket.tracker = new_tracker
             db.session.commit()
             notif.notify_tracker_changed(ticket, old_name, new_tracker.name)
-            record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) трекер с «{old_name}» на «{new_tracker.name}»')
-            flash('Трекер обновлён', 'success')
+            record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) категорию с «{old_name}» на «{new_tracker.name}»')
+            flash('Категория обновлена', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 
 

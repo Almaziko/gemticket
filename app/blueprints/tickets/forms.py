@@ -33,7 +33,7 @@ class DeadlineChangeForm(FlaskForm):
 
 
 class TrackerChangeForm(FlaskForm):
-    tracker_id = SelectField('Трекер', coerce=int, validators=[DataRequired()])
+    tracker_id = SelectField('Категория', coerce=int, validators=[DataRequired()])
 
 
 class PriorityChangeForm(FlaskForm):

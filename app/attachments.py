@@ -106,6 +106,28 @@ def delete_attachment_file(attachment):
         pass
 
 
+def save_favicon_file(file_storage):
+    original_name = file_storage.filename or 'favicon'
+    safe_name = secure_filename(original_name) or 'favicon'
+    ext = os.path.splitext(safe_name)[1]
+    stored_name = f"favicon-{uuid.uuid4().hex}{ext}"
+
+    upload_dir = current_app.config['UPLOAD_DIR']
+    os.makedirs(upload_dir, exist_ok=True)
+    file_storage.save(os.path.join(upload_dir, stored_name))
+    return stored_name
+
+
+def delete_favicon_file(filename):
+    if not filename:
+        return
+    path = os.path.join(current_app.config['UPLOAD_DIR'], filename)
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+
 def refresh_max_content_length(app):
     """Глобальный запасной потолок Flask на тело запроса — с учётом того, что
     за раз может грузиться несколько файлов. Точная проверка размера каждого

@@ -1,13 +1,38 @@
 {% extends 'base.html' %}
-{% block title %}Настройки — GemTicket{% endblock %}
+{% block title %}Настройки — {{ site_name }}{% endblock %}
 {% block content %}
 <h3 class="mb-3">Настройки</h3>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <h5 class="card-title">SMTP</h5>
-        <form method="post">
-            {{ form.hidden_tag() }}
+<form method="post" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Оформление сайта</h5>
+            <div class="mb-3">
+                {{ form.site_name.label(class_='form-label') }}
+                {{ form.site_name(class_='form-control') }}
+                {% for e in form.site_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.favicon.label(class_='form-label') }}
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    {% if favicon_url %}
+                        <img src="{{ favicon_url }}" alt="" width="32" height="32" class="rounded border">
+                        <span class="text-muted small">Текущая иконка</span>
+                    {% else %}
+                        <span class="text-muted small">Иконка не загружена</span>
+                    {% endif %}
+                </div>
+                {{ form.favicon(class_='form-control') }}
+                {% for e in form.favicon.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">SMTP</h5>
             <div class="row">
                 <div class="col-md-8 mb-3">
                     {{ form.smtp_host.label(class_='form-label') }}
@@ -54,9 +79,9 @@
                 {% for e in form.allowed_extensions.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
             </div>
             <button type="submit" class="btn btn-primary">Сохранить настройки</button>
-        </form>
+        </div>
     </div>
-</div>
+</form>
 
 <div class="card">
     <div class="card-body">

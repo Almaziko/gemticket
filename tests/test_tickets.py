@@ -1,6 +1,38 @@
 from io import BytesIO
 
-from app.models import Ticket, Status
+from app.models import Ticket, Status, PRIORITY_LOW
+
+
+def test_create_ticket_title_over_80_chars_rejected(client_client, db):
+    long_title = 'x' * 81
+    resp = client_client.post('/client/tickets/new', data={
+        'title': long_title,
+        'description': '<p>d</p>',
+        'tracker_id': '1',
+    }, follow_redirects=False)
+    assert resp.status_code == 200
+    assert Ticket.query.filter_by(title=long_title).first() is None
+
+
+def test_create_ticket_title_exactly_80_chars_accepted(client_client, db):
+    title = 'x' * 80
+    resp = client_client.post('/client/tickets/new', data={
+        'title': title,
+        'description': '<p>d</p>',
+        'tracker_id': '1',
+    }, follow_redirects=False)
+    assert resp.status_code == 302
+    assert Ticket.query.filter_by(title=title).first() is not None
+
+
+def test_new_ticket_defaults_to_low_priority(client_client, db):
+    client_client.post('/client/tickets/new', data={
+        'title': 'No explicit priority',
+        'description': '<p>d</p>',
+        'tracker_id': '1',
+    })
+    ticket = Ticket.query.filter_by(title='No explicit priority').first()
+    assert ticket.priority == PRIORITY_LOW
 
 
 def test_create_ticket_success(client_client):
@@ -234,16 +266,6 @@ def test_ticket_created_with_chosen_priority(client_client, db):
     ticket = Ticket.query.filter_by(title='High priority ticket').first()
     assert ticket.priority == PRIORITY_HIGH
     assert ticket.priority_label == 'Высокий'
-
-
-def test_ticket_defaults_to_medium_priority_when_not_specified(client_client, db):
-    from app.models import PRIORITY_MEDIUM
-
-    client_client.post('/client/tickets/new', data={
-        'title': 'Default priority ticket', 'description': '<p>d</p>', 'tracker_id': '1',
-    }, follow_redirects=False)
-    ticket = Ticket.query.filter_by(title='Default priority ticket').first()
-    assert ticket.priority == PRIORITY_MEDIUM
 
 
 def test_admin_can_change_ticket_priority(admin_client, client_client, db):

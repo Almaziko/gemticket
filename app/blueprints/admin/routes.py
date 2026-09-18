@@ -12,6 +12,7 @@ from ...security import hash_password, encrypt_secret, decrypt_secret
 from ...attachments import (
     delete_attachment_file, refresh_max_content_length,
     check_files_size, check_files_extensions, save_attachments,
+    save_favicon_file, delete_favicon_file,
     FileTooLargeError, DisallowedExtensionError,
 )
 from ...notifications import send_test_email
@@ -437,7 +438,7 @@ def tracker_new():
         tracker = Tracker(name=form.name.data, order=form.order.data, is_active=form.is_active.data)
         db.session.add(tracker)
         db.session.commit()
-        flash('Трекер создан', 'success')
+        flash('Категория создана', 'success')
         return redirect(url_for('admin.trackers_list'))
     return render_template('admin/tracker_form.html', form=form, tracker=None)
 
@@ -452,7 +453,7 @@ def tracker_edit(tracker_id):
         tracker.order = form.order.data
         tracker.is_active = form.is_active.data
         db.session.commit()
-        flash('Трекер обновлён', 'success')
+        flash('Категория обновлена', 'success')
         return redirect(url_for('admin.trackers_list'))
     return render_template('admin/tracker_form.html', form=form, tracker=tracker)
 
@@ -462,11 +463,11 @@ def tracker_edit(tracker_id):
 def tracker_delete(tracker_id):
     tracker = Tracker.query.get_or_404(tracker_id)
     if tracker.in_use:
-        flash('Нельзя удалить трекер, который используется тикетами — деактивируйте его', 'danger')
+        flash('Нельзя удалить категорию, которая используется тикетами — деактивируйте её', 'danger')
     else:
         db.session.delete(tracker)
         db.session.commit()
-        flash('Трекер удалён', 'success')
+        flash('Категория удалена', 'success')
     return redirect(url_for('admin.trackers_list'))
 
 
@@ -532,6 +533,11 @@ def settings_page():
         settings.max_upload_mb = form.max_upload_mb.data
         normalized_ext = [e.strip().lower().lstrip('.') for e in form.allowed_extensions.data.split(',') if e.strip()]
         settings.allowed_extensions = ','.join(dict.fromkeys(normalized_ext))
+        settings.site_name = form.site_name.data
+        if form.favicon.data:
+            old_favicon = settings.favicon_filename
+            settings.favicon_filename = save_favicon_file(form.favicon.data)
+            delete_favicon_file(old_favicon)
         db.session.commit()
         refresh_max_content_length(current_app._get_current_object())
         flash('Настройки сохранены', 'success')

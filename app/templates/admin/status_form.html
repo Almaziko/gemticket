@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Статус — GemTicket{% endblock %}
+{% block title %}Статус — {{ site_name }}{% endblock %}
 {% block content %}
 <h3 class="mb-3">{{ 'Новый статус' if not status else 'Редактирование статуса' }}</h3>
 <form method="post">
