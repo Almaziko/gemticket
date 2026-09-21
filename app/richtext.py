@@ -7,6 +7,7 @@
 атрибуты вроде onclick и т.д.) обрезается bleach'ем.
 """
 import bleach
+from bleach.linkifier import Linker, TLDS, build_url_re
 from wtforms.validators import ValidationError
 
 ALLOWED_TAGS = ['p', 'br', 'b', 'strong', 'i', 'em', 'u', 'ul', 'ol', 'li', 'a', 'div']
@@ -32,6 +33,21 @@ def _link_attrs(attrs, new=False):
     return attrs
 
 
+# bleach узнаёт в тексте только домены из своего списка латинских TLD, поэтому
+# ссылки вроде https://сделановмоскве.рф/... оставались некликабельными.
+# Добавляем кириллические зоны и punycode (xn--...; скобки в начале нужны,
+# чтобы этот вариант сортировался раньше голого "xn" и не обрезался по нему).
+_EXTRA_TLDS = [
+    'рф', 'москва', 'рус', 'дети', 'онлайн', 'сайт', 'орг', 'ком',
+    'бел', 'срб', 'укр', 'мкд', 'бг', 'мон', 'католик',
+    r'(?:xn--[a-z0-9-]{2,})',
+]
+_LINKER = Linker(
+    callbacks=[_link_attrs],
+    url_re=build_url_re(tlds=list(TLDS) + _EXTRA_TLDS),
+)
+
+
 def render_richtext(html):
     """Используется во ВСЕХ местах вывода описания/комментария (фильтр
     Jinja `richtext`). Чистит ещё раз (идемпотентно — не ломает уже чистый
@@ -40,8 +56,7 @@ def render_richtext(html):
     появления WYSIWYG-редактора: та старая plain-text могла содержать
     произвольные `<`/`>`, и раньше это было безопасно только потому, что
     шаблон не помечал её `|safe`. Теперь помечаем — так что чистим здесь."""
-    cleaned = clean_html(html)
-    return bleach.linkify(cleaned, callbacks=[_link_attrs])
+    return _LINKER.linkify(clean_html(html))
 
 
 def html_to_text(html):
