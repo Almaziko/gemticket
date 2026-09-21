@@ -1,3 +1,4 @@
+import re
 from io import BytesIO
 
 from app.models import Ticket, Status, PRIORITY_LOW
@@ -211,6 +212,27 @@ def test_ticket_list_shows_separate_blocks_per_status_group(admin_client, client
 
     assert group1_idx != -1 and group2_idx != -1
     assert group1_idx < ticket1_idx < group2_idx < ticket2_idx
+
+
+def test_group_name_shown_even_when_only_one_group_has_tickets(admin_client, client_client, db):
+    """Регрессия: название группы статуса раньше скрывалось, если в списке
+    была всего одна группа — оставался только ряд заголовков колонок."""
+    from app.models import StatusGroup
+
+    StatusGroup.query.get(2).name = 'Завершены'
+    db.session.commit()
+
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Only finished', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket_id = resp.headers['Location'].rstrip('/').split('/')[-1]
+    group2_status = Status.query.filter_by(group=2).first()
+    admin_client.post(f'/tickets/{ticket_id}/status', data={'status_id': str(group2_status.id)})
+
+    for client, url in ((client_client, '/client/tickets'), (admin_client, '/admin/')):
+        text = client.get(url).data.decode('utf-8')
+        assert 'Only finished' in text
+        assert re.search(r'card-header[^>]*>\s*Завершены', text), f'no group header on {url}'
 
 
 def test_ticket_new_form_has_single_description_field(client_client):

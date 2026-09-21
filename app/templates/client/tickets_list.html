@@ -60,12 +60,10 @@
 {% if tickets %}
     {% for group_number, group_tickets in ticket_groups %}
     <div class="card mb-4">
-        {% if ticket_groups|length > 1 %}
         <div class="card-header bg-white fw-semibold d-flex align-items-center justify-content-between">
             {{ group_names.get(group_number, 'Группа ' ~ group_number) }}
             <span class="badge bg-secondary rounded-pill">{{ group_tickets|length }}</span>
         </div>
-        {% endif %}
         {{ ticket_table(group_tickets) }}
     </div>
     {% endfor %}
