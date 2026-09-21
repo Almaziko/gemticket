@@ -25,6 +25,13 @@ function alignTicketTables() {
     // тогда auto-layout честно сжимает таблицу по контенту.
     var previousWidths = [];
     for (var pw = 0; pw < tables.length; pw++) {
+        // Функция вызывается повторно (см. ниже) — сначала сбрасываем
+        // результат прошлого прогона, иначе замер пошёл бы уже по
+        // зафиксированным ширинам, а не по естественному контенту.
+        tables[pw].style.tableLayout = '';
+        var oldCols = tables[pw].querySelectorAll('colgroup col');
+        for (var oc = 0; oc < oldCols.length; oc++) oldCols[oc].style.width = '';
+
         previousWidths.push(tables[pw].style.width);
         tables[pw].style.width = 'auto';
     }
@@ -63,4 +70,17 @@ function alignTicketTables() {
     }
 }
 
+// Замер зависит от метрик шрифта. Inter подгружается с Google Fonts с
+// font-display: swap, и при "холодном" кэше на DOMContentLoaded страница ещё
+// нарисована запасным (более узким) шрифтом: колонки фиксировались по его
+// ширинам, а после подмены шрифта на Inter текст в них не помещался и
+// обрезался многоточием (лечилось только перезагрузкой, когда шрифт уже в
+// кэше). Поэтому пересчитываем ещё раз, когда шрифты реально загрузились.
 document.addEventListener('DOMContentLoaded', alignTicketTables);
+window.addEventListener('load', alignTicketTables);
+if (document.fonts) {
+    if (document.fonts.ready) document.fonts.ready.then(alignTicketTables);
+    if (document.fonts.addEventListener) {
+        document.fonts.addEventListener('loadingdone', alignTicketTables);
+    }
+}
