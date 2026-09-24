@@ -6,11 +6,14 @@ from flask import (
 )
 
 from ...extensions import db
-from ...models import Ticket, Comment, Attachment, Status, Tracker, Admin, Notification, get_next_status
+from ...models import (
+    Ticket, Comment, Attachment, Status, Tracker, Admin, Notification, get_next_status, get_previous_status,
+)
 from ...decorators import login_required, superadmin_required
 from ...permissions import (
     can_view_ticket, can_manage_ticket_fields, can_reassign_ticket, can_delete_ticket,
-    can_edit_description, can_view_attachment, can_comment, can_change_priority, can_advance_status,
+    can_edit_description, can_view_attachment, can_comment, can_change_priority,
+    can_advance_status, can_revert_status,
 )
 from ...attachments import (
     check_files_size, check_files_extensions, save_attachments, delete_attachment_file,
@@ -75,6 +78,7 @@ def _render_detail(ticket, comment_form=None, description_form=None):
         can_manage=can_manage_ticket_fields(g.current_user, ticket),
         can_change_priority=can_change_priority(g.current_user, ticket),
         can_advance_status=can_advance_status(g.current_user, ticket),
+        can_revert_status=can_revert_status(g.current_user, ticket),
         can_reassign=can_reassign_ticket(g.current_user),
         can_delete=can_delete_ticket(g.current_user),
         can_edit_desc=can_edit_description(g.current_user, ticket),
@@ -189,6 +193,23 @@ def advance_status(ticket_id):
         flash('Следующий статус не найден — обратитесь к администратору', 'danger')
         return redirect(url_for('tickets.detail', ticket_id=ticket.id))
     _apply_status_change(ticket, next_status, g.current_user, notify_recipient=ticket.assignee)
+    flash('Статус обновлён', 'success')
+    return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+
+
+@tickets_bp.route('/tickets/<int:ticket_id>/revert-status', methods=['POST'])
+@login_required
+def revert_status(ticket_id):
+    """Кнопка возврата на доработку у постановщика — переводит тикет на
+    предыдущий статус по общему порядку списка статусов."""
+    ticket = _get_ticket_or_403(ticket_id)
+    if not can_revert_status(g.current_user, ticket):
+        abort(403)
+    previous_status = get_previous_status(ticket.status)
+    if previous_status is None:
+        flash('Предыдущий статус не найден — обратитесь к администратору', 'danger')
+        return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+    _apply_status_change(ticket, previous_status, g.current_user, notify_recipient=ticket.assignee)
     flash('Статус обновлён', 'success')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 

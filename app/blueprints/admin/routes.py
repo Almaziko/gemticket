@@ -355,6 +355,8 @@ def status_new():
             is_final=form.is_final.data,
             auto_advance_enabled=form.auto_advance_enabled.data,
             auto_advance_button_text=form.auto_advance_button_text.data or None,
+            auto_revert_enabled=form.auto_revert_enabled.data,
+            auto_revert_button_text=form.auto_revert_button_text.data or None,
         )
         db.session.add(status)
         db.session.commit()
@@ -380,6 +382,8 @@ def status_edit(status_id):
         status.is_final = form.is_final.data
         status.auto_advance_enabled = form.auto_advance_enabled.data
         status.auto_advance_button_text = form.auto_advance_button_text.data or None
+        status.auto_revert_enabled = form.auto_revert_enabled.data
+        status.auto_revert_button_text = form.auto_revert_button_text.data or None
         if was_default and not form.is_default.data:
             flash('Нельзя снять флаг «начальный» — сначала назначьте начальным другой статус', 'warning')
             status.is_default = True

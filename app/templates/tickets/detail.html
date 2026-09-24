@@ -8,13 +8,6 @@
     <div class="col-md-8">
         <h3>{{ ticket.title }} <span class="text-muted">#{{ ticket.id }}</span></h3>
 
-        {% if can_advance_status %}
-        <form method="post" action="{{ url_for('tickets.advance_status', ticket_id=ticket.id) }}" class="mb-3">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-success">{{ ticket.status.auto_advance_button_text }}</button>
-        </form>
-        {% endif %}
-
         <div class="card mb-3">
             <div class="card-body">
                 {% if can_edit_desc %}
@@ -30,6 +23,23 @@
                 {{ render_attachments(ticket.attachments) }}
             </div>
         </div>
+
+        {% if can_advance_status or can_revert_status %}
+        <div class="d-flex gap-2 mb-3">
+            {% if can_advance_status %}
+            <form method="post" action="{{ url_for('tickets.advance_status', ticket_id=ticket.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-success">{{ ticket.status.auto_advance_button_text }}</button>
+            </form>
+            {% endif %}
+            {% if can_revert_status %}
+            <form method="post" action="{{ url_for('tickets.revert_status', ticket_id=ticket.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-danger">{{ ticket.status.auto_revert_button_text }}</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
 
         <h5 id="comments">Комментарии</h5>
         {% for c in ticket.comments %}

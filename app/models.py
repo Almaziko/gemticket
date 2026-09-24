@@ -108,6 +108,11 @@ class Status(db.Model):
     # переходит на следующий статус по общему порядку (группа -> order).
     auto_advance_enabled = db.Column(db.Boolean, nullable=False, default=False)
     auto_advance_button_text = db.Column(db.String(80), nullable=True)
+    # Кнопка возврата на доработку — тот же механизм, но в обратную сторону
+    # по общему порядку (группа -> order) и с уведомлением исполнителя, а не
+    # постановщика (тот, кто её нажал — сам постановщик).
+    auto_revert_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    auto_revert_button_text = db.Column(db.String(80), nullable=True)
 
     tickets = db.relationship('Ticket', back_populates='status')
 
@@ -129,6 +134,21 @@ def get_next_status(current_status):
         return None
     if idx + 1 < len(ordered):
         return ordered[idx + 1]
+    return None
+
+
+def get_previous_status(current_status):
+    """Зеркально get_next_status — предыдущий статус по тому же общему
+    порядку. Используется кнопкой возврата на доработку. None, если текущий
+    статус первый по этому порядку."""
+    ordered = Status.query.order_by(Status.group, Status.order).all()
+    ids = [s.id for s in ordered]
+    try:
+        idx = ids.index(current_status.id)
+    except ValueError:
+        return None
+    if idx - 1 >= 0:
+        return ordered[idx - 1]
     return None
 
 

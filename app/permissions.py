@@ -33,6 +33,15 @@ def can_advance_status(user, ticket):
     return ticket.status.auto_advance_enabled and bool(ticket.status.auto_advance_button_text)
 
 
+def can_revert_status(user, ticket):
+    """Кнопка возврата на доработку ("На доработку" и т.п.) — тот же
+    механизм, что и автопереход, только в обратную сторону по порядку
+    статусов."""
+    if user is None or user.role != 'client' or ticket.client_id != user.id:
+        return False
+    return ticket.status.auto_revert_enabled and bool(ticket.status.auto_revert_button_text)
+
+
 def can_reassign_ticket(user):
     return user is not None and user.role == 'admin' and user.is_superadmin
 

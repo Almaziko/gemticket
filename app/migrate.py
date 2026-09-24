@@ -68,6 +68,12 @@ def run_light_migrations():
     if not _has_column('statuses', 'auto_advance_button_text'):
         db.session.execute(text('ALTER TABLE statuses ADD COLUMN auto_advance_button_text VARCHAR(80)'))
 
+    if not _has_column('statuses', 'auto_revert_enabled'):
+        db.session.execute(text('ALTER TABLE statuses ADD COLUMN auto_revert_enabled BOOLEAN NOT NULL DEFAULT 0'))
+
+    if not _has_column('statuses', 'auto_revert_button_text'):
+        db.session.execute(text('ALTER TABLE statuses ADD COLUMN auto_revert_button_text VARCHAR(80)'))
+
     db.session.commit()
 
     if added_is_final:

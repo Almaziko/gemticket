@@ -43,6 +43,16 @@ class StatusForm(FlaskForm):
         if self.auto_advance_enabled.data and not (field.data or '').strip():
             raise ValidationError('Укажите текст кнопки — иначе автопереход включить нельзя')
 
+    auto_revert_enabled = BooleanField(
+        'Кнопка возврата на доработку (постановщик нажимает и тикет '
+        'переходит на предыдущий статус по общему порядку списка)'
+    )
+    auto_revert_button_text = StringField('Текст кнопки', validators=[Length(max=80)])
+
+    def validate_auto_revert_button_text(self, field):
+        if self.auto_revert_enabled.data and not (field.data or '').strip():
+            raise ValidationError('Укажите текст кнопки — иначе возврат на доработку включить нельзя')
+
 
 class StatusGroupSettingsForm(FlaskForm):
     group_1 = StringField('Группа 1', validators=[DataRequired(), Length(max=80)])

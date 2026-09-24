@@ -49,6 +49,20 @@
             (сначала группа 1..5, внутри группы — по полю «Порядок»).
         </div>
     </div>
+    <hr>
+    <div class="form-check mb-2">
+        {{ form.auto_revert_enabled(class_='form-check-input') }}
+        {{ form.auto_revert_enabled.label(class_='form-check-label') }}
+    </div>
+    <div class="mb-3">
+        {{ form.auto_revert_button_text.label(class_='form-label') }}
+        {{ form.auto_revert_button_text(class_='form-control', placeholder='На доработку') }}
+        {% for e in form.auto_revert_button_text.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        <div class="form-text">
+            Аналогично, но в обратную сторону: тикет перейдёт на предыдущий статус по общему
+            порядку списка. Исполнителю в обоих случаях приходит уведомление о смене статуса.
+        </div>
+    </div>
     <button type="submit" class="btn btn-primary">Сохранить</button>
 </form>
 {% endblock %}
