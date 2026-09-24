@@ -3,6 +3,13 @@ function setupRichTextEditor(editorSelector, hiddenSelector, toolbarSelector, su
     var hidden = document.querySelector(hiddenSelector);
     if (!editor || !hidden) return;
 
+    // Без этого Chrome по Enter заворачивает новый абзац в <div> (а Firefox
+    // вообще ограничивается голым <br>), и у <div> нет отступа снизу — два
+    // абзаца, набранные через Enter+Enter, визуально слипались в один без
+    // видимого пропуска строки. Приводим оба браузера к <p> — под него уже
+    // есть margin-bottom в .richtext-content (см. style.css).
+    try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (err) { /* не критично */ }
+
     function isEmpty() {
         var nbsp = String.fromCharCode(160);
         var text = editor.textContent.split(nbsp).join(' ').trim();
@@ -21,6 +28,34 @@ function setupRichTextEditor(editorSelector, hiddenSelector, toolbarSelector, su
 
     editor.addEventListener('input', sync);
     sync();
+
+    // По умолчанию браузер при вставке обычного текста (Ctrl+V, скопированного
+    // не из HTML-источника) вставляет его буквально как текстовый узел с
+    // символами перевода строки внутри — а HTML такие переносы не показывает
+    // (схлопывает как обычный пробел), поэтому вставленные "два абзаца" на
+    // экране сливались в один. Разбираем текст сами: пустая строка — новый
+    // абзац, одиночный перенос внутри абзаца — <br>.
+    editor.addEventListener('paste', function (e) {
+        if (!e.clipboardData) return;
+        var text = e.clipboardData.getData('text/plain');
+        if (!text) return;
+        e.preventDefault();
+        document.execCommand('insertHTML', false, pastedTextToHtml(text));
+        sync();
+    });
+
+    function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function pastedTextToHtml(text) {
+        var normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        var paragraphs = normalized.split(/\n{2,}/);
+        return paragraphs.map(function (p) {
+            var withBr = escapeHtml(p).replace(/\n/g, '<br>');
+            return '<p>' + (withBr || '<br>') + '</p>';
+        }).join('');
+    }
 
     var toolbar = toolbarSelector ? document.querySelector(toolbarSelector) : null;
     var toolbarButtons = [];

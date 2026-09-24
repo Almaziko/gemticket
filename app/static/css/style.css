@@ -215,11 +215,17 @@ body {
     color: transparent;
 }
 
-.richtext-content p {
+/* JS-редактор приводит Enter к <p> (см. richtext_editor.js), но подстрахуемся
+   и на <div> — на случай контента из браузера, где execCommand не сработал,
+   или уже сохранённого до этой правки: без отступа соседние <div> визуально
+   слипались в один абзац. */
+.richtext-content p,
+.richtext-content div {
     margin-bottom: 0.5rem;
 }
 
-.richtext-content p:last-child {
+.richtext-content p:last-child,
+.richtext-content div:last-child {
     margin-bottom: 0;
 }
 
