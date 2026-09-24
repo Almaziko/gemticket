@@ -19,6 +19,14 @@ class Config:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + _db_path.replace(os.sep, '/')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # По умолчанию Flask-WTF считает CSRF-токен просроченным через час — если
+    # страницу тикета открыть и не торопясь написать комментарий (или просто
+    # оставить вкладку открытой), сабмит уже после истечения часа падал с
+    # "The CSRF token has expired", а введённый текст комментария терялся.
+    # Токен всё равно привязан к сессии и проверяется на каждый POST — просто
+    # без искусственного лимита по времени.
+    WTF_CSRF_TIME_LIMIT = None
+
     UPLOAD_DIR = os.path.abspath(os.environ.get('UPLOAD_DIR', os.path.join(basedir, 'uploads')))
 
     PORT = int(os.environ.get('PORT', 5000))

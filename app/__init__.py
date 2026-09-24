@@ -2,6 +2,7 @@ import os
 from datetime import date
 
 from flask import Flask, g, session, url_for
+from flask_wtf.csrf import CSRFError
 
 from .config import Config
 from .extensions import db, csrf
@@ -92,6 +93,12 @@ def create_app(config_overrides=None):
     def too_large(_e):
         from flask import flash, redirect, request
         flash('Загружаемые файлы слишком большие.', 'danger')
+        return redirect(request.referrer or '/'), 302
+
+    @app.errorhandler(CSRFError)
+    def csrf_error(_e):
+        from flask import flash, redirect, request
+        flash('Сессия истекла, попробуйте ещё раз.', 'danger')
         return redirect(request.referrer or '/'), 302
 
     return app
