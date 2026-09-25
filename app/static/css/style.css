@@ -222,10 +222,11 @@ body {
    уже ПОСЛЕ рендера — из-за этого он перестаёт быть прямым потомком
    .input-group, и стандартные бутстраповские правила
    ".input-group > .form-control:not(:last-child) { border-radius: 0 ... }"
-   и ".input-group-sm > .form-control { border-radius: var(--bs-border-radius-sm) }"
-   до него не дотягиваются: поле "Дедлайн" оставалось скруглённым со всех
-   сторон и более крупным радиусом, чем соседние select'ы в блоке
-   "Управление". Дублируем оба правила вручную. */
+   и ".input-group-sm > .form-control { font-size: .875rem; padding: ...;
+   border-radius: var(--bs-border-radius-sm) }" до него не дотягиваются:
+   поле "Дедлайн" оставалось со скруглением со всех сторон, более крупным
+   радиусом, шрифтом и паддингом, чем соседние select'ы в блоке
+   "Управление". Дублируем все три правила вручную. */
 .input-group .date-field-wrap input[type="date"] {
     width: 100%;
     border-top-right-radius: 0;
@@ -235,6 +236,13 @@ body {
 .input-group-sm .date-field-wrap input[type="date"] {
     border-top-left-radius: var(--bs-border-radius-sm);
     border-bottom-left-radius: var(--bs-border-radius-sm);
+    font-size: .875rem;
+    padding: .25rem .5rem;
+}
+
+.input-group-sm .date-field-placeholder {
+    font-size: .875rem;
+    left: .5rem;
 }
 
 .date-field-placeholder {
