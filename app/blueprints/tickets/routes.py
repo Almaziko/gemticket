@@ -137,7 +137,19 @@ def edit_description(ticket_id):
         abort(403)
     form = DescriptionEditForm()
     if form.validate_on_submit():
+        files = request.files.getlist('attachments')
+        try:
+            check_files_size(files)
+            check_files_extensions(files)
+        except FileTooLargeError as e:
+            flash(f'Файл «{e.filename}» превышает лимит {e.limit_mb} МБ. Описание не сохранено.', 'danger')
+            return _render_detail(ticket, description_form=form)
+        except DisallowedExtensionError as e:
+            flash(f'Файл «{e.filename}» имеет неразрешённое расширение. Разрешены: {", ".join(e.allowed)}.', 'danger')
+            return _render_detail(ticket, description_form=form)
+
         ticket.description = clean_html(form.description.data)
+        save_attachments(files, g.current_user, ticket=ticket)
         db.session.commit()
         notif.notify_ticket_edited_by_client(ticket)
         record_event(ticket, g.current_user, f'{g.current_user.name} отредактировал(а) описание')
@@ -146,6 +158,25 @@ def edit_description(ticket_id):
 
     flash('Не удалось сохранить описание', 'danger')
     return _render_detail(ticket, description_form=form)
+
+
+@tickets_bp.route('/attachments/<int:attachment_id>/delete', methods=['POST'])
+@login_required
+def delete_attachment(attachment_id):
+    """Удалить вложение тикета может только сам постановщик и только в том
+    же окне, когда ему доступно редактирование описания (тикет в начальном
+    статусе) — то есть ровно тем же условием, что и can_edit_description.
+    Вложения к комментариям сюда не попадают: attachment.ticket_id у них
+    пустой, у комментария своя лента и трогать её задним числом нельзя."""
+    attachment = Attachment.query.get_or_404(attachment_id)
+    ticket = attachment.parent_ticket
+    if ticket is None or attachment.ticket_id is None or not can_edit_description(g.current_user, ticket):
+        abort(403)
+    delete_attachment_file(attachment)
+    db.session.delete(attachment)
+    db.session.commit()
+    flash('Вложение удалено', 'success')
+    return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 
 
 def _apply_status_change(ticket, new_status, actor, notify_recipient=None):

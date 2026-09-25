@@ -10,6 +10,17 @@ function setupRichTextEditor(editorSelector, hiddenSelector, toolbarSelector, su
     // есть margin-bottom в .richtext-content (см. style.css).
     try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (err) { /* не критично */ }
 
+    // Если редактор стартует пустым, первый набранный текст ложится прямо в
+    // contenteditable-контейнер без обёртки в <p> — и самый первый Enter в
+    // такой ситуации браузер трактует не как разрыв абзаца, а как обычный
+    // перенос строки (<br>), в отличие от всех следующих Enter, которые уже
+    // корректно создают новый <p>. Подкладываем пустой абзац заранее, чтобы
+    // курсор с самого начала оказывался внутри <p>, и первый Enter вёл себя
+    // так же, как и остальные.
+    if (editor.innerHTML.trim() === '') {
+        editor.innerHTML = '<p><br></p>';
+    }
+
     function isEmpty() {
         var nbsp = String.fromCharCode(160);
         var text = editor.textContent.split(nbsp).join(' ').trim();

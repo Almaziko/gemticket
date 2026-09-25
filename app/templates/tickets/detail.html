@@ -11,16 +11,22 @@
         <div class="card mb-3">
             <div class="card-body">
                 {% if can_edit_desc %}
-                <form method="post" action="{{ url_for('tickets.edit_description', ticket_id=ticket.id) }}">
+                <form method="post" action="{{ url_for('tickets.edit_description', ticket_id=ticket.id) }}" enctype="multipart/form-data">
                     {{ description_form.hidden_tag() }}
                     {{ richtext_editor('description-editor', description_form.description) }}
                     <button class="btn btn-sm btn-outline-primary mt-2" type="submit">Сохранить описание</button>
                     <div class="form-text">Описание можно редактировать, пока тикет в начальном статусе.</div>
+                    <div class="mt-2">
+                        <input type="file" name="attachments" id="description-attachments-input" class="form-control"
+                               accept="{{ '.' + allowed_extensions|join(',.') }}" multiple>
+                        <div class="form-text">Разрешены файлы: {{ allowed_extensions|join(', ') }}.</div>
+                        <div id="description-attachments-list" class="mt-2"></div>
+                    </div>
                 </form>
                 {% else %}
                 <div class="richtext-content">{{ ticket.description|richtext|safe }}</div>
                 {% endif %}
-                {{ render_attachments(ticket.attachments) }}
+                {{ render_attachments(ticket.attachments, can_delete=can_edit_desc) }}
             </div>
         </div>
 
@@ -195,6 +201,9 @@
 </div>
 {% endblock %}
 {% block scripts %}
+{% if can_edit_desc %}
+<script>setupAttachmentsPicker('#description-attachments-input', '#description-attachments-list');</script>
+{% endif %}
 {% if can_comment %}
 <script>setupAttachmentsPicker('#comment-attachments-input', '#comment-attachments-list');</script>
 {% endif %}

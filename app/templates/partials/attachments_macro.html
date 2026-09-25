@@ -1,16 +1,25 @@
-{% macro render_attachments(attachments) %}
+{% macro render_attachments(attachments, can_delete=False) %}
 {% if attachments %}
 <div class="d-flex flex-wrap gap-2 mt-2">
     {% for a in attachments %}
-        {% if a.is_image %}
-            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" rel="noopener" title="{{ a.filename_original }}">
-                <img src="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="attachment-thumb" alt="{{ a.filename_original }}">
-            </a>
-        {% else %}
-            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
-                &#128206; {{ a.filename_original }} <span class="text-muted">({{ a.size_bytes|filesizeformat }})</span>
-            </a>
-        {% endif %}
+        <div class="attachment-item position-relative">
+            {% if a.is_image %}
+                <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="attachment-lightbox-trigger" title="{{ a.filename_original }}">
+                    <img src="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="attachment-thumb" alt="{{ a.filename_original }}">
+                </a>
+            {% else %}
+                <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
+                    &#128206; {{ a.filename_original }} <span class="text-muted">({{ a.size_bytes|filesizeformat }})</span>
+                </a>
+            {% endif %}
+            {% if can_delete %}
+            <form method="post" action="{{ url_for('tickets.delete_attachment', attachment_id=a.id) }}"
+                  class="d-inline" onsubmit="return confirm('Удалить вложение «{{ a.filename_original }}»?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="attachment-delete-btn" title="Удалить вложение">&times;</button>
+            </form>
+            {% endif %}
+        </div>
     {% endfor %}
 </div>
 {% endif %}
