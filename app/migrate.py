@@ -74,6 +74,9 @@ def run_light_migrations():
     if not _has_column('statuses', 'auto_revert_button_text'):
         db.session.execute(text('ALTER TABLE statuses ADD COLUMN auto_revert_button_text VARCHAR(80)'))
 
+    if not _has_column('tickets', 'bitrix24_url'):
+        db.session.execute(text('ALTER TABLE tickets ADD COLUMN bitrix24_url VARCHAR(500)'))
+
     db.session.commit()
 
     if added_is_final:

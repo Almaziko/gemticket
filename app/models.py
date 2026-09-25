@@ -186,6 +186,10 @@ class Ticket(db.Model):
     deadline = db.Column(db.Date, nullable=True)
     priority = db.Column(db.Integer, nullable=False, default=PRIORITY_LOW)
     overdue_notified = db.Column(db.Boolean, nullable=False, default=False)
+    #: Ссылка на связанную задачу в Битрикс24 — служебное поле только для
+    #: исполнителя/суперадмина (постановщик его не видит и не редактирует),
+    #: чтобы не терять, где именно ведётся тикет во внутренней CRM.
+    bitrix24_url = db.Column(db.String(500), nullable=True)
     #: Проставляется/сбрасывается автоматически при смене статуса — см.
     #: change_status в tickets/routes.py. Нужно для сортировки группы "по
     #: дате закрытия".

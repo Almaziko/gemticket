@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import TextAreaField, SelectField, DateField
-from wtforms.validators import DataRequired, Optional
+from wtforms import TextAreaField, SelectField, DateField, StringField
+from wtforms.validators import DataRequired, Optional, Length, URL
 
 from ...models import PRIORITY_CHOICES
 from ...richtext import validate_nonempty_richtext
@@ -38,3 +38,9 @@ class TrackerChangeForm(FlaskForm):
 
 class PriorityChangeForm(FlaskForm):
     priority = SelectField('Приоритет', choices=PRIORITY_CHOICES, coerce=int, validators=[DataRequired()])
+
+
+class Bitrix24UrlForm(FlaskForm):
+    bitrix24_url = StringField('Битрикс24', validators=[
+        Optional(), Length(max=500), URL(message='Введите корректную ссылку (с http:// или https://)'),
+    ])

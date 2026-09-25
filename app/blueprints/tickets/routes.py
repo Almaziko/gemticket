@@ -24,7 +24,7 @@ from ...history import record_event
 from ... import notifications as notif
 from .forms import (
     CommentForm, DescriptionEditForm, StatusChangeForm, AssigneeChangeForm,
-    DeadlineChangeForm, TrackerChangeForm, PriorityChangeForm,
+    DeadlineChangeForm, TrackerChangeForm, PriorityChangeForm, Bitrix24UrlForm,
 )
 
 tickets_bp = Blueprint('tickets', __name__)
@@ -59,6 +59,7 @@ def _render_detail(ticket, comment_form=None, description_form=None):
     assignee_form.assignee_id.choices = [(a.id, a.name) for a in admins]
     deadline_form = DeadlineChangeForm(deadline=ticket.deadline)
     priority_form = PriorityChangeForm(priority=ticket.priority)
+    bitrix24_form = Bitrix24UrlForm(bitrix24_url=ticket.bitrix24_url)
 
     if description_form is None:
         description_form = DescriptionEditForm(description=ticket.description)
@@ -73,6 +74,7 @@ def _render_detail(ticket, comment_form=None, description_form=None):
         assignee_form=assignee_form,
         deadline_form=deadline_form,
         priority_form=priority_form,
+        bitrix24_form=bitrix24_form,
         description_form=description_form,
         comment_form=comment_form,
         can_manage=can_manage_ticket_fields(g.current_user, ticket),
@@ -269,6 +271,27 @@ def change_deadline(ticket_id):
             notif.notify_deadline_changed(ticket, old_value, new_value)
             record_event(ticket, g.current_user, f'{g.current_user.name} изменил(а) дедлайн с «{old_value}» на «{new_value}»')
         flash('Дедлайн обновлён', 'success')
+    return redirect(url_for('tickets.detail', ticket_id=ticket.id))
+
+
+@tickets_bp.route('/tickets/<int:ticket_id>/bitrix24', methods=['POST'])
+@login_required
+def change_bitrix24(ticket_id):
+    """Ссылка на задачу в Битрикс24 — служебное поле, видно и редактируется
+    только исполнителем/суперадмином (постановщик его вообще не видит),
+    поэтому в отличие от остальных полей "Управление" здесь не пишем ни
+    уведомление, ни запись в историю (её видит и постановщик тоже) —
+    сохранение самой ссылки никого больше не касается."""
+    ticket = _get_ticket_or_403(ticket_id)
+    if not can_manage_ticket_fields(g.current_user, ticket):
+        abort(403)
+    form = Bitrix24UrlForm()
+    if form.validate_on_submit():
+        ticket.bitrix24_url = form.bitrix24_url.data or None
+        db.session.commit()
+        flash('Ссылка на Битрикс24 сохранена', 'success')
+    else:
+        flash('Не удалось сохранить ссылку — проверьте формат (нужен http:// или https://)', 'danger')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))
 
 
