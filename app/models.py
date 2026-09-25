@@ -93,6 +93,7 @@ GROUP_THEME_CHOICES = [
     ('accent-yellow', 'Акцентная — жёлтая'),
     ('accent-red', 'Акцентная — красная'),
     ('accent-green', 'Акцентная — зелёная'),
+    ('accent-gray', 'Акцентная — серая'),
 ]
 GROUP_THEME_LABELS = dict(GROUP_THEME_CHOICES)
 

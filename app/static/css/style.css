@@ -387,7 +387,8 @@ body {
    тикетов (admin/dashboard.html, client/tickets_list.html). Цвета акцентов
    переиспользуют палитру бейджей выше. */
 .card.status-group-muted {
-    opacity: 0.6;
+    opacity: 0.4;
+    filter: grayscale(55%);
 }
 
 .card.status-group-muted .card-header {
@@ -406,3 +407,6 @@ body {
 
 .card.status-group-accent-green { border-left: 4px solid #166534; }
 .card.status-group-accent-green .card-header { background: #dcfce7; }
+
+.card.status-group-accent-gray { border-left: 4px solid #374151; }
+.card.status-group-accent-gray .card-header { background: #f3f4f6; }
