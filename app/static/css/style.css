@@ -438,6 +438,7 @@ body {
    тикетов (admin/dashboard.html, client/tickets_list.html). Цвета акцентов
    переиспользуют палитру бейджей выше. */
 .card.status-group-muted {
+    border-left: 4px solid #d1d5db;
     opacity: 0.4;
     filter: grayscale(55%);
 }
