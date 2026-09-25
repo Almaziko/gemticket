@@ -5,6 +5,7 @@ from datetime import datetime
 from .models import (
     STATUS_GROUPS, StatusGroup, DEFAULT_STATUS_GROUP_NAMES,
     SORT_MODE_CREATED_AT, SORT_MODE_CLOSED_AT, SORT_MODE_ID, DEFAULT_SORT_MODE,
+    GROUP_THEME_DEFAULT,
 )
 
 
@@ -19,6 +20,12 @@ def get_group_sort_modes():
     """{номер группы: режим сортировки}, с фолбэком на дефолт (по приоритету)."""
     rows = {g.number: g.sort_mode for g in StatusGroup.query.all()}
     return {n: rows.get(n, DEFAULT_SORT_MODE) for n in STATUS_GROUPS}
+
+
+def get_group_themes():
+    """{номер группы: тема оформления}, с фолбэком на обычную тему."""
+    rows = {g.number: g.theme for g in StatusGroup.query.all()}
+    return {n: rows.get(n, GROUP_THEME_DEFAULT) for n in STATUS_GROUPS}
 
 
 def _sort_key(ticket, mode):

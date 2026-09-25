@@ -49,10 +49,13 @@
             {% for n in [1, 2, 3, 4, 5] %}
             {% set name_field = group_settings_form['group_' ~ n] %}
             {% set sort_field = group_settings_form['sort_' ~ n] %}
+            {% set theme_field = group_settings_form['theme_' ~ n] %}
             <div class="col-md">
                 {{ name_field.label(class_='form-label small') }}
                 {{ name_field(class_='form-control form-control-sm mb-2') }}
-                {{ sort_field(class_='form-select form-select-sm') }}
+                {{ sort_field(class_='form-select form-select-sm mb-2') }}
+                {{ theme_field.label(class_='form-label small') }}
+                {{ theme_field(class_='form-select form-select-sm') }}
             </div>
             {% endfor %}
             <div class="col-12">

@@ -381,3 +381,28 @@ body {
     /* 0.79rem от нового корня (82%) ~= прежний 0.65rem от старого 16px-корня. */
     font-size: 0.79rem;
 }
+
+/* Оформление групп статусов — задаётся в админке (Статусы -> Настройки
+   групп), применяется только к карточкам групп на страницах со списками
+   тикетов (admin/dashboard.html, client/tickets_list.html). Цвета акцентов
+   переиспользуют палитру бейджей выше. */
+.card.status-group-muted {
+    opacity: 0.6;
+}
+
+.card.status-group-muted .card-header {
+    font-weight: 400;
+    color: #9ca3af;
+}
+
+.card.status-group-accent-blue { border-left: 4px solid #3730a3; }
+.card.status-group-accent-blue .card-header { background: #e0e7ff; }
+
+.card.status-group-accent-yellow { border-left: 4px solid #92400e; }
+.card.status-group-accent-yellow .card-header { background: #fef3c7; }
+
+.card.status-group-accent-red { border-left: 4px solid #991b1b; }
+.card.status-group-accent-red .card-header { background: #fee2e2; }
+
+.card.status-group-accent-green { border-left: 4px solid #166534; }
+.card.status-group-accent-green .card-header { background: #dcfce7; }

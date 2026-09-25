@@ -59,8 +59,8 @@
 
 {% if tickets %}
     {% for group_number, group_tickets in ticket_groups %}
-    <div class="card mb-4">
-        <div class="card-header bg-white fw-semibold d-flex align-items-center justify-content-between">
+    <div class="card mb-4 status-group-{{ group_themes.get(group_number, 'default') }}">
+        <div class="card-header fw-semibold d-flex align-items-center justify-content-between">
             {{ group_names.get(group_number, 'Группа ' ~ group_number) }}
             <span class="badge bg-secondary rounded-pill">{{ group_tickets|length }}</span>
         </div>

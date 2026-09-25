@@ -41,6 +41,8 @@ def test_rename_status_group(admin_client, db):
         'group_3': 'Группа 3', 'group_4': 'Группа 4', 'group_5': 'Группа 5',
         'sort_1': 'priority', 'sort_2': 'closed_at',
         'sort_3': 'priority', 'sort_4': 'priority', 'sort_5': 'priority',
+        'theme_1': 'default', 'theme_2': 'default',
+        'theme_3': 'default', 'theme_4': 'default', 'theme_5': 'default',
     }, follow_redirects=False)
     assert resp.status_code == 302
 
@@ -66,6 +68,8 @@ def test_group_sort_mode_by_created_at_ignores_priority(admin_client, client_cli
         'group_3': 'Группа 3', 'group_4': 'Группа 4', 'group_5': 'Группа 5',
         'sort_1': 'created_at', 'sort_2': 'priority',
         'sort_3': 'priority', 'sort_4': 'priority', 'sort_5': 'priority',
+        'theme_1': 'default', 'theme_2': 'default',
+        'theme_3': 'default', 'theme_4': 'default', 'theme_5': 'default',
     })
 
     client_client.post('/client/tickets/new', data={

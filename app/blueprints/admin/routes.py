@@ -19,7 +19,9 @@ from ...notifications import send_test_email
 from ... import notifications as notif
 from ...richtext import clean_html
 from ...history import record_event
-from ...grouping import group_by_status_group, group_tickets_sorted, get_group_names, get_group_sort_modes
+from ...grouping import (
+    group_by_status_group, group_tickets_sorted, get_group_names, get_group_sort_modes, get_group_themes,
+)
 from .forms import (
     ClientForm, AdminForm, StatusForm, StatusGroupSettingsForm, TrackerForm, SettingsForm,
     TestEmailForm, EmailTemplateForm, AdminTicketCreateForm,
@@ -57,6 +59,7 @@ def dashboard():
     return render_template(
         'admin/dashboard.html', tickets=tickets, statuses=statuses,
         ticket_groups=ticket_groups, status_groups=status_groups, group_names=get_group_names(),
+        group_themes=get_group_themes(),
         status_filter=status_filter, search=search,
     )
 
@@ -313,9 +316,11 @@ def statuses_list():
     statuses = Status.query.order_by(Status.order).all()
     group_names = get_group_names()
     group_sort_modes = get_group_sort_modes()
+    group_themes = get_group_themes()
     group_settings_form = StatusGroupSettingsForm(data={
         **{f'group_{n}': name for n, name in group_names.items()},
         **{f'sort_{n}': mode for n, mode in group_sort_modes.items()},
+        **{f'theme_{n}': theme for n, theme in group_themes.items()},
     })
     return render_template('admin/statuses_list.html', statuses=statuses, group_settings_form=group_settings_form)
 
@@ -329,6 +334,7 @@ def status_groups_update():
             group_row = StatusGroup.query.get(n)
             group_row.name = getattr(form, f'group_{n}').data
             group_row.sort_mode = getattr(form, f'sort_{n}').data
+            group_row.theme = getattr(form, f'theme_{n}').data
         db.session.commit()
         flash('Настройки групп сохранены', 'success')
     else:

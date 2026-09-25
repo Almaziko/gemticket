@@ -79,17 +79,36 @@ SORT_MODE_CHOICES = [
 SORT_MODE_LABELS = dict(SORT_MODE_CHOICES)
 DEFAULT_SORT_MODE = SORT_MODE_PRIORITY
 
+#: Визуальное оформление блока группы — только в списках тикетов (админский
+#: и постановщика), больше нигде. Готовые пресеты вместо произвольных цветов,
+#: чтобы результат всегда выглядел опрятно: "приглушённая" — для
+#: неважных/архивных групп (например, "Завершено"/"Отменено"), "акцентная" —
+#: наоборот, чтобы группа бросалась в глаза.
+GROUP_THEME_DEFAULT = 'default'
+GROUP_THEME_MUTED = 'muted'
+GROUP_THEME_CHOICES = [
+    (GROUP_THEME_DEFAULT, 'Обычная'),
+    (GROUP_THEME_MUTED, 'Приглушённая'),
+    ('accent-blue', 'Акцентная — синяя'),
+    ('accent-yellow', 'Акцентная — жёлтая'),
+    ('accent-red', 'Акцентная — красная'),
+    ('accent-green', 'Акцентная — зелёная'),
+]
+GROUP_THEME_LABELS = dict(GROUP_THEME_CHOICES)
+
 
 class StatusGroup(db.Model):
     """Редактируемые в админке настройки одной из 5 фиксированных групп:
-    название и то, чем внутри неё сортируются тикеты. Строки на все 5
-    номеров сидируются один раз при первом старте — сама строка (номер)
-    не создаётся и не удаляется, редактируются только name/sort_mode."""
+    название, чем внутри неё сортируются тикеты, и её визуальное оформление
+    в списках тикетов. Строки на все 5 номеров сидируются один раз при первом
+    старте — сама строка (номер) не создаётся и не удаляется, редактируются
+    только name/sort_mode/theme."""
     __tablename__ = 'status_groups'
 
     number = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
     sort_mode = db.Column(db.String(20), nullable=False, default=DEFAULT_SORT_MODE)
+    theme = db.Column(db.String(20), nullable=False, default=GROUP_THEME_DEFAULT)
 
 
 class Status(db.Model):

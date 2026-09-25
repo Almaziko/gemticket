@@ -77,6 +77,9 @@ def run_light_migrations():
     if not _has_column('tickets', 'bitrix24_url'):
         db.session.execute(text('ALTER TABLE tickets ADD COLUMN bitrix24_url VARCHAR(500)'))
 
+    if not _has_column('status_groups', 'theme'):
+        db.session.execute(text("ALTER TABLE status_groups ADD COLUMN theme VARCHAR(20) NOT NULL DEFAULT 'default'"))
+
     db.session.commit()
 
     if added_is_final:

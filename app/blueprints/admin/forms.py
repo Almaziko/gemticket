@@ -3,7 +3,7 @@ from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SelectField, IntegerField, BooleanField, TextAreaField, DateField
 from wtforms.validators import DataRequired, Optional, Length, Email, NumberRange, ValidationError
 
-from ...models import SORT_MODE_CHOICES, PRIORITY_CHOICES, PRIORITY_LOW
+from ...models import SORT_MODE_CHOICES, PRIORITY_CHOICES, PRIORITY_LOW, GROUP_THEME_CHOICES
 from ...richtext import validate_nonempty_richtext
 
 
@@ -65,6 +65,11 @@ class StatusGroupSettingsForm(FlaskForm):
     sort_3 = SelectField('Сортировка группы 3', choices=SORT_MODE_CHOICES)
     sort_4 = SelectField('Сортировка группы 4', choices=SORT_MODE_CHOICES)
     sort_5 = SelectField('Сортировка группы 5', choices=SORT_MODE_CHOICES)
+    theme_1 = SelectField('Оформление группы 1', choices=GROUP_THEME_CHOICES)
+    theme_2 = SelectField('Оформление группы 2', choices=GROUP_THEME_CHOICES)
+    theme_3 = SelectField('Оформление группы 3', choices=GROUP_THEME_CHOICES)
+    theme_4 = SelectField('Оформление группы 4', choices=GROUP_THEME_CHOICES)
+    theme_5 = SelectField('Оформление группы 5', choices=GROUP_THEME_CHOICES)
 
 
 class TrackerForm(FlaskForm):
