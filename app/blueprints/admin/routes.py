@@ -533,6 +533,7 @@ def settings_page():
     test_form = TestEmailForm()
     if request.method == 'GET':
         form.smtp_password.data = ''
+        form.s3_secret_key.data = ''
 
     if form.validate_on_submit():
         settings.smtp_host = form.smtp_host.data or None
@@ -548,6 +549,11 @@ def settings_page():
         normalized_ext = [e.strip().lower().lstrip('.') for e in form.allowed_extensions.data.split(',') if e.strip()]
         settings.allowed_extensions = ','.join(dict.fromkeys(normalized_ext))
         settings.site_name = form.site_name.data
+        settings.s3_endpoint = form.s3_endpoint.data or None
+        settings.s3_bucket = form.s3_bucket.data or None
+        settings.s3_access_key = form.s3_access_key.data or None
+        if form.s3_secret_key.data:
+            settings.s3_secret_key_encrypted = encrypt_secret(form.s3_secret_key.data)
         if form.favicon.data:
             old_favicon = settings.favicon_filename
             settings.favicon_filename = save_favicon_file(form.favicon.data)

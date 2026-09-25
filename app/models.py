@@ -285,6 +285,11 @@ class Attachment(db.Model):
     filename_stored = db.Column(db.String(255), nullable=False, unique=True)
     size_bytes = db.Column(db.Integer, nullable=False)
     mime_type = db.Column(db.String(120), nullable=False)
+    #: Где физически лежит файл — 'local' (диск сервера, как было всегда) или
+    #: 's3' (S3-совместимое хранилище, см. Settings.s3_*). Нужен, чтобы старые
+    #: вложения (сохранённые ещё до подключения S3) продолжали читаться с
+    #: диска, а не только новые.
+    storage = db.Column(db.String(10), nullable=False, default='local')
     uploaded_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
@@ -336,6 +341,16 @@ class Settings(db.Model):
     allowed_extensions = db.Column(db.String(500), nullable=False, default='zip,xlsx,xls,csv,docx,doc,pdf,jpeg,png,jpg')
     site_name = db.Column(db.String(120), nullable=False, default='GemTicket')
     favicon_filename = db.Column(db.String(255), nullable=True)
+
+    #: S3-совместимое объектное хранилище для НОВЫХ вложений тикетов — чтобы
+    #: не упираться в место на диске сервера. Если не заполнено (bucket
+    #: пустой), вложения как и раньше сохраняются на локальный диск — старые
+    #: вложения, уже лежащие локально, при заполнении этих полей никуда
+    #: не переносятся (см. Attachment.storage).
+    s3_endpoint = db.Column(db.String(255), nullable=True)
+    s3_bucket = db.Column(db.String(255), nullable=True)
+    s3_access_key = db.Column(db.String(255), nullable=True)
+    s3_secret_key_encrypted = db.Column(db.LargeBinary, nullable=True)
 
 
 class TicketEvent(db.Model):

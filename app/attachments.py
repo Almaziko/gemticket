@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 
 from .extensions import db
 from .models import Attachment, Settings
+from . import s3_storage
 
 
 DEFAULT_ALLOWED_EXTENSIONS = 'zip,xlsx,xls,csv,docx,doc,pdf,jpeg,png,jpg'
@@ -67,20 +68,29 @@ def save_attachment(file_storage, uploader, ticket=None, comment=None):
     safe_name = secure_filename(original_name) or 'file'
     ext = os.path.splitext(safe_name)[1]
     stored_name = f"{uuid.uuid4().hex}{ext}"
-
-    upload_dir = current_app.config['UPLOAD_DIR']
-    os.makedirs(upload_dir, exist_ok=True)
-    full_path = os.path.join(upload_dir, stored_name)
-    file_storage.save(full_path)
-    size = os.path.getsize(full_path)
-
     mime = file_storage.mimetype or mimetypes.guess_type(safe_name)[0] or 'application/octet-stream'
+
+    settings = Settings.query.first()
+    if s3_storage.s3_configured(settings):
+        file_storage.stream.seek(0, os.SEEK_END)
+        size = file_storage.stream.tell()
+        file_storage.stream.seek(0)
+        s3_storage.upload_fileobj(settings, file_storage, stored_name, mime)
+        storage = 's3'
+    else:
+        upload_dir = current_app.config['UPLOAD_DIR']
+        os.makedirs(upload_dir, exist_ok=True)
+        full_path = os.path.join(upload_dir, stored_name)
+        file_storage.save(full_path)
+        size = os.path.getsize(full_path)
+        storage = 'local'
 
     attachment = Attachment(
         filename_original=original_name,
         filename_stored=stored_name,
         size_bytes=size,
         mime_type=mime,
+        storage=storage,
         uploaded_by_id=uploader.id,
         ticket_id=ticket.id if ticket else None,
         comment_id=comment.id if comment else None,
@@ -99,6 +109,13 @@ def save_attachments(file_storages, uploader, ticket=None, comment=None):
 
 
 def delete_attachment_file(attachment):
+    if attachment.storage == 's3':
+        settings = Settings.query.first()
+        try:
+            s3_storage.delete_object(settings, attachment.filename_stored)
+        except Exception:
+            pass
+        return
     path = os.path.join(current_app.config['UPLOAD_DIR'], attachment.filename_stored)
     try:
         os.remove(path)

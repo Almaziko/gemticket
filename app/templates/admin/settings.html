@@ -81,6 +81,35 @@
             <button type="submit" class="btn btn-primary">Сохранить настройки</button>
         </div>
     </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Хранилище вложений (S3)</h5>
+            <p class="text-muted small">
+                Если заполнено — новые вложения тикетов сохраняются в это S3-совместимое
+                хранилище вместо диска сервера. Уже загруженные ранее вложения остаются
+                на месте и продолжают открываться как обычно. Бакет должен быть приватным —
+                доступ к файлам всегда идёт через проверку прав на сайте.
+            </p>
+            <div class="mb-3">
+                {{ form.s3_endpoint.label(class_='form-label') }}
+                {{ form.s3_endpoint(class_='form-control', placeholder='https://s3.beget.com') }}
+            </div>
+            <div class="mb-3">
+                {{ form.s3_bucket.label(class_='form-label') }}
+                {{ form.s3_bucket(class_='form-control') }}
+            </div>
+            <div class="mb-3">
+                {{ form.s3_access_key.label(class_='form-label') }}
+                {{ form.s3_access_key(class_='form-control') }}
+            </div>
+            <div class="mb-3">
+                {{ form.s3_secret_key.label(class_='form-label') }}
+                {{ form.s3_secret_key(class_='form-control') }}
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+        </div>
+    </div>
 </form>
 
 <div class="card">

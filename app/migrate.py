@@ -80,6 +80,21 @@ def run_light_migrations():
     if not _has_column('status_groups', 'theme'):
         db.session.execute(text("ALTER TABLE status_groups ADD COLUMN theme VARCHAR(20) NOT NULL DEFAULT 'default'"))
 
+    if not _has_column('attachments', 'storage'):
+        db.session.execute(text("ALTER TABLE attachments ADD COLUMN storage VARCHAR(10) NOT NULL DEFAULT 'local'"))
+
+    if not _has_column('settings', 's3_endpoint'):
+        db.session.execute(text('ALTER TABLE settings ADD COLUMN s3_endpoint VARCHAR(255)'))
+
+    if not _has_column('settings', 's3_bucket'):
+        db.session.execute(text('ALTER TABLE settings ADD COLUMN s3_bucket VARCHAR(255)'))
+
+    if not _has_column('settings', 's3_access_key'):
+        db.session.execute(text('ALTER TABLE settings ADD COLUMN s3_access_key VARCHAR(255)'))
+
+    if not _has_column('settings', 's3_secret_key_encrypted'):
+        db.session.execute(text('ALTER TABLE settings ADD COLUMN s3_secret_key_encrypted BLOB'))
+
     db.session.commit()
 
     if added_is_final:

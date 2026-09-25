@@ -7,8 +7,10 @@ from flask import (
 
 from ...extensions import db
 from ...models import (
-    Ticket, Comment, Attachment, Status, Tracker, Admin, Notification, get_next_status, get_previous_status,
+    Ticket, Comment, Attachment, Status, Tracker, Admin, Notification, Settings,
+    get_next_status, get_previous_status,
 )
+from ... import s3_storage
 from ...decorators import login_required, superadmin_required
 from ...permissions import (
     can_view_ticket, can_manage_ticket_fields, can_reassign_ticket, can_delete_ticket,
@@ -340,6 +342,12 @@ def download_attachment(attachment_id):
     attachment = Attachment.query.get_or_404(attachment_id)
     if not can_view_attachment(g.current_user, attachment):
         abort(403)
+    if attachment.storage == 's3':
+        url = s3_storage.generate_download_url(
+            Settings.query.first(), attachment.filename_stored, attachment.filename_original,
+            attachment.mime_type, as_attachment=not attachment.is_image,
+        )
+        return redirect(url)
     return send_from_directory(
         current_app.config['UPLOAD_DIR'],
         attachment.filename_stored,
