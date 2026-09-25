@@ -277,11 +277,12 @@ def change_deadline(ticket_id):
 @tickets_bp.route('/tickets/<int:ticket_id>/bitrix24', methods=['POST'])
 @login_required
 def change_bitrix24(ticket_id):
-    """Ссылка на задачу в Битрикс24 — служебное поле, видно и редактируется
-    только исполнителем/суперадмином (постановщик его вообще не видит),
-    поэтому в отличие от остальных полей "Управление" здесь не пишем ни
-    уведомление, ни запись в историю (её видит и постановщик тоже) —
-    сохранение самой ссылки никого больше не касается."""
+    """Произвольная внешняя ссылка (CRM-задача, таблица и т.п.) — служебное
+    поле, видно и редактируется только исполнителем/суперадмином
+    (постановщик его вообще не видит), поэтому в отличие от остальных полей
+    "Управление" здесь не пишем ни уведомление, ни запись в историю (её
+    видит и постановщик тоже) — сохранение самой ссылки никого больше
+    не касается."""
     ticket = _get_ticket_or_403(ticket_id)
     if not can_manage_ticket_fields(g.current_user, ticket):
         abort(403)
@@ -289,7 +290,7 @@ def change_bitrix24(ticket_id):
     if form.validate_on_submit():
         ticket.bitrix24_url = form.bitrix24_url.data or None
         db.session.commit()
-        flash('Ссылка на Битрикс24 сохранена', 'success')
+        flash('Ссылка сохранена', 'success')
     else:
         flash('Не удалось сохранить ссылку — проверьте формат (нужен http:// или https://)', 'danger')
     return redirect(url_for('tickets.detail', ticket_id=ticket.id))

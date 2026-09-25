@@ -80,9 +80,9 @@
                 <p class="mb-1"><strong>Дедлайн:</strong> {{ ticket.deadline.strftime('%d.%m.%Y') if ticket.deadline else 'не задан' }}</p>
                 {% if can_manage %}
                 <p class="mb-1">
-                    <strong>Битрикс24:</strong>
+                    <strong>Внешняя ссылка:</strong>
                     {% if ticket.bitrix24_url %}
-                        <a href="{{ ticket.bitrix24_url }}" target="_blank" rel="noopener noreferrer">Открыть задачу</a>
+                        <a href="{{ ticket.bitrix24_url }}" target="_blank" rel="noopener noreferrer">Перейти по ссылке</a>
                     {% else %}
                         не указана
                     {% endif %}
@@ -128,7 +128,7 @@
 
                 <form method="post" action="{{ url_for('tickets.change_bitrix24', ticket_id=ticket.id) }}" class="mb-2">
                     {{ bitrix24_form.hidden_tag() }}
-                    <label class="form-label small mb-1">Битрикс24</label>
+                    <label class="form-label small mb-1">Внешняя ссылка</label>
                     <div class="input-group input-group-sm">
                         {{ bitrix24_form.bitrix24_url(class_='form-control', placeholder='https://...') }}
                         <button class="btn btn-outline-primary" type="submit">&#10003;</button>

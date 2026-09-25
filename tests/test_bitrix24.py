@@ -3,7 +3,7 @@ from app.models import Ticket
 
 def _create_ticket(client_client):
     resp = client_client.post('/client/tickets/new', data={
-        'title': 'Bitrix24 field check', 'description': '<p>d</p>', 'tracker_id': '1',
+        'title': 'External link field check', 'description': '<p>d</p>', 'tracker_id': '1',
     }, follow_redirects=False)
     return int(resp.headers['Location'].rstrip('/').split('/')[-1])
 
@@ -28,7 +28,7 @@ def test_bitrix24_link_is_clickable_and_opens_new_tab(admin_client, client_clien
     html = admin_client.get(f'/tickets/{ticket_id}').data.decode('utf-8')
     assert f'href="{url}"' in html
     assert 'target="_blank"' in html
-    assert 'Открыть задачу' in html
+    assert 'Перейти по ссылке' in html
 
 
 def test_bitrix24_field_hidden_from_client(admin_client, client_client, db):
@@ -38,7 +38,7 @@ def test_bitrix24_field_hidden_from_client(admin_client, client_client, db):
     })
 
     html = client_client.get(f'/tickets/{ticket_id}').data.decode('utf-8')
-    assert 'Битрикс24' not in html
+    assert 'Внешняя ссылка' not in html
     assert 'bitrix24.ru' not in html
 
 
@@ -63,6 +63,18 @@ def test_invalid_bitrix24_url_rejected(admin_client, client_client, db):
 
     ticket = Ticket.query.get(ticket_id)
     assert ticket.bitrix24_url is None
+
+
+def test_field_accepts_any_external_link_not_just_bitrix24(admin_client, client_client, db):
+    """Поле общее — сюда можно положить ссылку на что угодно (таблицу,
+    другой трекер и т.п.), а не только на Битрикс24."""
+    ticket_id = _create_ticket(client_client)
+    url = 'https://docs.google.com/spreadsheets/d/abc123/edit'
+    resp = admin_client.post(f'/tickets/{ticket_id}/bitrix24', data={'bitrix24_url': url}, follow_redirects=False)
+    assert resp.status_code == 302
+
+    ticket = Ticket.query.get(ticket_id)
+    assert ticket.bitrix24_url == url
 
 
 def test_bitrix24_url_can_be_cleared(admin_client, client_client, db):

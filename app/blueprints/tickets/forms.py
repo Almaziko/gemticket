@@ -41,6 +41,6 @@ class PriorityChangeForm(FlaskForm):
 
 
 class Bitrix24UrlForm(FlaskForm):
-    bitrix24_url = StringField('Битрикс24', validators=[
+    bitrix24_url = StringField('Внешняя ссылка', validators=[
         Optional(), Length(max=500), URL(message='Введите корректную ссылку (с http:// или https://)'),
     ])
