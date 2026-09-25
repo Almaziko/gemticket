@@ -227,6 +227,16 @@ body {
 
 .date-field-wrap {
     position: relative;
+}
+
+/* width: 1% — стандартный бутстраповский трюк для распределения ширины
+   между flex-элементами .input-group (как у ".input-group > .form-control"),
+   и он нужен только там. Раньше он был на .date-field-wrap безусловно —
+   вне .input-group (например, в форме создания тикета, где поле дедлайна
+   просто стоит в колонке col-md-*) это на полном серьёзе схлопывало
+   обёртку до 1% ширины колонки, и подсказка "Не определён" переносилась
+   на две строки, пытаясь влезть в эту узкую область. */
+.input-group .date-field-wrap {
     flex: 1 1 auto;
     width: 1%;
     min-width: 0;
@@ -266,6 +276,7 @@ body {
     transform: translateY(-50%);
     color: #6c757d;
     pointer-events: none;
+    white-space: nowrap;
 }
 
 .date-field-wrap input[type="date"].date-empty {
