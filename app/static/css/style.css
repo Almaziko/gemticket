@@ -38,6 +38,20 @@ body {
     color: var(--gt-ink);
 }
 
+/* Тосты с флеш-сообщениями — в углу экрана, поверх навбара (если он есть на
+   странице), а не баннером в потоке контента. top учитывает высоту навбара
+   с запасом, чтобы не перекрываться с ним даже на маленьких экранах. */
+.toast-container-top-end {
+    top: 80px;
+    right: 0;
+    z-index: 1085;
+}
+
+.toast {
+    border-radius: var(--gt-radius-sm);
+    box-shadow: var(--gt-shadow);
+}
+
 .card {
     border: none;
     border-radius: var(--gt-radius-lg);
