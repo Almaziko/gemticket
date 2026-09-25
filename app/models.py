@@ -349,6 +349,11 @@ class Settings(db.Model):
     #: не переносятся (см. Attachment.storage).
     s3_endpoint = db.Column(db.String(255), nullable=True)
     s3_bucket = db.Column(db.String(255), nullable=True)
+    #: Необязательный префикс ("папка") внутри бакета — чтобы разные проекты
+    #: на одном бакете не путали файлы друг друга. Прибавляется только к
+    #: НОВЫМ вложениям (см. s3_storage.build_key) — уже загруженные файлы
+    #: свой ключ не меняют, даже если префикс потом поменять в настройках.
+    s3_prefix = db.Column(db.String(255), nullable=True)
     s3_access_key = db.Column(db.String(255), nullable=True)
     s3_secret_key_encrypted = db.Column(db.LargeBinary, nullable=True)
 

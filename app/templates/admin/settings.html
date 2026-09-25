@@ -100,6 +100,11 @@
                 {{ form.s3_bucket(class_='form-control') }}
             </div>
             <div class="mb-3">
+                {{ form.s3_prefix.label(class_='form-label') }}
+                {{ form.s3_prefix(class_='form-control', placeholder='gemticket') }}
+                <div class="form-text">Если в бакете хранятся файлы нескольких проектов — вложения GemTicket будут складываться в эту "папку" (ключ вида "gemticket/имя-файла").</div>
+            </div>
+            <div class="mb-3">
                 {{ form.s3_access_key.label(class_='form-label') }}
                 {{ form.s3_access_key(class_='form-control') }}
             </div>

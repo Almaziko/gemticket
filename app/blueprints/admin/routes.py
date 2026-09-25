@@ -551,6 +551,7 @@ def settings_page():
         settings.site_name = form.site_name.data
         settings.s3_endpoint = form.s3_endpoint.data or None
         settings.s3_bucket = form.s3_bucket.data or None
+        settings.s3_prefix = (form.s3_prefix.data or '').strip('/') or None
         settings.s3_access_key = form.s3_access_key.data or None
         if form.s3_secret_key.data:
             settings.s3_secret_key_encrypted = encrypt_secret(form.s3_secret_key.data)

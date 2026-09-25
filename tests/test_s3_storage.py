@@ -6,11 +6,12 @@ from app.security import encrypt_secret
 from app import s3_storage
 
 
-def _configure_s3(app):
+def _configure_s3(app, prefix=None):
     with app.app_context():
         settings = Settings.query.first()
         settings.s3_endpoint = 'https://s3.example.com'
         settings.s3_bucket = 'my-bucket'
+        settings.s3_prefix = prefix
         settings.s3_access_key = 'AKIAEXAMPLE'
         settings.s3_secret_key_encrypted = encrypt_secret('super-secret')
         from app.extensions import db
@@ -80,6 +81,28 @@ def test_attachment_uploads_to_s3_when_configured(app, client_client, db, monkey
     assert calls['bucket'] == 'my-bucket'
     assert calls['key'] == attachment.filename_stored
     assert not os.path.exists(os.path.join(app.config['UPLOAD_DIR'], attachment.filename_stored))
+
+
+def test_attachment_key_gets_configured_prefix(app, client_client, db, monkeypatch):
+    _configure_s3(app, prefix='gemticket')
+    calls = {}
+    monkeypatch.setattr(s3_storage, 'upload_fileobj', lambda settings, fs, key, ct: calls.setdefault('key', key))
+
+    client_client.post('/client/tickets/new', data={
+        'title': 'S3 prefixed file', 'description': '<p>d</p>', 'tracker_id': '1',
+        'attachments': (BytesIO(b'content'), 'a.pdf'),
+    }, content_type='multipart/form-data')
+
+    attachment = Attachment.query.first()
+    assert attachment.filename_stored.startswith('gemticket/')
+    assert calls['key'] == attachment.filename_stored
+
+
+def test_prefix_with_slashes_is_normalized(app):
+    with app.app_context():
+        settings = Settings.query.first()
+        settings.s3_prefix = '/gemticket/'
+        assert s3_storage.build_key(settings, 'abc.png') == 'gemticket/abc.png'
 
 
 def test_download_s3_attachment_redirects_to_presigned_url(app, admin_client, client_client, db, monkeypatch):

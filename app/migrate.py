@@ -89,6 +89,9 @@ def run_light_migrations():
     if not _has_column('settings', 's3_bucket'):
         db.session.execute(text('ALTER TABLE settings ADD COLUMN s3_bucket VARCHAR(255)'))
 
+    if not _has_column('settings', 's3_prefix'):
+        db.session.execute(text('ALTER TABLE settings ADD COLUMN s3_prefix VARCHAR(255)'))
+
     if not _has_column('settings', 's3_access_key'):
         db.session.execute(text('ALTER TABLE settings ADD COLUMN s3_access_key VARCHAR(255)'))
 

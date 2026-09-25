@@ -75,6 +75,7 @@ def save_attachment(file_storage, uploader, ticket=None, comment=None):
         file_storage.stream.seek(0, os.SEEK_END)
         size = file_storage.stream.tell()
         file_storage.stream.seek(0)
+        stored_name = s3_storage.build_key(settings, stored_name)
         s3_storage.upload_fileobj(settings, file_storage, stored_name, mime)
         storage = 's3'
     else:

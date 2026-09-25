@@ -99,6 +99,7 @@ class SettingsForm(FlaskForm):
     )
     s3_endpoint = StringField('S3 endpoint', validators=[Optional(), Length(max=255)])
     s3_bucket = StringField('Бакет', validators=[Optional(), Length(max=255)])
+    s3_prefix = StringField('Папка внутри бакета (необязательно)', validators=[Optional(), Length(max=255)])
     s3_access_key = StringField('Access key', validators=[Optional(), Length(max=255)])
     s3_secret_key = PasswordField('Secret key (оставьте пустым, чтобы не менять)', validators=[Optional()])
 

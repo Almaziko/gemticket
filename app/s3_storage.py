@@ -22,6 +22,15 @@ def s3_configured(settings):
     )
 
 
+def build_key(settings, name):
+    """Ключ объекта с учётом настроенного префикса ("папки") — вызывается
+    только при загрузке НОВОГО файла, а не при каждом обращении: итоговый
+    ключ сохраняется как Attachment.filename_stored, так что уже
+    загруженные файлы не потеряются, даже если префикс потом сменят."""
+    prefix = (settings.s3_prefix or '').strip('/')
+    return f'{prefix}/{name}' if prefix else name
+
+
 def get_s3_client(settings):
     return boto3.client(
         's3',
