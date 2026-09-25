@@ -1,9 +1,12 @@
 /* ---------- Design refresh: soft cards, rounded controls, muted badges ---------- */
 
 :root {
-    --gt-radius-lg: 20px;
-    --gt-radius-md: 14px;
-    --gt-radius-sm: 10px;
+    /* Уменьшены пропорционально компактному масштабу шрифта (html: 82%,
+       см. ниже) — были подобраны под прежний, более крупный размер полей и
+       на новом компактном фоне смотрелись слишком круглыми. */
+    --gt-radius-lg: 16px;
+    --gt-radius-md: 12px;
+    --gt-radius-sm: 8px;
     --gt-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 1px 6px rgba(16, 24, 40, .06);
     --gt-ink: #111827;
     --gt-bg: #f3f4f6;
@@ -211,6 +214,27 @@ body {
 .date-field-wrap {
     position: relative;
     flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+}
+
+/* Дата-инпут в JS оборачивается в .date-field-wrap (см. date_placeholder.js)
+   уже ПОСЛЕ рендера — из-за этого он перестаёт быть прямым потомком
+   .input-group, и стандартные бутстраповские правила
+   ".input-group > .form-control:not(:last-child) { border-radius: 0 ... }"
+   и ".input-group-sm > .form-control { border-radius: var(--bs-border-radius-sm) }"
+   до него не дотягиваются: поле "Дедлайн" оставалось скруглённым со всех
+   сторон и более крупным радиусом, чем соседние select'ы в блоке
+   "Управление". Дублируем оба правила вручную. */
+.input-group .date-field-wrap input[type="date"] {
+    width: 100%;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-group-sm .date-field-wrap input[type="date"] {
+    border-top-left-radius: var(--bs-border-radius-sm);
+    border-bottom-left-radius: var(--bs-border-radius-sm);
 }
 
 .date-field-placeholder {
