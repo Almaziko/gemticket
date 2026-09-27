@@ -1,135 +1,237 @@
 {% extends 'base.html' %}
 {% block title %}Настройки — {{ site_name }}{% endblock %}
 {% block content %}
-<h3 class="mb-3">Настройки</h3>
+<div class="gt-settings-grid">
+    <aside class="gt-settings-nav">
+        <h1 class="gt-list-title" style="font-size:44px">Настройки</h1>
+        <nav class="gt-settings-nav-links">
+            <a class="gt-settings-nav-link" href="#s-look"><span class="dot"></span>Оформление сайта</a>
+            <a class="gt-settings-nav-link" href="#s-smtp"><span class="dot"></span>SMTP</a>
+            <a class="gt-settings-nav-link" href="#s-s3"><span class="dot"></span>Хранилище вложений (S3)</a>
+            <a class="gt-settings-nav-link" href="#s-test"><span class="dot"></span>Тестовое письмо</a>
+        </nav>
+    </aside>
 
-<form method="post" enctype="multipart/form-data">
-    {{ form.hidden_tag() }}
+    <div class="gt-settings-sections">
+        <form method="post" enctype="multipart/form-data" id="settings-form">
+            {{ form.hidden_tag() }}
 
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Оформление сайта</h5>
-            <div class="mb-3">
-                {{ form.site_name.label(class_='form-label') }}
-                {{ form.site_name(class_='form-control') }}
-                {% for e in form.site_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-            </div>
-            <div class="mb-3">
-                {{ form.favicon.label(class_='form-label') }}
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    {% if favicon_url %}
-                        <img src="{{ favicon_url }}" alt="" width="32" height="32" class="rounded border">
-                        <span class="text-muted small">Текущая иконка</span>
-                    {% else %}
-                        <span class="text-muted small">Иконка не загружена</span>
-                    {% endif %}
+            <section id="s-look" class="gt-card gt-settings-section">
+                <h2>Оформление сайта</h2>
+                <div class="gt-form-field">
+                    {{ form.site_name.label() }}
+                    {{ form.site_name(class_='gt-form-input') }}
+                    {% for e in form.site_name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
                 </div>
-                {{ form.favicon(class_='form-control') }}
-                {% for e in form.favicon.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">SMTP</h5>
-            <div class="row">
-                <div class="col-md-8 mb-3">
-                    {{ form.smtp_host.label(class_='form-label') }}
-                    {{ form.smtp_host(class_='form-control') }}
+                <div class="gt-form-field">
+                    <span>Иконка сайта (favicon)</span>
+                    <div class="gt-favicon-box">
+                        <span class="gt-favicon-preview">
+                            {% if favicon_url %}<img src="{{ favicon_url }}" alt="">{% else %}<span class="dot"></span>{% endif %}
+                        </span>
+                        <span class="d-flex flex-column gap-1" style="min-width:0;flex:1">
+                            <span style="font-size:14px;font-weight:500">{{ 'Иконка загружена' if favicon_url else 'Иконка не загружена' }}</span>
+                            <span style="font-size:12px;color:oklch(0.52 0.01 60)">{{ 'Можно заменить новым файлом' if favicon_url else 'Используется стандартная' }}</span>
+                        </span>
+                        <label class="gt-pill-file-btn">
+                            {{ form.favicon(class_='d-none') }}
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></svg>
+                            Выберите файл
+                        </label>
+                    </div>
+                    {% for e in form.favicon.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
                 </div>
-                <div class="col-md-4 mb-3">
-                    {{ form.smtp_port.label(class_='form-label') }}
-                    {{ form.smtp_port(class_='form-control') }}
+            </section>
+
+            <section id="s-smtp" class="gt-card gt-settings-section">
+                <h2>SMTP</h2>
+                <div class="gt-settings-row" style="grid-template-columns:minmax(0,2fr) minmax(120px,1fr)">
+                    <div class="gt-form-field">
+                        {{ form.smtp_host.label() }}
+                        {{ form.smtp_host(class_='gt-form-input mono') }}
+                    </div>
+                    <div class="gt-form-field">
+                        {{ form.smtp_port.label() }}
+                        {{ form.smtp_port(class_='gt-form-input mono') }}
+                    </div>
                 </div>
-            </div>
-            <div class="mb-3">
-                {{ form.smtp_username.label(class_='form-label') }}
-                {{ form.smtp_username(class_='form-control') }}
-            </div>
-            <div class="mb-3">
-                {{ form.smtp_password.label(class_='form-label') }}
-                {{ form.smtp_password(class_='form-control') }}
-            </div>
-            <div class="mb-3">
-                {{ form.smtp_from_address.label(class_='form-label') }}
-                {{ form.smtp_from_address(class_='form-control') }}
-            </div>
-            <div class="form-check mb-2">
-                {{ form.smtp_use_tls(class_='form-check-input') }}
-                {{ form.smtp_use_tls.label(class_='form-check-label') }}
-            </div>
-            <div class="form-check mb-3">
-                {{ form.smtp_use_ssl(class_='form-check-input') }}
-                {{ form.smtp_use_ssl.label(class_='form-check-label') }}
-            </div>
-            <hr>
-            <div class="mb-3">
-                {{ form.base_url.label(class_='form-label') }}
-                {{ form.base_url(class_='form-control') }}
-                <div class="form-text">Используется в ссылках на тикеты в письмах-уведомлениях.</div>
-            </div>
-            <div class="mb-3">
-                {{ form.max_upload_mb.label(class_='form-label') }}
-                {{ form.max_upload_mb(class_='form-control') }}
-            </div>
-            <div class="mb-3">
-                {{ form.allowed_extensions.label(class_='form-label') }}
-                {{ form.allowed_extensions(class_='form-control', placeholder='zip,xlsx,xls,csv,docx,doc,pdf,jpeg,png,jpg') }}
-                {% for e in form.allowed_extensions.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-            </div>
-            <button type="submit" class="btn btn-primary">Сохранить настройки</button>
-        </div>
-    </div>
+                <div class="gt-settings-row">
+                    <div class="gt-form-field">
+                        {{ form.smtp_username.label() }}
+                        {{ form.smtp_username(class_='gt-form-input mono', autocomplete='off') }}
+                    </div>
+                    <div class="gt-form-field">
+                        <span>SMTP пароль <span style="font-weight:400;color:oklch(0.58 0.01 60)">оставьте пустым, чтобы не менять</span></span>
+                        {{ form.smtp_password(class_='gt-form-input', placeholder='••••••••', autocomplete='new-password') }}
+                    </div>
+                </div>
+                <div class="gt-form-field">
+                    {{ form.smtp_from_address.label() }}
+                    {{ form.smtp_from_address(class_='gt-form-input mono') }}
+                </div>
+                <div class="d-flex gap-3 flex-wrap">
+                    <label class="gt-toggle-btn">
+                        {{ form.smtp_use_tls(class_='gt-toggle-input') }}
+                        <span class="gt-toggle-track"><span class="gt-toggle-knob"></span></span>
+                        STARTTLS
+                    </label>
+                    <label class="gt-toggle-btn">
+                        {{ form.smtp_use_ssl(class_='gt-toggle-input') }}
+                        <span class="gt-toggle-track"><span class="gt-toggle-knob"></span></span>
+                        SSL
+                    </label>
+                </div>
+                <div style="height:1px;background:oklch(0.93 0.005 70)"></div>
+                <div class="gt-form-field">
+                    {{ form.base_url.label() }}
+                    {{ form.base_url(class_='gt-form-input mono') }}
+                    <span class="gt-form-hint">Используется в ссылках на тикеты в письмах-уведомлениях.</span>
+                </div>
+                <div class="gt-form-field" style="max-width:260px">
+                    {{ form.max_upload_mb.label() }}
+                    <div class="gt-input-suffix-wrap">
+                        {{ form.max_upload_mb(class_='gt-form-input mono') }}
+                        <span class="gt-input-suffix">МБ</span>
+                    </div>
+                </div>
+                <div class="gt-form-field">
+                    {{ form.allowed_extensions.label() }}
+                    <div class="gt-chips-input" id="ext-chips">
+                        <input type="text" id="ext-draft" placeholder="zip,xlsx,xls,csv,docx,doc,pdf,jpeg,png,jpg">
+                    </div>
+                    {{ form.allowed_extensions(type='hidden', id='ext-hidden') }}
+                    {% for e in form.allowed_extensions.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+                </div>
+            </section>
 
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Хранилище вложений (S3)</h5>
-            <p class="text-muted small">
-                Если заполнено — новые вложения тикетов сохраняются в это S3-совместимое
-                хранилище вместо диска сервера. Уже загруженные ранее вложения остаются
-                на месте и продолжают открываться как обычно. Бакет должен быть приватным —
-                доступ к файлам всегда идёт через проверку прав на сайте.
-            </p>
-            <div class="mb-3">
-                {{ form.s3_endpoint.label(class_='form-label') }}
-                {{ form.s3_endpoint(class_='form-control', placeholder='https://s3.beget.com') }}
-            </div>
-            <div class="mb-3">
-                {{ form.s3_bucket.label(class_='form-label') }}
-                {{ form.s3_bucket(class_='form-control') }}
-            </div>
-            <div class="mb-3">
-                {{ form.s3_prefix.label(class_='form-label') }}
-                {{ form.s3_prefix(class_='form-control', placeholder='gemticket') }}
-                <div class="form-text">Если в бакете хранятся файлы нескольких проектов — вложения GemTicket будут складываться в эту "папку" (ключ вида "gemticket/имя-файла").</div>
-            </div>
-            <div class="mb-3">
-                {{ form.s3_access_key.label(class_='form-label') }}
-                {{ form.s3_access_key(class_='form-control') }}
-            </div>
-            <div class="mb-3">
-                {{ form.s3_secret_key.label(class_='form-label') }}
-                {{ form.s3_secret_key(class_='form-control') }}
-            </div>
-            <button type="submit" class="btn btn-primary">Сохранить настройки</button>
-        </div>
-    </div>
-</form>
-
-<div class="card">
-    <div class="card-body">
-        <h5 class="card-title">Тестовое письмо</h5>
-        <form method="post" action="{{ url_for('admin.settings_test_email') }}" class="row g-2 align-items-end">
-            {{ test_form.hidden_tag() }}
-            <div class="col-auto">
-                {{ test_form.to_address.label(class_='form-label') }}
-                {{ test_form.to_address(class_='form-control') }}
-            </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-outline-primary">Отправить тестовое письмо</button>
-            </div>
+            <section id="s-s3" class="gt-card gt-settings-section">
+                <div class="d-flex flex-column gap-2">
+                    <h2>Хранилище вложений (S3)</h2>
+                    <p style="margin:0;font-size:14px;line-height:1.55;color:oklch(0.5 0.01 60);max-width:760px">Если заполнено — новые вложения тикетов сохраняются в это S3-совместимое хранилище вместо диска сервера. Уже загруженные ранее вложения остаются на месте и продолжают открываться как обычно. Бакет должен быть приватным — доступ к файлам всегда идёт через проверку прав на сайте.</p>
+                </div>
+                <div class="gt-form-field">
+                    {{ form.s3_endpoint.label() }}
+                    {{ form.s3_endpoint(class_='gt-form-input mono', placeholder='https://s3.beget.com') }}
+                </div>
+                <div class="gt-settings-row">
+                    <div class="gt-form-field">
+                        {{ form.s3_bucket.label() }}
+                        {{ form.s3_bucket(class_='gt-form-input mono') }}
+                    </div>
+                    <div class="gt-form-field">
+                        <span>Папка внутри бакета <span style="font-weight:400;color:oklch(0.58 0.01 60)">необязательно</span></span>
+                        <div class="gt-input-prefix-wrap" style="position:relative">
+                            <span class="gt-input-prefix">/</span>
+                            {{ form.s3_prefix(class_='gt-form-input mono', placeholder='gemticket') }}
+                        </div>
+                    </div>
+                </div>
+                <span style="margin-top:-12px;font-size:12px;line-height:1.5;color:oklch(0.55 0.01 60)">Если в бакете хранятся файлы нескольких проектов — вложения GemTicket будут складываться в эту «папку» (ключ вида «gemticket/имя-файла»).</span>
+                <div class="gt-settings-row">
+                    <div class="gt-form-field">
+                        {{ form.s3_access_key.label() }}
+                        {{ form.s3_access_key(class_='gt-form-input mono', autocomplete='off') }}
+                    </div>
+                    <div class="gt-form-field">
+                        <span>Secret key <span style="font-weight:400;color:oklch(0.58 0.01 60)">оставьте пустым, чтобы не менять</span></span>
+                        {{ form.s3_secret_key(class_='gt-form-input', placeholder='••••••••', autocomplete='new-password') }}
+                    </div>
+                </div>
+            </section>
         </form>
+
+        <section id="s-test" class="gt-card gt-settings-section" style="gap:18px">
+            <h2>Тестовое письмо</h2>
+            <form method="post" action="{{ url_for('admin.settings_test_email') }}" class="d-flex flex-column gap-2">
+                {{ test_form.hidden_tag() }}
+                {{ test_form.to_address.label() }}
+                <div class="d-flex gap-2 flex-wrap">
+                    {{ test_form.to_address(class_='gt-form-input mono', style='flex:1;min-width:220px;max-width:420px') }}
+                    <button type="submit" class="gt-t-btn" style="height:46px;padding:0 18px;border-radius:12px">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
+                        Отправить тестовое письмо
+                    </button>
+                </div>
+            </form>
+        </section>
     </div>
 </div>
+
+<div class="gt-settings-savebar" id="settings-savebar" hidden>
+    <span>Есть несохранённые изменения</span>
+    <button type="button" class="gt-settings-savebar-cancel" id="settings-cancel-btn">Отменить</button>
+    <button type="submit" form="settings-form" class="gt-settings-savebar-save">Сохранить настройки</button>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+    var wrap = document.getElementById('ext-chips');
+    var draft = document.getElementById('ext-draft');
+    var hidden = document.getElementById('ext-hidden');
+    var tokens = (hidden.value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+
+    function render() {
+        wrap.querySelectorAll('.gt-chip').forEach(function (el) { el.remove(); });
+        tokens.forEach(function (token, index) {
+            var chip = document.createElement('span');
+            chip.className = 'gt-chip';
+            chip.textContent = token;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'gt-chip-remove';
+            btn.title = 'Удалить';
+            btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>';
+            btn.addEventListener('click', function () {
+                tokens.splice(index, 1);
+                sync();
+            });
+            chip.appendChild(btn);
+            wrap.insertBefore(chip, draft);
+        });
+        hidden.value = tokens.join(',');
+    }
+    function sync() { render(); markDirty(); }
+
+    function commitDraft() {
+        var raw = draft.value.split(/[,\s]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+        if (raw.length) {
+            raw.forEach(function (t) { if (tokens.indexOf(t) === -1) tokens.push(t); });
+            draft.value = '';
+            sync();
+        }
+    }
+    draft.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); commitDraft(); }
+        if (e.key === 'Backspace' && !draft.value && tokens.length) { tokens.pop(); sync(); }
+    });
+    draft.addEventListener('blur', commitDraft);
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) draft.focus(); });
+    render();
+
+    var form = document.getElementById('settings-form');
+    var savebar = document.getElementById('settings-savebar');
+    var baseline = null;
+    function snapshot() {
+        return Array.from(form.elements).map(function (el) {
+            if (el.type === 'checkbox' || el.type === 'radio') return el.name + '=' + el.checked;
+            if (el.type === 'file') return el.name + '=' + (el.files.length ? el.files[0].name : '');
+            return el.name + '=' + el.value;
+        }).join('|');
+    }
+    function markDirty() {
+        savebar.hidden = snapshot() === baseline;
+    }
+    baseline = snapshot();
+    form.addEventListener('input', markDirty);
+    form.addEventListener('change', markDirty);
+    document.getElementById('settings-cancel-btn').addEventListener('click', function () {
+        form.reset();
+        tokens = (hidden.value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+        render();
+        baseline = snapshot();
+        savebar.hidden = true;
+    });
+})();
+</script>
 {% endblock %}
