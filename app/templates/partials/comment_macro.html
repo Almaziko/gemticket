@@ -1,14 +1,13 @@
 {% from 'partials/attachments_macro.html' import render_attachments %}
 {% macro render_comment(comment) %}
-<div class="card mb-2 comment-card role-{{ comment.author.role }}">
-    <div class="card-body py-2">
-        <div class="d-flex justify-content-between">
-            <strong>{{ comment.author.name }}</strong>
-            <span class="badge bg-{{ 'primary' if comment.author.role == 'client' else 'success' }}">{{ 'Исполнитель' if comment.author.role == 'admin' else comment.author.role_label }}</span>
-        </div>
-        <div class="small text-muted mb-1">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
-        <div class="richtext-content">{{ comment.body|richtext|safe }}</div>
-        {{ render_attachments(comment.attachments) }}
+<div class="gt-comment role-{{ comment.author.role }}">
+    <div class="gt-comment-head">
+        <span class="gt-comment-avatar" style="background:oklch(0.92 0.04 {{ comment.author.avatar_hue }});color:oklch(0.42 0.12 {{ comment.author.avatar_hue }})">{{ comment.author.initials }}</span>
+        <span class="gt-comment-author">{{ comment.author.name }}</span>
+        <span class="gt-comment-role">{{ 'Исполнитель' if comment.author.role == 'admin' else comment.author.role_label }}</span>
+        <span class="gt-comment-date">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
     </div>
+    <div class="richtext-content gt-comment-body">{{ comment.body|richtext|safe }}</div>
+    {{ render_attachments(comment.attachments) }}
 </div>
 {% endmacro %}

@@ -2,36 +2,59 @@
 {% from 'partials/attachments_macro.html' import render_attachments %}
 {% from 'partials/comment_macro.html' import render_comment %}
 {% from 'partials/richtext_macro.html' import richtext_editor %}
+{% from 'partials/priority_bars_macro.html' import priority_bars %}
+{% from 'partials/file_picker_macro.html' import file_picker_button, file_picker_list %}
 {% block title %}Тикет #{{ ticket.id }} — {{ site_name }}{% endblock %}
-{% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <h3>{{ ticket.title }} <span class="text-muted">#{{ ticket.id }}</span></h3>
 
-        <div class="card mb-3">
-            <div class="card-body">
-                {% if can_edit_desc %}
-                <form method="post" action="{{ url_for('tickets.edit_description', ticket_id=ticket.id) }}" enctype="multipart/form-data">
-                    {{ description_form.hidden_tag() }}
-                    {{ richtext_editor('description-editor', description_form.description) }}
-                    <button class="btn btn-sm btn-outline-primary mt-2" type="submit">Сохранить описание</button>
-                    <div class="form-text">Описание можно редактировать, пока тикет в начальном статусе.</div>
-                    <div class="mt-2">
-                        <input type="file" name="attachments" id="description-attachments-input" class="form-control"
-                               accept="{{ '.' + allowed_extensions|join(',.') }}" multiple>
-                        <div class="form-text">Разрешены файлы: {{ allowed_extensions|join(', ') }}.</div>
-                        <div id="description-attachments-list" class="mt-2"></div>
-                    </div>
-                </form>
-                {% else %}
-                <div class="richtext-content">{{ ticket.description|richtext|safe }}</div>
-                {% endif %}
-                {{ render_attachments(ticket.attachments, can_delete=can_edit_desc) }}
+{% macro manage_field(label, action, field) %}
+<div class="gt-field">
+    <span class="gt-field-label">{{ label }}</span>
+    <form method="post" action="{{ action }}" class="gt-field-row" data-field-form>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="gt-field-control">{{ field }}</div>
+        <button type="submit" class="gt-field-save" disabled data-field-save title="Сохранить">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+        </button>
+    </form>
+</div>
+{% endmacro %}
+
+{% block content %}
+<div class="gt-detail-grid">
+    <div class="gt-detail-main">
+        <div class="gt-detail-heading">
+            <a class="gt-back-link" href="{{ url_for('client.tickets_list') if current_user.role == 'client' else url_for('admin.dashboard') }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+                Тикеты
+            </a>
+            <h1 class="gt-detail-title">{{ ticket.title }}<span class="gt-detail-id">#{{ ticket.id }}</span></h1>
+            <div class="gt-pills-row">
+                <span class="badge bg-{{ ticket.status.color or 'secondary' }} gt-status-pill gt-pill"><span class="gt-status-dot"></span>{{ ticket.status.name }}</span>
+                <span class="gt-pill-outline">{{ priority_bars(ticket) }}{{ ticket.priority_label }}</span>
+                <span class="gt-pill-outline">{{ ticket.tracker.name }}</span>
             </div>
         </div>
 
+        <section class="gt-desc-card">
+            {% if can_edit_desc %}
+            <form method="post" action="{{ url_for('tickets.edit_description', ticket_id=ticket.id) }}" enctype="multipart/form-data">
+                {{ description_form.hidden_tag() }}
+                {{ richtext_editor('description-editor', description_form.description) }}
+                <button class="btn btn-sm btn-outline-primary mt-2" type="submit">Сохранить описание</button>
+                <div class="form-text mb-2">Описание можно редактировать, пока тикет в начальном статусе.</div>
+                {{ file_picker_button('description-attachments-input', allowed_extensions) }}
+                {{ file_picker_list('description-attachments-list') }}
+            </form>
+            {% else %}
+            <div class="richtext-content">{{ ticket.description|richtext|safe }}</div>
+            {% endif %}
+            {% if ticket.attachments %}
+            <div class="gt-desc-attachments">{{ render_attachments(ticket.attachments, can_delete=can_edit_desc) }}</div>
+            {% endif %}
+        </section>
+
         {% if can_advance_status or can_revert_status %}
-        <div class="d-flex gap-2 mb-3">
+        <div class="d-flex gap-2">
             {% if can_advance_status %}
             <form method="post" action="{{ url_for('tickets.advance_status', ticket_id=ticket.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -47,157 +70,125 @@
         </div>
         {% endif %}
 
-        <h5 id="comments">Комментарии</h5>
-        {% for c in ticket.comments %}
-            {{ render_comment(c) }}
-        {% else %}
-            <p class="text-muted">Комментариев пока нет.</p>
-        {% endfor %}
+        <section id="comments">
+            <div class="gt-comments-head">
+                <h2 class="gt-comments-title">Комментарии</h2>
+                {% if ticket.comments %}<span class="gt-comments-count">{{ ticket.comments|length }}</span>{% endif %}
+            </div>
+            <div class="gt-comments-list mt-3">
+                {% for c in ticket.comments %}
+                    {{ render_comment(c) }}
+                {% else %}
+                    <p class="text-muted mb-0">Комментариев пока нет.</p>
+                {% endfor %}
+            </div>
 
-        {% if can_comment %}
-        <form method="post" action="{{ url_for('tickets.add_comment', ticket_id=ticket.id) }}" enctype="multipart/form-data" class="mt-3">
-            {{ comment_form.hidden_tag() }}
-            <div class="mb-2">
-                <label class="form-label">Комментарий</label>
-                {{ richtext_editor('comment-editor', comment_form.body, '#comment-submit-btn') }}
-            </div>
-            <div class="mb-2">
-                <input type="file" name="attachments" id="comment-attachments-input" class="form-control"
-                       accept="{{ '.' + allowed_extensions|join(',.') }}" multiple>
-                <div class="form-text">Разрешены файлы: {{ allowed_extensions|join(', ') }}.</div>
-                <div id="comment-attachments-list" class="mt-2"></div>
-            </div>
-            <button type="submit" class="btn btn-primary btn-sm" id="comment-submit-btn" disabled>Отправить</button>
-        </form>
-        {% else %}
-        <p class="text-muted">Тикет в статусе «{{ ticket.status.name }}» — постановщик не может добавлять комментарии.</p>
-        {% endif %}
+            {% if can_comment %}
+            <form method="post" action="{{ url_for('tickets.add_comment', ticket_id=ticket.id) }}" enctype="multipart/form-data" class="gt-composer">
+                {{ comment_form.hidden_tag() }}
+                <div>
+                    <label class="form-label">Комментарий</label>
+                    {{ richtext_editor('comment-editor', comment_form.body, '#comment-submit-btn') }}
+                </div>
+                {{ file_picker_list('comment-attachments-list') }}
+                <div class="gt-composer-bottom">
+                    {{ file_picker_button('comment-attachments-input', allowed_extensions) }}
+                    <button type="submit" class="gt-composer-submit" id="comment-submit-btn" disabled>Отправить</button>
+                </div>
+            </form>
+            {% else %}
+            <p class="text-muted">Тикет в статусе «{{ ticket.status.name }}» — постановщик не может добавлять комментарии.</p>
+            {% endif %}
+        </section>
     </div>
 
-    <div class="col-md-4">
-        <div class="card mb-3">
-            <div class="card-body">
-                <h6 class="card-title">Сведения</h6>
-                <p class="mb-1"><strong>Постановщик:</strong> {{ ticket.client.name }}</p>
-                <p class="mb-1"><strong>Исполнитель:</strong> {{ ticket.assignee.name }}</p>
-                <p class="mb-1"><strong>Категория:</strong> {{ ticket.tracker.name }}</p>
-                <p class="mb-1"><strong>Приоритет:</strong> <span class="badge bg-{{ ticket.priority_color }}">{{ ticket.priority_label }}</span></p>
-                <p class="mb-1"><strong>Статус:</strong> <span class="badge bg-{{ ticket.status.color or 'secondary' }}">{{ ticket.status.name }}</span></p>
-                <p class="mb-1"><strong>Дедлайн:</strong> {{ ticket.deadline.strftime('%d.%m.%Y') if ticket.deadline else 'не задан' }}</p>
+    <aside class="d-flex flex-column gap-3">
+        <section class="gt-side-card">
+            <h3 class="gt-side-title">Сведения</h3>
+            <div class="gt-info-grid">
+                <span class="gt-info-label">Постановщик</span>
+                <span class="gt-info-value gt-info-people">
+                    <span class="gt-avatar-mini md" style="background:oklch(0.92 0.04 {{ ticket.client.avatar_hue }});color:oklch(0.42 0.12 {{ ticket.client.avatar_hue }})">{{ ticket.client.initials }}</span>
+                    {{ ticket.client.name }}
+                </span>
+                <span class="gt-info-label">Исполнитель</span>
+                <span class="gt-info-value gt-info-people">
+                    <span class="gt-avatar-mini md" style="background:oklch(0.92 0.04 {{ ticket.assignee.avatar_hue }});color:oklch(0.42 0.12 {{ ticket.assignee.avatar_hue }})">{{ ticket.assignee.initials }}</span>
+                    {{ ticket.assignee.name }}
+                </span>
+                <span class="gt-info-label">Категория</span><span class="gt-info-value">{{ ticket.tracker.name }}</span>
+                <span class="gt-info-label">Приоритет</span><span class="gt-info-value">{{ ticket.priority_label }}</span>
+                <span class="gt-info-label">Статус</span><span class="gt-info-value">{{ ticket.status.name }}</span>
+                <span class="gt-info-label">Дедлайн</span><span class="gt-info-value">{{ ticket.deadline.strftime('%d.%m.%Y') if ticket.deadline else 'не задан' }}</span>
                 {% if can_manage %}
-                <p class="mb-1">
-                    <strong>Внешняя ссылка:</strong>
-                    {% if ticket.bitrix24_url %}
-                        <a href="{{ ticket.bitrix24_url }}" target="_blank" rel="noopener noreferrer">Перейти по ссылке</a>
-                    {% else %}
-                        не указана
-                    {% endif %}
-                </p>
+                <span class="gt-info-label">Внешняя ссылка</span>
+                <span class="gt-info-value">
+                    {% if ticket.bitrix24_url %}<a href="{{ ticket.bitrix24_url }}" target="_blank" rel="noopener noreferrer">Перейти по ссылке</a>{% else %}не указана{% endif %}
+                </span>
                 {% endif %}
-                <p class="mb-1"><strong>Создан:</strong> {{ ticket.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
-                <p class="mb-0"><strong>Обновлён:</strong> {{ ticket.updated_at.strftime('%d.%m.%Y %H:%M') }}</p>
             </div>
-        </div>
+            <div class="gt-info-meta">
+                <span class="gt-info-label">Создан</span><span class="gt-info-value">{{ ticket.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                <span class="gt-info-label">Обновлён</span><span class="gt-info-value">{{ ticket.updated_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            </div>
+        </section>
 
         {% if can_manage or can_change_priority %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <h6 class="card-title">Управление</h6>
+        <section class="gt-side-card">
+            <h3 class="gt-side-title">Управление</h3>
 
-                {% if can_manage %}
-                <form method="post" action="{{ url_for('tickets.change_status', ticket_id=ticket.id) }}" class="mb-2">
-                    {{ status_form.hidden_tag() }}
-                    <label class="form-label small mb-1">Статус</label>
-                    <div class="input-group input-group-sm">
-                        {{ status_form.status_id(class_='form-select') }}
-                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
-                    </div>
-                </form>
+            {% if can_manage %}
+            {{ manage_field('Статус', url_for('tickets.change_status', ticket_id=ticket.id), status_form.status_id(class_='form-select')) }}
+            {{ manage_field('Категория', url_for('tickets.change_tracker', ticket_id=ticket.id), tracker_form.tracker_id(class_='form-select')) }}
+            {{ manage_field('Дедлайн', url_for('tickets.change_deadline', ticket_id=ticket.id), deadline_form.deadline(class_='form-control', data_empty_text='Не определён')) }}
+            {{ manage_field('Внешняя ссылка', url_for('tickets.change_bitrix24', ticket_id=ticket.id), bitrix24_form.bitrix24_url(class_='form-control', placeholder='https://...')) }}
+            {% for e in bitrix24_form.bitrix24_url.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            {% endif %}
 
-                <form method="post" action="{{ url_for('tickets.change_tracker', ticket_id=ticket.id) }}" class="mb-2">
-                    {{ tracker_form.hidden_tag() }}
-                    <label class="form-label small mb-1">Категория</label>
-                    <div class="input-group input-group-sm">
-                        {{ tracker_form.tracker_id(class_='form-select') }}
-                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
-                    </div>
-                </form>
+            {% if can_change_priority %}
+            {{ manage_field('Приоритет', url_for('tickets.change_priority', ticket_id=ticket.id), priority_form.priority(class_='form-select')) }}
+            {% endif %}
 
-                <form method="post" action="{{ url_for('tickets.change_deadline', ticket_id=ticket.id) }}" class="mb-2">
-                    {{ deadline_form.hidden_tag() }}
-                    <label class="form-label small mb-1">Дедлайн</label>
-                    <div class="input-group input-group-sm">
-                        {{ deadline_form.deadline(class_='form-control', data_empty_text='Не определён') }}
-                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
-                    </div>
-                </form>
-
-                <form method="post" action="{{ url_for('tickets.change_bitrix24', ticket_id=ticket.id) }}" class="mb-2">
-                    {{ bitrix24_form.hidden_tag() }}
-                    <label class="form-label small mb-1">Внешняя ссылка</label>
-                    <div class="input-group input-group-sm">
-                        {{ bitrix24_form.bitrix24_url(class_='form-control', placeholder='https://...') }}
-                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
-                    </div>
-                    {% for e in bitrix24_form.bitrix24_url.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-                </form>
-                {% endif %}
-
-                {% if can_change_priority %}
-                <form method="post" action="{{ url_for('tickets.change_priority', ticket_id=ticket.id) }}" class="mb-2">
-                    {{ priority_form.hidden_tag() }}
-                    <label class="form-label small mb-1">Приоритет</label>
-                    <div class="input-group input-group-sm">
-                        {{ priority_form.priority(class_='form-select') }}
-                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
-                    </div>
-                </form>
-                {% endif %}
-
-                {% if can_manage and can_reassign %}
-                <form method="post" action="{{ url_for('tickets.change_assignee', ticket_id=ticket.id) }}">
-                    {{ assignee_form.hidden_tag() }}
-                    <label class="form-label small mb-1">Исполнитель</label>
-                    <div class="input-group input-group-sm">
-                        {{ assignee_form.assignee_id(class_='form-select') }}
-                        <button class="btn btn-outline-primary" type="submit">&#10003;</button>
-                    </div>
-                </form>
-                {% endif %}
-            </div>
-        </div>
+            {% if can_manage and can_reassign %}
+            {{ manage_field('Исполнитель', url_for('tickets.change_assignee', ticket_id=ticket.id), assignee_form.assignee_id(class_='form-select')) }}
+            {% endif %}
+        </section>
         {% endif %}
 
-        <div class="card">
-            <div class="card-body">
-                <h6 class="card-title">История</h6>
+        <section class="gt-side-card">
+            <h3 class="gt-side-title">История</h3>
+            <div>
                 {% if ticket.events %}
                     {% for ev in ticket.events %}
-                    <div class="history-item small">
-                        <div>{{ ev.message }}</div>
-                        <div class="text-muted">{{ ev.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                    <div class="gt-history-item {{ 'is-latest' if loop.last }}">
+                        <div class="gt-history-rail">
+                            <span class="gt-history-dot"></span>
+                            <span class="gt-history-line"></span>
+                        </div>
+                        <div class="gt-history-body">
+                            <span class="gt-history-text">{{ ev.message }}</span>
+                            <span class="gt-history-date">{{ ev.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                        </div>
                     </div>
                     {% endfor %}
                 {% else %}
                     <p class="text-muted small mb-0">История пуста.</p>
                 {% endif %}
             </div>
-        </div>
+        </section>
 
         {% if can_delete %}
-        <div class="card mt-4">
-            <div class="card-body">
-                <h6 class="card-title text-danger">Опасная зона</h6>
-                <p class="text-muted small">Удаляет тикет безвозвратно вместе со всеми комментариями, вложениями и историей.</p>
-                <form method="post" action="{{ url_for('tickets.delete_ticket', ticket_id=ticket.id) }}"
-                      onsubmit="return confirm('Удалить тикет «{{ ticket.title }}» безвозвратно? Это действие нельзя отменить.');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">Удалить тикет</button>
-                </form>
-            </div>
-        </div>
+        <section class="gt-danger-card">
+            <h3 class="gt-side-title">Опасная зона</h3>
+            <p>Удаляет тикет безвозвратно вместе со всеми комментариями, вложениями и историей.</p>
+            <form method="post" action="{{ url_for('tickets.delete_ticket', ticket_id=ticket.id) }}"
+                  onsubmit="return confirm('Удалить тикет «{{ ticket.title }}» безвозвратно? Это действие нельзя отменить.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="gt-danger-btn">Удалить тикет</button>
+            </form>
+        </section>
         {% endif %}
-    </div>
+    </aside>
 </div>
 {% endblock %}
 {% block scripts %}
@@ -207,4 +198,19 @@
 {% if can_comment %}
 <script>setupAttachmentsPicker('#comment-attachments-input', '#comment-attachments-list');</script>
 {% endif %}
+<script>
+document.querySelectorAll('[data-field-form]').forEach(function (form) {
+    var control = form.querySelector('select, input');
+    var btn = form.querySelector('[data-field-save]');
+    if (!control || !btn) return;
+    var initial = control.value;
+    function sync() {
+        var dirty = control.value !== initial;
+        btn.disabled = !dirty;
+        btn.classList.toggle('is-dirty', dirty);
+    }
+    control.addEventListener('input', sync);
+    control.addEventListener('change', sync);
+});
+</script>
 {% endblock %}

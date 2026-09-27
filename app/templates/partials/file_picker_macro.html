@@ -1,0 +1,20 @@
+{% macro file_picker_button(input_id, allowed_extensions) %}
+<input type="file" name="attachments" id="{{ input_id }}" class="d-none"
+       accept="{{ '.' + allowed_extensions|join(',.') }}" multiple>
+<div class="gt-composer-pick">
+    <label class="gt-composer-pick-label" for="{{ input_id }}">
+        <span class="gt-composer-pick-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+            Выбрать файлы
+        </span>
+    </label>
+    <span class="gt-composer-hint">Разрешены файлы: {{ allowed_extensions|join(', ') }}.</span>
+</div>
+{% endmacro %}
+
+{% macro file_picker_list(list_id) %}
+<div class="gt-composer-files">
+    <span class="gt-composer-files-label">Прикреплённые файлы</span>
+    <div id="{{ list_id }}" class="gt-file-list"></div>
+</div>
+{% endmacro %}

@@ -5,28 +5,64 @@ function setupAttachmentsPicker(fileInputSelector, listSelector) {
 
     var files = [];
 
+    function formatSize(bytes) {
+        var kb = bytes / 1024;
+        return kb > 1024 ? (kb / 1024).toFixed(1) + ' МБ' : Math.max(1, Math.round(kb)) + ' КБ';
+    }
+
     function render() {
         list.innerHTML = '';
+        if (files.length) list.classList.add('gt-files');
         files.forEach(function (file, index) {
-            var item = document.createElement('div');
-            item.className = 'd-flex align-items-center justify-content-between border rounded px-2 py-1 mb-1 small bg-white';
+            var isImage = /^image\//.test(file.type);
+            var ext = (file.name.split('.').pop() || '').toUpperCase();
 
-            var label = document.createElement('span');
-            label.textContent = file.name + ' (' + Math.max(1, Math.round(file.size / 1024)) + ' КБ)';
+            var chip = document.createElement('div');
+            chip.className = 'gt-file-chip';
 
+            var body = document.createElement('span');
+            body.className = 'gt-file-link';
+            body.style.cursor = 'default';
+
+            var thumb = document.createElement('span');
+            if (isImage) {
+                thumb.className = 'gt-file-thumb';
+                thumb.style.backgroundImage = 'url(' + URL.createObjectURL(file) + ')';
+            } else {
+                thumb.className = 'gt-file-thumb gt-file-thumb-doc';
+                thumb.textContent = ext;
+            }
+
+            var meta = document.createElement('span');
+            meta.className = 'gt-file-meta';
+            var name = document.createElement('span');
+            name.className = 'gt-file-name';
+            name.textContent = file.name;
+            var size = document.createElement('span');
+            size.className = 'gt-file-size';
+            size.textContent = formatSize(file.size);
+            meta.appendChild(name);
+            meta.appendChild(size);
+
+            body.appendChild(thumb);
+            body.appendChild(meta);
+
+            var removeForm = document.createElement('span');
+            removeForm.className = 'gt-file-remove-form';
             var btn = document.createElement('button');
             btn.type = 'button';
-            btn.className = 'btn btn-sm btn-outline-danger py-0 px-2';
-            btn.textContent = '×';
+            btn.className = 'gt-file-remove';
             btn.title = 'Убрать файл';
+            btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>';
             btn.addEventListener('click', function () {
                 files.splice(index, 1);
                 sync();
             });
+            removeForm.appendChild(btn);
 
-            item.appendChild(label);
-            item.appendChild(btn);
-            list.appendChild(item);
+            chip.appendChild(body);
+            chip.appendChild(removeForm);
+            list.appendChild(chip);
         });
     }
 

@@ -1,22 +1,32 @@
 {% macro render_attachments(attachments, can_delete=False) %}
 {% if attachments %}
-<div class="d-flex flex-wrap gap-2 mt-2">
+<div class="gt-files">
     {% for a in attachments %}
-        <div class="attachment-item position-relative">
+        <div class="gt-file-chip">
             {% if a.is_image %}
-                <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="attachment-lightbox-trigger" title="{{ a.filename_original }}">
-                    <img src="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="attachment-thumb" alt="{{ a.filename_original }}">
-                </a>
+            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" class="attachment-lightbox-trigger gt-file-link" title="{{ a.filename_original }}">
+                <span class="gt-file-thumb" style="background-image:url('{{ url_for('tickets.download_attachment', attachment_id=a.id) }}')"></span>
+                <span class="gt-file-meta">
+                    <span class="gt-file-name">{{ a.filename_original }}</span>
+                    <span class="gt-file-size">{{ a.size_bytes|filesizeformat }}</span>
+                </span>
+            </a>
             {% else %}
-                <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
-                    &#128206; {{ a.filename_original }} <span class="text-muted">({{ a.size_bytes|filesizeformat }})</span>
-                </a>
+            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" rel="noopener" class="gt-file-link" title="{{ a.filename_original }}">
+                <span class="gt-file-thumb gt-file-thumb-doc">{{ a.filename_original.rsplit('.', 1)[-1]|upper }}</span>
+                <span class="gt-file-meta">
+                    <span class="gt-file-name">{{ a.filename_original }}</span>
+                    <span class="gt-file-size">{{ a.size_bytes|filesizeformat }}</span>
+                </span>
+            </a>
             {% endif %}
             {% if can_delete %}
             <form method="post" action="{{ url_for('tickets.delete_attachment', attachment_id=a.id) }}"
-                  class="d-inline" onsubmit="return confirm('Удалить вложение «{{ a.filename_original }}»?');">
+                  class="gt-file-remove-form" onsubmit="return confirm('Удалить вложение «{{ a.filename_original }}»?');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="attachment-delete-btn" title="Удалить вложение">&times;</button>
+                <button type="submit" class="gt-file-remove" title="Удалить вложение">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+                </button>
             </form>
             {% endif %}
         </div>

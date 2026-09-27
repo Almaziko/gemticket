@@ -79,7 +79,12 @@ body {
 }
 
 .btn {
-    border-radius: var(--gt-radius-sm);
+    /* Все кнопки в макетах — пилюли, без исключений (в т.ч. маленькие
+       btn-sm/outline-*). Кнопки внутри .input-group всё равно получают
+       плоские внутренние углы от более специфичных правил самого
+       Bootstrap (".input-group > .btn:not(:first-child)" и т.п.),
+       которые весят больше, чем один класс — сюда они не долетают. */
+    border-radius: var(--gt-radius-pill);
     font-weight: 500;
 }
 
@@ -295,46 +300,6 @@ body {
 
 .date-field-wrap {
     position: relative;
-}
-
-/* width: 1% — стандартный бутстраповский трюк для распределения ширины
-   между flex-элементами .input-group (как у ".input-group > .form-control"),
-   и он нужен только там. Раньше он был на .date-field-wrap безусловно —
-   вне .input-group (например, в форме создания тикета, где поле дедлайна
-   просто стоит в колонке col-md-*) это на полном серьёзе схлопывало
-   обёртку до 1% ширины колонки, и подсказка "Не определён" переносилась
-   на две строки, пытаясь влезть в эту узкую область. */
-.input-group .date-field-wrap {
-    flex: 1 1 auto;
-    width: 1%;
-    min-width: 0;
-}
-
-/* Дата-инпут в JS оборачивается в .date-field-wrap (см. date_placeholder.js)
-   уже ПОСЛЕ рендера — из-за этого он перестаёт быть прямым потомком
-   .input-group, и стандартные бутстраповские правила
-   ".input-group > .form-control:not(:last-child) { border-radius: 0 ... }"
-   и ".input-group-sm > .form-control { font-size: .875rem; padding: ...;
-   border-radius: var(--bs-border-radius-sm) }" до него не дотягиваются:
-   поле "Дедлайн" оставалось со скруглением со всех сторон, более крупным
-   радиусом, шрифтом и паддингом, чем соседние select'ы в блоке
-   "Управление". Дублируем все три правила вручную. */
-.input-group .date-field-wrap input[type="date"] {
-    width: 100%;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-.input-group-sm .date-field-wrap input[type="date"] {
-    border-top-left-radius: var(--bs-border-radius-sm);
-    border-bottom-left-radius: var(--bs-border-radius-sm);
-    font-size: .875rem;
-    padding: .25rem .5rem;
-}
-
-.input-group-sm .date-field-placeholder {
-    font-size: .875rem;
-    left: .5rem;
 }
 
 .date-field-placeholder {
@@ -1030,4 +995,654 @@ body {
     padding: 64px 24px;
     text-align: center;
     color: var(--gt-muted);
+}
+
+/* ---------- Вложения (шапка-описание тикета + комментарии) ---------- */
+
+.gt-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.gt-file-chip {
+    position: relative;
+}
+
+.gt-file-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 220px;
+    padding: 8px 36px 8px 8px;
+    border-radius: var(--gt-radius-md);
+    border: 1px solid var(--gt-border);
+    background: oklch(0.985 0.003 75);
+    text-decoration: none;
+    color: inherit;
+}
+
+.gt-file-link:hover {
+    border-color: var(--gt-border-strong);
+    color: inherit;
+}
+
+.gt-file-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+    flex-shrink: 0;
+    background-color: oklch(0.94 0.005 70);
+    background-size: cover;
+    background-position: center;
+}
+
+.gt-file-thumb-doc {
+    background: oklch(0.94 0.03 42);
+    color: oklch(0.48 0.14 42);
+    display: grid;
+    place-items: center;
+    font-family: var(--gt-font-mono);
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.gt-file-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.gt-file-name {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gt-file-size {
+    font-family: var(--gt-font-mono);
+    font-size: 11px;
+    color: var(--gt-muted);
+}
+
+.gt-file-remove-form {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    margin: 0;
+}
+
+.gt-file-remove {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 0;
+    background: transparent;
+    color: var(--gt-muted);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.gt-file-remove:hover {
+    background: oklch(0.94 0.04 25);
+    color: oklch(0.52 0.18 25);
+}
+
+/* ---------- Страница тикета ---------- */
+
+.gt-detail-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 32px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .gt-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.gt-detail-main {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    min-width: 0;
+}
+
+.gt-detail-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.gt-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--gt-muted);
+    align-self: flex-start;
+    text-decoration: none;
+}
+
+.gt-back-link:hover {
+    color: var(--gt-ink);
+}
+
+.gt-detail-title {
+    margin: 0;
+    font-size: 40px;
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+}
+
+.gt-detail-id {
+    font-family: var(--gt-font-mono);
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: oklch(0.6 0.01 60);
+    margin-left: 6px;
+}
+
+.gt-pills-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.badge.gt-pill {
+    border-radius: var(--gt-radius-pill);
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.gt-pill-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: var(--gt-radius-pill);
+    border: 1px solid var(--gt-border-strong);
+    color: oklch(0.35 0.01 60);
+}
+
+.gt-desc-card {
+    background: var(--gt-surface);
+    border: 1px solid var(--gt-border);
+    border-radius: var(--gt-radius-lg);
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: var(--gt-shadow);
+}
+
+.gt-desc-card .richtext-content {
+    font-size: 16px;
+    line-height: 1.65;
+    color: oklch(0.26 0.01 60);
+    max-width: 760px;
+}
+
+.gt-desc-attachments {
+    padding-top: 20px;
+    border-top: 1px solid var(--gt-border);
+}
+
+.gt-comments-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gt-comments-title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.gt-comments-count {
+    font-family: var(--gt-font-mono);
+    font-size: 12px;
+    padding: 2px 9px;
+    border-radius: var(--gt-radius-pill);
+    background: oklch(0.94 0.005 70);
+    color: oklch(0.45 0.01 60);
+}
+
+.gt-comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.gt-comment {
+    border-radius: var(--gt-radius-lg);
+    padding: 18px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border: 1px solid var(--gt-border);
+    background: var(--gt-surface);
+}
+
+.gt-comment.role-admin {
+    background: oklch(0.965 0.02 275);
+    border-color: oklch(0.89 0.04 275);
+}
+
+.gt-comment-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.gt-comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.gt-comment-author {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.gt-comment-role {
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: var(--gt-radius-pill);
+    background: oklch(0.93 0.04 160);
+    color: oklch(0.4 0.1 160);
+}
+
+.gt-comment.role-admin .gt-comment-role {
+    background: oklch(0.92 0.04 275);
+    color: oklch(0.42 0.12 275);
+}
+
+.gt-comment-date {
+    margin-left: auto;
+    font-family: var(--gt-font-mono);
+    font-size: 11px;
+    color: oklch(0.55 0.01 60);
+    white-space: nowrap;
+}
+
+.gt-comment-body {
+    font-size: 15px;
+    line-height: 1.6;
+    color: oklch(0.26 0.01 60);
+}
+
+.gt-comment .gt-files {
+    margin-top: 6px;
+}
+
+/* ---------- Композер комментария ---------- */
+
+.gt-composer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.richtext-wrap {
+    border-radius: var(--gt-radius-lg);
+}
+
+.richtext-wrap:focus-within {
+    border-color: oklch(0.75 0.08 42);
+}
+
+.richtext-toolbar {
+    background: transparent;
+    padding: 8px 10px;
+}
+
+.richtext-btn {
+    width: 32px;
+    height: 32px;
+}
+
+.richtext-wrap .richtext-editor {
+    padding: 16px 20px;
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.gt-composer-files {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--gt-border);
+}
+
+.gt-composer-files:has(.gt-file-list:empty) {
+    display: none;
+}
+
+.gt-file-list:empty {
+    display: none;
+}
+
+.gt-file-list.gt-files {
+    display: flex;
+}
+
+.gt-composer-files-label {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: oklch(0.5 0.01 60);
+}
+
+.gt-composer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.gt-composer-pick {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.gt-composer-pick-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: oklch(0.35 0.01 60);
+}
+
+.gt-composer-pick-btn {
+    height: 36px;
+    padding: 0 14px;
+    border-radius: var(--gt-radius-pill);
+    border: 1px dashed oklch(0.8 0.01 70);
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.gt-composer-pick-label:hover .gt-composer-pick-btn {
+    border-color: var(--gt-accent);
+    color: var(--gt-accent-strong);
+}
+
+.gt-composer-hint {
+    font-size: 12px;
+    color: oklch(0.55 0.01 60);
+}
+
+.gt-composer-submit {
+    height: 44px;
+    padding: 0 22px;
+    border-radius: var(--gt-radius-pill);
+    border: 0;
+    background: oklch(0.22 0.01 60);
+    color: oklch(0.98 0.004 80);
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.gt-composer-submit:disabled {
+    background: oklch(0.82 0.008 70);
+    cursor: not-allowed;
+}
+
+/* ---------- Сайдбар: Сведения / Управление / История / Опасная зона ---------- */
+
+.gt-side-card {
+    background: var(--gt-surface);
+    border: 1px solid var(--gt-border);
+    border-radius: var(--gt-radius-lg);
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.gt-side-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: oklch(0.5 0.01 60);
+}
+
+.gt-info-grid {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px 16px;
+    font-size: 14px;
+    align-items: center;
+}
+
+.gt-info-grid .gt-info-label {
+    color: oklch(0.52 0.01 60);
+}
+
+.gt-info-grid .gt-info-value {
+    font-weight: 500;
+}
+
+.gt-info-people {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gt-avatar-mini.md {
+    width: 22px;
+    height: 22px;
+    font-size: 9px;
+}
+
+.gt-info-meta {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px 16px;
+    font-size: 13px;
+    padding-top: 14px;
+    border-top: 1px solid var(--gt-border);
+}
+
+.gt-info-meta .gt-info-label {
+    color: oklch(0.52 0.01 60);
+}
+
+.gt-info-meta .gt-info-value {
+    font-family: var(--gt-font-mono);
+    font-size: 12px;
+    text-align: right;
+}
+
+.gt-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.gt-field-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: oklch(0.45 0.01 60);
+}
+
+.gt-field-row {
+    display: flex;
+    gap: 6px;
+}
+
+.gt-field-control {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.gt-field-control select,
+.gt-field-control input {
+    width: 100%;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: var(--gt-radius-sm);
+    border: 1px solid var(--gt-border-strong);
+    background: oklch(0.985 0.003 75);
+    font: inherit;
+    font-size: 14px;
+    color: var(--gt-ink);
+}
+
+.gt-field-control select:focus,
+.gt-field-control input:focus {
+    outline: 0;
+    border-color: var(--gt-ink);
+}
+
+.gt-field-save {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: var(--gt-radius-sm);
+    border: 1px solid var(--gt-border-strong);
+    background: transparent;
+    color: oklch(0.72 0.01 60);
+    display: grid;
+    place-items: center;
+    cursor: default;
+    transition: all .15s;
+}
+
+.gt-field-save.is-dirty {
+    background: oklch(0.22 0.01 60);
+    color: oklch(0.98 0.004 80);
+    border-color: oklch(0.22 0.01 60);
+    cursor: pointer;
+}
+
+.gt-history-item {
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr);
+    gap: 12px;
+}
+
+.gt-history-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.gt-history-dot {
+    width: 9px;
+    height: 9px;
+    margin-top: 5px;
+    border-radius: 50%;
+    background: oklch(0.82 0.008 70);
+    flex-shrink: 0;
+}
+
+.gt-history-item.is-latest .gt-history-dot {
+    background: var(--gt-accent);
+}
+
+.gt-history-line {
+    flex: 1;
+    width: 1px;
+    background: var(--gt-border);
+    margin-top: 4px;
+}
+
+.gt-history-item.is-latest .gt-history-line {
+    background: transparent;
+}
+
+.gt-history-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-bottom: 16px;
+}
+
+.gt-history-text {
+    font-size: 13px;
+    line-height: 1.45;
+    color: oklch(0.28 0.01 60);
+}
+
+.gt-history-date {
+    font-family: var(--gt-font-mono);
+    font-size: 11px;
+    color: oklch(0.55 0.01 60);
+}
+
+.gt-danger-card {
+    border: 1px solid oklch(0.88 0.05 25);
+    background: oklch(0.985 0.008 25);
+    border-radius: var(--gt-radius-lg);
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.gt-danger-card .gt-side-title {
+    color: oklch(0.52 0.18 25);
+}
+
+.gt-danger-card p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: oklch(0.45 0.02 40);
+}
+
+.gt-danger-btn {
+    margin-top: 4px;
+    height: 40px;
+    border-radius: var(--gt-radius-pill);
+    border: 1px solid oklch(0.62 0.19 25);
+    background: transparent;
+    color: oklch(0.52 0.18 25);
+    font-size: 14px;
+    width: 100%;
+}
+
+.gt-danger-btn:hover {
+    background: oklch(0.58 0.2 25);
+    color: oklch(0.99 0.005 80);
 }

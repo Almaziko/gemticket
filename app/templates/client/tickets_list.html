@@ -1,14 +1,6 @@
 {% extends 'base.html' %}
+{% from 'partials/priority_bars_macro.html' import priority_bars %}
 {% block title %}Мои тикеты — {{ site_name }}{% endblock %}
-
-{% macro priority_bars(t) %}
-{% set bc = {'danger': 'oklch(0.62 0.19 25)', 'warning': 'oklch(0.72 0.15 70)', 'secondary': 'oklch(0.6 0.01 60)'}[t.priority_color] %}
-<span class="gt-bars">
-    <span style="height:5px;background:{{ bc }}"></span>
-    <span style="height:8px{{ (';background:' ~ bc) if t.priority >= 2 else '' }}"></span>
-    <span style="height:12px{{ (';background:' ~ bc) if t.priority >= 3 else '' }}"></span>
-</span>
-{% endmacro %}
 
 {% macro ticket_group(group_tickets) %}
 <div class="gt-cols">
