@@ -28,6 +28,20 @@ class User(db.Model):
     def role_label(self):
         return {'admin': 'Админ', 'client': 'Постановщик'}.get(self.role, self.role)
 
+    @property
+    def initials(self):
+        """Инициалы для аватара-кружка (шапка сайта, комментарии, сведения
+        о тикете) — первые буквы первых двух слов имени."""
+        letters = ''.join(part[0] for part in self.name.split()[:2] if part)
+        return letters.upper() or '?'
+
+    @property
+    def avatar_hue(self):
+        """Стабильный (не зависящий от PYTHONHASHSEED) псевдослучайный
+        оттенок 0-359 для фона аватара — один и тот же пользователь всегда
+        получает один и тот же цвет."""
+        return (sum(ord(c) for c in self.name) * 37) % 360
+
 
 class Admin(User):
     __tablename__ = 'admins'

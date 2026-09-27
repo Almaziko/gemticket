@@ -1,17 +1,27 @@
 /* ---------- Design refresh: soft cards, rounded controls, muted badges ---------- */
 
 :root {
-    /* Уменьшены пропорционально компактному масштабу шрифта (html: 82%,
-       см. ниже) — были подобраны под прежний, более крупный размер полей и
-       на новом компактном фоне смотрелись слишком круглыми. */
-    --gt-radius-lg: 16px;
-    --gt-radius-md: 12px;
-    --gt-radius-sm: 8px;
-    --gt-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 1px 6px rgba(16, 24, 40, .06);
-    --gt-ink: #111827;
-    --gt-bg: #f3f4f6;
-    --gt-border: #eef0f2;
-    --gt-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    /* Дизайн-система на основе макетов ("Claude Design"): тёплый бежевый
+       фон, графитовый текст, акцент — терракотовый оранжевый; Onest для
+       текста, JetBrains Mono — для цифр/дат/id (везде, где раньше шёл
+       обычный шрифт, но глазу нужно "выровнять" колонку цифр). Радиусы
+       уменьшены пропорционально компактному масштабу шрифта (html: 82%,
+       см. ниже), чтобы соответствовать компактной плотности макетов. */
+    --gt-radius-lg: 20px;
+    --gt-radius-md: 14px;
+    --gt-radius-sm: 12px;
+    --gt-radius-pill: 999px;
+    --gt-shadow: 0 1px 2px oklch(0.2 0.01 60 / 0.04), 0 1px 6px oklch(0.2 0.01 60 / 0.06);
+    --gt-ink: oklch(0.22 0.01 60);
+    --gt-muted: oklch(0.52 0.01 60);
+    --gt-bg: oklch(0.975 0.004 80);
+    --gt-surface: oklch(0.995 0.002 80);
+    --gt-border: oklch(0.92 0.005 70);
+    --gt-border-strong: oklch(0.9 0.006 70);
+    --gt-accent: oklch(0.66 0.19 42);
+    --gt-accent-strong: oklch(0.55 0.17 42);
+    --gt-font: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --gt-font-mono: 'JetBrains Mono', ui-monospace, monospace;
     /* Переопределяем переменные самого Bootstrap, чтобы шрифт подхватился
        во всех его компонентах (кнопки, формы, таблицы, навбар и т.д.),
        а не только там, где мы явно задаём font-family. */
@@ -38,11 +48,12 @@ body {
     color: var(--gt-ink);
 }
 
-/* Тосты с флеш-сообщениями — в углу экрана, поверх навбара (если он есть на
-   странице), а не баннером в потоке контента. top учитывает высоту навбара
-   с запасом, чтобы не перекрываться с ним даже на маленьких экранах. */
+/* Тосты с флеш-сообщениями — в углу экрана, поверх шапки, а не баннером в
+   потоке контента. top учитывает высоту двухрядной шапки (лого/пилюли
+   навигации) с запасом, чтобы не перекрываться с ней даже на маленьких
+   экранах. */
 .toast-container-top-end {
-    top: 80px;
+    top: 112px;
     right: 0;
     z-index: 1085;
 }
@@ -62,7 +73,7 @@ body {
 }
 
 .card-header {
-    background: #fff;
+    background: var(--gt-surface);
     border-bottom: 1px solid var(--gt-border);
     border-radius: var(--gt-radius-lg) var(--gt-radius-lg) 0 0 !important;
 }
@@ -75,13 +86,16 @@ body {
 .btn-primary {
     background-color: var(--gt-ink);
     border-color: var(--gt-ink);
+    border-radius: var(--gt-radius-pill);
+    padding-left: 1.1em;
+    padding-right: 1.1em;
 }
 
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-primary:active {
-    background-color: #000 !important;
-    border-color: #000 !important;
+    background-color: var(--gt-accent) !important;
+    border-color: var(--gt-accent) !important;
 }
 
 .btn-outline-light {
@@ -91,13 +105,14 @@ body {
 .form-control,
 .form-select {
     border-radius: var(--gt-radius-sm);
-    border-color: #e5e7eb;
+    border-color: var(--gt-border-strong);
+    background-color: var(--gt-surface);
 }
 
 .form-control:focus,
 .form-select:focus {
     border-color: var(--gt-ink);
-    box-shadow: 0 0 0 3px rgba(17, 24, 39, .08);
+    box-shadow: 0 0 0 3px oklch(0.93 0.006 70);
 }
 
 .table {
@@ -128,16 +143,18 @@ body {
     color: #fff;
 }
 
-/* Смягчённые бейджи вместо насыщенных bootstrap-цветов — покрывает все
-   существующие bg-* бейджи по всему приложению без правки шаблонов. */
-.badge.bg-primary { background-color: #e0e7ff !important; color: #3730a3 !important; }
-.badge.bg-secondary { background-color: #f3f4f6 !important; color: #374151 !important; }
-.badge.bg-success { background-color: #dcfce7 !important; color: #166534 !important; }
-.badge.bg-warning { background-color: #fef3c7 !important; color: #92400e !important; }
-.badge.bg-danger { background-color: #fee2e2 !important; color: #991b1b !important; }
-.badge.bg-info { background-color: #cffafe !important; color: #155e75 !important; }
-.badge.bg-dark { background-color: #e5e7eb !important; color: #111827 !important; }
-.badge.text-bg-light { background-color: #f3f4f6 !important; color: #374151 !important; }
+/* Смягчённые бейджи-"пилюли" вместо насыщенных bootstrap-цветов — покрывает
+   все существующие bg-* бейджи по всему приложению без правки шаблонов.
+   Формула цвета — та же, что и в макетах: bg = oklch(0.95 0.035 H),
+   fg = oklch(0.45 0.14 H) для конкретного оттенка H на каждый статус/цвет. */
+.badge.bg-primary { background-color: oklch(0.95 0.035 275) !important; color: oklch(0.45 0.14 275) !important; }
+.badge.bg-secondary { background-color: oklch(0.93 0.005 70) !important; color: oklch(0.28 0.01 60) !important; }
+.badge.bg-success { background-color: oklch(0.95 0.035 155) !important; color: oklch(0.45 0.14 155) !important; }
+.badge.bg-warning { background-color: oklch(0.95 0.035 70) !important; color: oklch(0.45 0.14 70) !important; }
+.badge.bg-danger { background-color: oklch(0.95 0.035 25) !important; color: oklch(0.45 0.14 25) !important; }
+.badge.bg-info { background-color: oklch(0.95 0.035 200) !important; color: oklch(0.45 0.14 200) !important; }
+.badge.bg-dark { background-color: oklch(0.94 0.005 70) !important; color: oklch(0.45 0.01 60) !important; }
+.badge.text-bg-light { background-color: oklch(0.94 0.005 70) !important; color: oklch(0.45 0.01 60) !important; }
 
 .badge {
     font-weight: 600;
@@ -462,3 +479,326 @@ body {
 
 .card.status-group-accent-gray { border-left: 4px solid #374151; }
 .card.status-group-accent-gray .card-header { background: #f3f4f6; }
+
+/* ---------- Шапка сайта (шапка+навигация из макетов Claude Design) ---------- */
+
+.gt-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 40px 96px;
+}
+
+.gt-header {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    background: oklch(0.975 0.004 80 / 0.85);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--gt-border);
+    margin-bottom: 28px;
+}
+
+.gt-header-row {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 14px 40px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.gt-header-row.gt-nav-row {
+    padding: 0 40px 10px;
+}
+
+.gt-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+    flex-shrink: 0;
+    color: var(--gt-ink);
+    text-decoration: none;
+}
+
+.gt-brand:hover {
+    color: var(--gt-ink);
+}
+
+.gt-brand-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: var(--gt-accent);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.gt-brand-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gt-brand-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--gt-surface);
+}
+
+.gt-header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.gt-notif {
+    position: relative;
+}
+
+.gt-notif-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--gt-border-strong);
+    background: var(--gt-surface);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: oklch(0.35 0.01 60);
+}
+
+.gt-notif-btn:hover {
+    border-color: oklch(0.8 0.01 70);
+}
+
+.gt-notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--gt-radius-pill);
+    background: oklch(0.62 0.2 28);
+    color: var(--gt-surface);
+    font-family: var(--gt-font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--gt-bg);
+}
+
+.gt-notif-menu {
+    width: 380px;
+    max-width: 90vw;
+    padding: 0;
+    border: 1px solid var(--gt-border);
+    border-radius: var(--gt-radius-lg);
+    box-shadow: 0 30px 80px -24px oklch(0.2 0.01 60 / 0.3), 0 2px 6px oklch(0.2 0.01 60 / 0.06);
+    overflow: hidden;
+}
+
+.gt-notif-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 20px 14px;
+}
+
+.gt-notif-title {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+}
+
+.gt-notif-count {
+    font-family: var(--gt-font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: var(--gt-radius-pill);
+    background: oklch(0.94 0.04 28);
+    color: oklch(0.5 0.18 28);
+}
+
+.gt-notif-markall-form {
+    margin-left: auto;
+}
+
+.gt-notif-markall {
+    height: 32px;
+    padding: 0 12px;
+    border-radius: var(--gt-radius-pill);
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--gt-accent-strong);
+}
+
+.gt-notif-markall:disabled {
+    color: oklch(0.7 0.01 60);
+    cursor: default;
+}
+
+.gt-notif-markall:hover:not(:disabled) {
+    background: oklch(0.95 0.005 70);
+}
+
+.gt-notif-list {
+    max-height: min(420px, calc(100vh - 170px));
+    overflow-y: auto;
+    border-top: 1px solid var(--gt-border);
+    padding: 6px;
+}
+
+.gt-notif-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 8px;
+    gap: 2px 12px;
+    align-items: start;
+    padding: 12px 14px;
+    border-radius: var(--gt-radius-md);
+    color: inherit;
+    text-decoration: none;
+}
+
+.gt-notif-item:hover {
+    background: oklch(0.97 0.005 75);
+}
+
+.gt-notif-text {
+    grid-column: 1;
+    font-size: 14px;
+    line-height: 1.4;
+    color: oklch(0.35 0.01 60);
+}
+
+.gt-notif-item.unread .gt-notif-text {
+    font-weight: 600;
+    color: oklch(0.2 0.01 60);
+}
+
+.gt-notif-date {
+    grid-column: 1;
+    font-family: var(--gt-font-mono);
+    font-size: 11px;
+    color: oklch(0.55 0.01 60);
+}
+
+.gt-notif-dot {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: 8px;
+    height: 8px;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.gt-notif-item.unread .gt-notif-dot {
+    background: oklch(0.62 0.2 28);
+}
+
+.gt-notif-empty {
+    padding: 20px;
+    margin: 0;
+    text-align: center;
+    color: oklch(0.55 0.01 60);
+    font-size: 14px;
+}
+
+.gt-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.gt-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.gt-user-meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.gt-user-name {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--gt-ink);
+}
+
+.gt-user-role {
+    font-size: 12px;
+    color: oklch(0.52 0.01 60);
+}
+
+.gt-btn-pill-outline {
+    height: 36px;
+    padding: 0 16px;
+    border-radius: var(--gt-radius-pill);
+    border: 1px solid var(--gt-border-strong);
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: oklch(0.3 0.01 60);
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.gt-btn-pill-outline:hover {
+    background: oklch(0.94 0.005 70);
+    color: oklch(0.3 0.01 60);
+}
+
+.gt-nav-pills {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    margin-left: -13px;
+}
+
+.gt-nav-pill {
+    padding: 8px 13px;
+    border-radius: var(--gt-radius-pill);
+    background: transparent;
+    color: oklch(0.48 0.01 60);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.gt-nav-pill:hover {
+    background: oklch(0.93 0.006 70);
+    color: var(--gt-ink);
+}
+
+.gt-nav-pill.active {
+    background: oklch(0.93 0.006 70);
+    color: var(--gt-ink);
+}
