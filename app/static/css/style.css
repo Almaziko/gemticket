@@ -3031,3 +3031,267 @@ body {
 .gt-settings-savebar-save:hover {
     background: oklch(0.62 0.19 42);
 }
+
+/* ---------- Страница создания тикета ---------- */
+
+.gt-ticket-form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 24px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .gt-ticket-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.gt-ticket-form-main {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+
+.gt-ticket-form-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 96px;
+}
+
+.gt-title-input-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.gt-title-counter {
+    font-family: var(--gt-font-mono);
+    font-size: 11px;
+    color: oklch(0.6 0.01 60);
+}
+
+.gt-title-counter.is-full {
+    color: oklch(0.55 0.19 25);
+}
+
+.gt-title-input {
+    width: 100%;
+    height: 56px;
+    padding: 0 18px;
+    border-radius: 16px;
+    border: 1.5px solid var(--gt-border-strong);
+    background: oklch(0.985 0.003 75);
+    font: inherit;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--gt-ink);
+    outline: 0;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.gt-title-input:focus {
+    border-color: var(--gt-ink);
+    box-shadow: 0 0 0 4px oklch(0.93 0.006 70);
+}
+
+.gt-title-input.is-invalid {
+    border-color: oklch(0.62 0.19 25);
+    box-shadow: 0 0 0 4px oklch(0.94 0.04 25);
+}
+
+.gt-title-input.is-shaking {
+    animation: shakeA .4s ease;
+}
+
+.gt-dropzone {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px;
+    border-radius: 16px;
+    border: 1.5px dashed oklch(0.8 0.01 70);
+    background: oklch(0.985 0.003 75);
+    cursor: pointer;
+    transition: all .15s;
+}
+
+.gt-dropzone:hover,
+.gt-dropzone.is-dragover {
+    border-color: var(--gt-accent);
+    background: oklch(0.975 0.012 42);
+}
+
+.gt-dropzone-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    flex-shrink: 0;
+    background: oklch(0.94 0.03 42);
+    color: oklch(0.52 0.15 42);
+    display: grid;
+    place-items: center;
+}
+
+.gt-dropzone-title {
+    font-weight: 600;
+    color: oklch(0.25 0.01 60);
+}
+
+.gt-dropzone-hint {
+    font-size: 12px;
+    color: oklch(0.55 0.01 60);
+}
+
+.gt-avatar-select-chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 60px;
+    padding: 0 40px 0 12px;
+    border-radius: 16px;
+    border: 1px solid var(--gt-border-strong);
+    background: oklch(0.985 0.003 75);
+}
+
+.gt-avatar-select-chip:hover {
+    border-color: oklch(0.8 0.01 70);
+}
+
+.gt-avatar-select-chip select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    font: inherit;
+}
+
+.gt-avatar-select-name {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gt-avatar-select-email {
+    font-size: 12px;
+    color: oklch(0.52 0.01 60);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gt-chip-pick-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.gt-chip-pick {
+    position: relative;
+    cursor: pointer;
+}
+
+.gt-chip-pick-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.gt-chip-pick-visual {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 14px;
+    border-radius: var(--gt-radius-pill);
+    border: 1px solid var(--gt-border-strong);
+    background: var(--gt-surface);
+    color: oklch(0.35 0.01 60);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all .15s;
+}
+
+.gt-chip-pick-input:checked ~ .gt-chip-pick-visual {
+    background: var(--gt-ink);
+    border-color: var(--gt-ink);
+    color: oklch(0.98 0.004 80);
+}
+
+.gt-priority-pick {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    padding: 4px;
+    border-radius: 14px;
+    background: oklch(0.94 0.005 70);
+}
+
+.gt-priority-pick-opt {
+    position: relative;
+    cursor: pointer;
+}
+
+.gt-priority-pick-visual {
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    color: oklch(0.48 0.01 60);
+    transition: all .15s;
+}
+
+.gt-chip-pick-input:checked ~ .gt-priority-pick-visual {
+    background: var(--gt-surface);
+    box-shadow: 0 1px 3px oklch(0.2 0.01 60 / 0.12);
+    color: var(--gt-ink);
+}
+
+.gt-ticket-submit-btn {
+    height: 56px;
+    border-radius: 18px;
+    border: 0;
+    background: var(--gt-ink);
+    color: oklch(0.98 0.004 80);
+    font: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background .2s;
+    box-shadow: 0 10px 30px -12px oklch(0.22 0.01 60 / 0.6);
+    width: 100%;
+}
+
+.gt-ticket-submit-btn:hover {
+    background: var(--gt-accent);
+}
+
+.gt-ticket-form-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: oklch(0.55 0.19 25);
+    padding: 0 8px;
+}

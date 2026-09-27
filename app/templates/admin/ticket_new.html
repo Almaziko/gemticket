@@ -1,61 +1,175 @@
 {% extends 'base.html' %}
 {% from 'partials/richtext_macro.html' import richtext_editor %}
+{% from 'partials/file_picker_macro.html' import file_picker_list %}
 {% block title %}Новый тикет от имени постановщика — {{ site_name }}{% endblock %}
+
+{% macro avatar_select(field_id, select_field, label) %}
+<div class="gt-form-field">
+    <span>{{ label }}</span>
+    <div class="gt-avatar-select-chip" id="{{ field_id }}-chip">
+        <span class="gt-comment-avatar" id="{{ field_id }}-avatar"></span>
+        <span class="d-flex flex-column gap-1" style="min-width:0">
+            <span class="gt-avatar-select-name" id="{{ field_id }}-name"></span>
+            <span class="gt-avatar-select-email" id="{{ field_id }}-email"></span>
+        </span>
+        <svg class="gt-form-select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+        {{ select_field(id=field_id) }}
+    </div>
+</div>
+{% endmacro %}
+
 {% block content %}
-<h3 class="mb-1">Новый тикет от имени постановщика</h3>
-<p class="text-muted">
-    Для случаев, когда постановщик попросил завести тикет по другому каналу связи (звонок,
-    чат и т.п.) и пока не может сделать это сам. Тикет будет выглядеть так же, как если бы его
-    создал выбранный постановщик.
-</p>
-<form method="post" enctype="multipart/form-data">
+<div class="d-flex flex-column gap-3 mb-4" style="max-width:860px">
+    <a class="gt-back-link" href="{{ url_for('admin.dashboard') }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Тикеты
+    </a>
+    <h1 class="gt-list-title" style="font-size:44px">Новый тикет от имени постановщика</h1>
+    <p style="margin:0;font-size:16px;line-height:1.55;color:oklch(0.48 0.01 60)">Для случаев, когда постановщик попросил завести тикет по другому каналу связи (звонок, чат и т.п.) и пока не может сделать это сам. Тикет будет выглядеть так же, как если бы его создал выбранный постановщик.</p>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="gt-ticket-form-grid" id="ticket-form" novalidate>
     {{ form.hidden_tag() }}
-    <div class="row">
-        <div class="col-md-6 mb-3">
-            {{ form.client_id.label(class_='form-label') }}
-            {{ form.client_id(class_='form-select') }}
-            {% for e in form.client_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+    <section class="gt-card gt-ticket-form-main">
+        <label class="gt-form-field">
+            <span class="gt-title-input-row">
+                <span>Название</span>
+                <span class="gt-title-counter" id="title-counter">0/80</span>
+            </span>
+            {{ form.title(class_='gt-title-input', maxlength=80, id='ticket-title-input') }}
+            {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </label>
+
+        <div class="gt-form-field">
+            <span>Описание</span>
+            {{ richtext_editor('description-editor', form.description) }}
         </div>
-        <div class="col-md-6 mb-3">
-            {{ form.assignee_id.label(class_='form-label') }}
-            {{ form.assignee_id(class_='form-select') }}
-            {% for e in form.assignee_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+
+        <div class="gt-form-field">
+            <span>Вложения</span>
+            <label class="gt-dropzone" id="ticket-dropzone">
+                <input type="file" name="attachments" id="attachments-input" class="d-none"
+                       accept="{{ '.' + allowed_extensions|join(',.') }}" multiple>
+                <span class="gt-dropzone-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                </span>
+                <span class="d-flex flex-column gap-1" style="min-width:0">
+                    <span class="d-flex align-items-center gap-2 flex-wrap"><span class="gt-dropzone-title">Выбрать файлы</span></span>
+                    <span class="gt-dropzone-hint">Разрешены файлы: {{ allowed_extensions|join(', ') }}.</span>
+                </span>
+            </label>
+            {{ file_picker_list('attachments-list') }}
         </div>
-    </div>
-    <div class="mb-3">
-        {{ form.title.label(class_='form-label') }}
-        {{ form.title(class_='form-control', maxlength=80) }}
-        {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Описание</label>
-        {{ richtext_editor('description-editor', form.description) }}
-    </div>
-    <div class="row">
-        <div class="col-md-4 mb-3">
-            {{ form.tracker_id.label(class_='form-label') }}
-            {{ form.tracker_id(class_='form-select') }}
-            {% for e in form.tracker_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-        </div>
-        <div class="col-md-4 mb-3">
-            {{ form.priority.label(class_='form-label') }}
-            {{ form.priority(class_='form-select') }}
-        </div>
-        <div class="col-md-4 mb-3">
-            {{ form.deadline.label(class_='form-label') }}
-            {{ form.deadline(class_='form-control', data_empty_text='Не определён') }}
-        </div>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Вложения</label>
-        <input type="file" name="attachments" id="attachments-input" class="form-control"
-               accept="{{ '.' + allowed_extensions|join(',.') }}" multiple>
-        <div class="form-text">Разрешены файлы: {{ allowed_extensions|join(', ') }}.</div>
-        <div id="attachments-list" class="mt-2"></div>
-    </div>
-    <button type="submit" class="btn btn-primary">Создать тикет</button>
+    </section>
+
+    <aside class="gt-ticket-form-aside">
+        <section class="gt-card p-3 d-flex flex-column gap-3">
+            {{ avatar_select('client-select', form.client_id, 'Постановщик') }}
+            {{ avatar_select('assignee-select', form.assignee_id, 'Исполнитель') }}
+        </section>
+
+        <section class="gt-card p-4 d-flex flex-column gap-4">
+            <div class="gt-form-field">
+                <span>Категория</span>
+                <div class="gt-chip-pick-row">
+                    {% for value, label in form.tracker_id.choices %}
+                    <label class="gt-chip-pick">
+                        <input type="radio" name="tracker_id" value="{{ value }}" class="gt-chip-pick-input" {{ 'checked' if form.tracker_id.data == value }}>
+                        <span class="gt-chip-pick-visual">{{ label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% for e in form.tracker_id.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="gt-form-field">
+                <span>Приоритет</span>
+                <div class="gt-priority-pick">
+                    {% for value, label, bar_color in [(3, 'Высокий', 'oklch(0.62 0.19 25)'), (2, 'Средний', 'oklch(0.72 0.15 70)'), (1, 'Низкий', 'oklch(0.6 0.01 60)')] %}
+                    <label class="gt-priority-pick-opt">
+                        <input type="radio" name="priority" value="{{ value }}" class="gt-chip-pick-input" {{ 'checked' if form.priority.data == value }}>
+                        <span class="gt-priority-pick-visual">
+                            <span class="gt-bars">
+                                <span style="height:4px;background:{{ bar_color }}"></span>
+                                <span style="height:7px{{ (';background:' ~ bar_color) if value >= 2 else '' }}"></span>
+                                <span style="height:11px{{ (';background:' ~ bar_color) if value >= 3 else '' }}"></span>
+                            </span>
+                            {{ label }}
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <label class="gt-form-field">
+                <span>Дедлайн</span>
+                {{ form.deadline(class_='gt-form-input', style='height:44px', data_empty_text='Не определён') }}
+            </label>
+        </section>
+
+        <button type="submit" class="gt-ticket-submit-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+            Создать тикет
+        </button>
+    </aside>
 </form>
 {% endblock %}
 {% block scripts %}
-<script>setupAttachmentsPicker('#attachments-input', '#attachments-list');</script>
+<script>setupAttachmentsPicker('#attachments-input', '#attachments-list', '#ticket-dropzone');</script>
+<script>
+(function () {
+    var input = document.getElementById('ticket-title-input');
+    var counter = document.getElementById('title-counter');
+    function syncCounter() {
+        var len = input.value.length;
+        counter.textContent = len + '/80';
+        counter.classList.toggle('is-full', len >= 80);
+    }
+    input.addEventListener('input', syncCounter);
+    syncCounter();
+
+    document.getElementById('ticket-form').addEventListener('submit', function (e) {
+        if (!input.value.trim()) {
+            e.preventDefault();
+            input.classList.add('is-invalid');
+            input.classList.remove('is-shaking');
+            void input.offsetWidth;
+            input.classList.add('is-shaking');
+            input.focus();
+        }
+    });
+
+    function hueOf(name) {
+        var sum = 0;
+        for (var i = 0; i < name.length; i++) sum += name.charCodeAt(i);
+        return (sum * 37) % 360;
+    }
+    function initialsOf(name) {
+        var parts = name.trim().split(/\s+/).slice(0, 2);
+        return parts.map(function (p) { return p.charAt(0) || ''; }).join('').toUpperCase() || '?';
+    }
+    ['client-select', 'assignee-select'].forEach(function (id) {
+        var select = document.getElementById(id);
+        var avatar = document.getElementById(id + '-avatar');
+        var nameEl = document.getElementById(id + '-name');
+        var emailEl = document.getElementById(id + '-email');
+        if (!select) return;
+        function sync() {
+            var opt = select.options[select.selectedIndex];
+            if (!opt) return;
+            var text = opt.textContent;
+            var m = text.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+            var name = m ? m[1] : text;
+            var email = m ? m[2] : '';
+            var hue = hueOf(name);
+            avatar.style.background = 'oklch(0.92 0.04 ' + hue + ')';
+            avatar.style.color = 'oklch(0.42 0.12 ' + hue + ')';
+            avatar.textContent = initialsOf(name);
+            nameEl.textContent = name;
+            emailEl.textContent = email;
+            emailEl.style.display = email ? '' : 'none';
+        }
+        select.addEventListener('change', sync);
+        sync();
+    });
+})();
+</script>
 {% endblock %}

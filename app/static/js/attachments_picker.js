@@ -1,4 +1,4 @@
-function setupAttachmentsPicker(fileInputSelector, listSelector) {
+function setupAttachmentsPicker(fileInputSelector, listSelector, dropZoneSelector) {
     var input = document.querySelector(fileInputSelector);
     var list = document.querySelector(listSelector);
     if (!input || !list) return;
@@ -77,4 +77,22 @@ function setupAttachmentsPicker(fileInputSelector, listSelector) {
         files = Array.prototype.slice.call(input.files);
         render();
     });
+
+    var dropZone = dropZoneSelector ? document.querySelector(dropZoneSelector) : null;
+    if (dropZone) {
+        dropZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            dropZone.classList.add('is-dragover');
+        });
+        dropZone.addEventListener('dragleave', function () {
+            dropZone.classList.remove('is-dragover');
+        });
+        dropZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropZone.classList.remove('is-dragover');
+            var dropped = (e.dataTransfer && e.dataTransfer.files) || [];
+            Array.prototype.forEach.call(dropped, function (f) { files.push(f); });
+            sync();
+        });
+    }
 }
