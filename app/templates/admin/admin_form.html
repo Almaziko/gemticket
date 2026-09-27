@@ -1,25 +1,70 @@
 {% extends 'base.html' %}
 {% block title %}{{ 'Новый админ' if not admin else 'Админ' }} — {{ site_name }}{% endblock %}
 {% block content %}
-<h3 class="mb-3">{{ 'Новый админ' if not admin else 'Редактирование админа' }}</h3>
-<form method="post">
-    {{ form.hidden_tag() }}
-    <div class="mb-3">
-        {{ form.name.label(class_='form-label') }}
-        {{ form.name(class_='form-control') }}
-        {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+<div class="gt-form-page">
+    <a class="gt-back-link" href="{{ url_for('admin.admins_list') }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Админы
+    </a>
+    <div class="gt-form-header">
+        {% if admin %}
+        <span class="gt-form-avatar" style="background:oklch(0.92 0.04 {{ admin.avatar_hue }});color:oklch(0.42 0.12 {{ admin.avatar_hue }})">{{ admin.initials }}</span>
+        {% else %}
+        <span class="gt-form-avatar" style="background:oklch(0.93 0.006 70);color:oklch(0.55 0.01 60)">?</span>
+        {% endif %}
+        <div class="gt-form-heading">
+            <h1 class="gt-form-title">{{ 'Новый админ' if not admin else 'Редактирование админа' }}</h1>
+            {% if admin %}<span class="gt-form-subtitle">{{ admin.email }}</span>{% endif %}
+        </div>
     </div>
-    <div class="mb-3">
-        {{ form.email.label(class_='form-label') }}
-        {{ form.email(class_='form-control') }}
-        {% for e in form.email.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-    </div>
-    <div class="mb-3">
-        {{ form.password.label(class_='form-label') }}
-        {{ form.password(class_='form-control') }}
-        <div class="form-text">{{ 'Оставьте пустым, чтобы не менять.' if admin else 'Пароль должен быть уникальным во всей системе.' }}</div>
-        {% for e in form.password.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-    </div>
-    <button type="submit" class="btn btn-primary">Сохранить</button>
-</form>
+
+    <form method="post" class="gt-card gt-form-card">
+        {{ form.hidden_tag() }}
+        <div class="gt-form-field">
+            {{ form.name.label() }}
+            {{ form.name(class_='gt-form-input') }}
+            {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="gt-form-field">
+            {{ form.email.label() }}
+            {{ form.email(class_='gt-form-input mono') }}
+            {% for e in form.email.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="gt-form-field">
+            {{ form.password.label() }}
+            <div class="gt-form-password-wrap" id="password-wrap">
+                {{ form.password(class_='gt-form-input mono', placeholder='••••••••', autocomplete='new-password', id='password-input') }}
+                <button type="button" class="gt-form-eye" id="password-eye-btn" title="Показать пароль">
+                    <svg class="gt-eye-off" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg class="gt-eye-on" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><path d="M2 2l20 20"></path></svg>
+                </button>
+            </div>
+            <span class="gt-form-hint">{{ 'Оставьте пустым, чтобы не менять.' if admin else 'Пароль должен быть уникальным во всей системе.' }}</span>
+            {% for e in form.password.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="gt-form-footer">
+            <button type="reset" class="gt-form-cancel-btn">Отменить</button>
+            <button type="submit" class="gt-form-save-btn">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                Сохранить
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+    var eyeBtn = document.getElementById('password-eye-btn');
+    var input = document.getElementById('password-input');
+    var showing = false;
+    eyeBtn.addEventListener('click', function () {
+        showing = !showing;
+        input.type = showing ? 'text' : 'password';
+        eyeBtn.querySelector('.gt-eye-off').style.display = showing ? 'none' : '';
+        eyeBtn.querySelector('.gt-eye-on').style.display = showing ? '' : 'none';
+        eyeBtn.title = showing ? 'Скрыть пароль' : 'Показать пароль';
+    });
+})();
+</script>
 {% endblock %}

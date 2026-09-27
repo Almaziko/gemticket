@@ -1,68 +1,104 @@
 {% extends 'base.html' %}
 {% block title %}Статус — {{ site_name }}{% endblock %}
+{% set color_swatches = [
+    ('primary', 'Фиолетовый', 'oklch(0.7 0.14 275)'),
+    ('success', 'Зелёный', 'oklch(0.7 0.14 155)'),
+    ('warning', 'Жёлтый', 'oklch(0.7 0.14 70)'),
+    ('danger', 'Красный', 'oklch(0.7 0.14 25)'),
+    ('info', 'Синий', 'oklch(0.7 0.14 200)'),
+    ('secondary', 'Серый', 'oklch(0.55 0.01 60)'),
+    ('dark', 'Тёмный', 'oklch(0.3 0.01 60)'),
+] %}
 {% block content %}
-<h3 class="mb-3">{{ 'Новый статус' if not status else 'Редактирование статуса' }}</h3>
-<form method="post">
-    {{ form.hidden_tag() }}
-    <div class="mb-3">
-        {{ form.name.label(class_='form-label') }}
-        {{ form.name(class_='form-control') }}
-        {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-    </div>
-    <div class="mb-3">
-        {{ form.order.label(class_='form-label') }}
-        {{ form.order(class_='form-control') }}
-    </div>
-    <div class="mb-3">
-        {{ form.color.label(class_='form-label') }}
-        {{ form.color(class_='form-control', placeholder='success, warning, danger, primary...') }}
-    </div>
-    <div class="mb-3">
-        {{ form.group.label(class_='form-label') }}
-        {{ form.group(class_='form-select') }}
-        <div class="form-text">Группа 1 показывается в списках тикетов первой, группа 5 — последней.</div>
-    </div>
-    <div class="form-check mb-2">
-        {{ form.is_default(class_='form-check-input') }}
-        {{ form.is_default.label(class_='form-check-label') }}
-    </div>
-    <div class="form-check mb-2">
-        {{ form.is_active(class_='form-check-input') }}
-        {{ form.is_active.label(class_='form-check-label') }}
-    </div>
-    <div class="form-check mb-3">
-        {{ form.is_final(class_='form-check-input') }}
-        {{ form.is_final.label(class_='form-check-label') }}
-    </div>
-    <hr>
-    <div class="form-check mb-2">
-        {{ form.auto_advance_enabled(class_='form-check-input') }}
-        {{ form.auto_advance_enabled.label(class_='form-check-label') }}
-    </div>
-    <div class="mb-3">
-        {{ form.auto_advance_button_text.label(class_='form-label') }}
-        {{ form.auto_advance_button_text(class_='form-control', placeholder='Проверено') }}
-        {% for e in form.auto_advance_button_text.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-        <div class="form-text">
-            Пока тикет в этом статусе, постановщик увидит эту кнопку на странице тикета.
-            По нажатию тикет сам перейдёт на следующий статус по общему порядку списка статусов
-            (сначала группа 1..5, внутри группы — по полю «Порядок»).
+<div class="gt-form-page">
+    <a class="gt-back-link" href="{{ url_for('admin.statuses_list') }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Статусы
+    </a>
+    <h1 class="gt-form-title">{{ 'Новый статус' if not status else 'Редактирование статуса' }}</h1>
+
+    <form method="post" class="gt-card gt-form-card">
+        {{ form.hidden_tag() }}
+        <div class="gt-form-field">
+            {{ form.name.label() }}
+            {{ form.name(class_='gt-form-input') }}
+            {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
         </div>
-    </div>
-    <hr>
-    <div class="form-check mb-2">
-        {{ form.auto_revert_enabled(class_='form-check-input') }}
-        {{ form.auto_revert_enabled.label(class_='form-check-label') }}
-    </div>
-    <div class="mb-3">
-        {{ form.auto_revert_button_text.label(class_='form-label') }}
-        {{ form.auto_revert_button_text(class_='form-control', placeholder='На доработку') }}
-        {% for e in form.auto_revert_button_text.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-        <div class="form-text">
-            Аналогично, но в обратную сторону: тикет перейдёт на предыдущий статус по общему
-            порядку списка. Исполнителю в обоих случаях приходит уведомление о смене статуса.
+        <div class="gt-settings-row">
+            <div class="gt-form-field">
+                {{ form.order.label() }}
+                {{ form.order(class_='gt-form-input mono') }}
+            </div>
+            <div class="gt-form-field">
+                {{ form.group.label() }}
+                {{ form.group(class_='gt-form-select') }}
+                <span class="gt-form-hint">Группа 1 показывается в списках тикетов первой, группа 5 — последней.</span>
+            </div>
         </div>
-    </div>
-    <button type="submit" class="btn btn-primary">Сохранить</button>
-</form>
+        <div class="gt-form-field">
+            <span>Цвет</span>
+            <div class="gt-swatch-row" style="gap:8px">
+                {% for value, label, fill in color_swatches %}
+                <label class="gt-swatch" style="max-width:30px" title="{{ label }}">
+                    <input type="radio" name="{{ form.color.name }}" value="{{ value }}" class="gt-swatch-input" {{ 'checked' if form.color.data == value }}>
+                    <span class="gt-swatch-fill" style="background:{{ fill }}"></span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="d-flex gap-3 flex-wrap">
+            <label class="gt-toggle-btn">
+                {{ form.is_default(class_='gt-toggle-input') }}
+                <span class="gt-toggle-track"><span class="gt-toggle-knob"></span></span>
+                {{ form.is_default.label.text }}
+            </label>
+            <label class="gt-toggle-btn">
+                {{ form.is_active(class_='gt-toggle-input') }}
+                <span class="gt-toggle-track"><span class="gt-toggle-knob"></span></span>
+                {{ form.is_active.label.text }}
+            </label>
+            <label class="gt-toggle-btn">
+                {{ form.is_final(class_='gt-toggle-input') }}
+                <span class="gt-toggle-track"><span class="gt-toggle-knob"></span></span>
+                {{ form.is_final.label.text }}
+            </label>
+        </div>
+
+        <div style="height:1px;background:oklch(0.93 0.005 70)"></div>
+
+        <label class="gt-toggle-btn" style="align-self:flex-start">
+            {{ form.auto_advance_enabled(class_='gt-toggle-input') }}
+            <span class="gt-toggle-track"><span class="gt-toggle-knob"></span></span>
+            {{ form.auto_advance_enabled.label.text }}
+        </label>
+        <div class="gt-form-field">
+            {{ form.auto_advance_button_text.label() }}
+            {{ form.auto_advance_button_text(class_='gt-form-input', placeholder='Проверено') }}
+            {% for e in form.auto_advance_button_text.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            <span class="gt-form-hint">Пока тикет в этом статусе, постановщик увидит эту кнопку на странице тикета. По нажатию тикет сам перейдёт на следующий статус по общему порядку списка статусов (сначала группа 1..5, внутри группы — по полю «Порядок»).</span>
+        </div>
+
+        <div style="height:1px;background:oklch(0.93 0.005 70)"></div>
+
+        <label class="gt-toggle-btn" style="align-self:flex-start">
+            {{ form.auto_revert_enabled(class_='gt-toggle-input') }}
+            <span class="gt-toggle-track"><span class="gt-toggle-knob"></span></span>
+            {{ form.auto_revert_enabled.label.text }}
+        </label>
+        <div class="gt-form-field">
+            {{ form.auto_revert_button_text.label() }}
+            {{ form.auto_revert_button_text(class_='gt-form-input', placeholder='На доработку') }}
+            {% for e in form.auto_revert_button_text.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            <span class="gt-form-hint">Аналогично, но в обратную сторону: тикет перейдёт на предыдущий статус по общему порядку списка. Исполнителю в обоих случаях приходит уведомление о смене статуса.</span>
+        </div>
+
+        <div class="gt-form-footer">
+            <button type="reset" class="gt-form-cancel-btn">Отменить</button>
+            <button type="submit" class="gt-form-save-btn">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                Сохранить
+            </button>
+        </div>
+    </form>
+</div>
 {% endblock %}

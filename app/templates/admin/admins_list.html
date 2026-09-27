@@ -1,30 +1,54 @@
 {% extends 'base.html' %}
 {% block title %}Админы — {{ site_name }}{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Админы</h3>
-    <a href="{{ url_for('admin.admin_new') }}" class="btn btn-primary">Новый админ</a>
+<div class="gt-list-head">
+    <div class="gt-list-title-row">
+        <h1 class="gt-list-title">Админы</h1>
+        <span class="gt-list-count">{{ admins|length }}</span>
+    </div>
+    <a href="{{ url_for('admin.admin_new') }}" class="gt-list-new-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        Новый админ
+    </a>
 </div>
-<table class="table bg-white align-middle">
-    <thead><tr><th>Имя</th><th>Email</th><th>Роль</th><th></th></tr></thead>
-    <tbody>
-    {% for a in admins %}
-    <tr>
-        <td>{{ a.name }}</td>
-        <td>{{ a.email }}</td>
-        <td>{{ 'Суперадмин' if a.is_superadmin else 'Админ' }}</td>
-        <td class="text-end">
-            <a href="{{ url_for('admin.admin_edit', admin_id=a.id) }}" class="btn btn-sm btn-outline-secondary">Изменить</a>
-            <a href="{{ url_for('admin.admin_show_password', admin_id=a.id) }}" class="btn btn-sm btn-outline-info">Показать пароль</a>
-            {% if not a.is_superadmin and a.id != current_user.id %}
-            <form method="post" action="{{ url_for('admin.admin_delete', admin_id=a.id) }}" class="d-inline" onsubmit="return confirm('Удалить админа?');">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-danger">Удалить</button>
-            </form>
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+
+<section class="gt-card">
+    <div class="gt-table-wrap"><div style="min-width:700px">
+        <div class="gt-t-head" style="grid-template-columns:minmax(240px,1fr) 140px 240px">
+            <span>Имя · Email</span><span>Роль</span><span></span>
+        </div>
+        {% for a in admins %}
+        <div class="gt-t-row" style="grid-template-columns:minmax(240px,1fr) 140px 240px">
+            <span class="d-flex align-items-center gap-3" style="min-width:0">
+                <span class="gt-avatar-md" style="background:oklch(0.92 0.04 {{ a.avatar_hue }});color:oklch(0.42 0.12 {{ a.avatar_hue }})">{{ a.initials }}</span>
+                <span class="d-flex flex-column gap-1" style="min-width:0">
+                    <span class="gt-t-name">{{ a.name }}</span>
+                    <span class="gt-t-email">{{ a.email }}</span>
+                </span>
+            </span>
+            <span style="font-size:14px;color:oklch(0.3 0.01 60)">{{ 'Суперадмин' if a.is_superadmin else 'Админ' }}</span>
+            <span class="gt-t-actions">
+                <a href="{{ url_for('admin.admin_edit', admin_id=a.id) }}" class="gt-t-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    Изменить
+                </a>
+                <a href="{{ url_for('admin.admin_show_password', admin_id=a.id) }}" class="gt-t-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3L22 7l-3-3"></path></svg>
+                    Пароль
+                </a>
+                {% if not a.is_superadmin and a.id != current_user.id %}
+                <form method="post" action="{{ url_for('admin.admin_delete', admin_id=a.id) }}" onsubmit="return confirm('Удалить админа?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="gt-t-icon-btn gt-t-danger" title="Удалить">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg>
+                    </button>
+                </form>
+                {% endif %}
+            </span>
+        </div>
+        {% else %}
+        <div class="gt-t-empty">Админов пока нет.</div>
+        {% endfor %}
+    </div></div>
+</section>
 {% endblock %}
