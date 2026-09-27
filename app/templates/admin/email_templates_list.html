@@ -1,20 +1,38 @@
 {% extends 'base.html' %}
 {% block title %}Шаблоны писем — {{ site_name }}{% endblock %}
 {% block content %}
-<h3 class="mb-3">Шаблоны писем</h3>
-<p class="text-muted">Все письма, которые система рассылает пользователям. Тема и текст поддерживают переменные вида <code>{{ '{{ ticket_title }}' }}</code> — список переменных для каждого шаблона указан на странице редактирования.</p>
-<table class="table bg-white align-middle">
-    <thead><tr><th>Название</th><th>Тема</th><th></th></tr></thead>
-    <tbody>
-    {% for t in templates %}
-    <tr>
-        <td>{{ t.name }}</td>
-        <td class="text-muted small">{{ t.subject }}</td>
-        <td class="text-end">
-            <a href="{{ url_for('admin.email_template_edit', template_id=t.id) }}" class="btn btn-sm btn-outline-secondary">Редактировать</a>
-        </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+<div class="gt-list-head" style="margin-bottom:8px">
+    <div class="gt-list-title-row">
+        <h1 class="gt-list-title">Шаблоны писем</h1>
+        <span class="gt-list-count">{{ templates|length }}</span>
+    </div>
+</div>
+<p style="margin:0 0 20px;max-width:820px;font-size:16px;line-height:1.6;color:oklch(0.48 0.01 60)">Все письма, которые система рассылает пользователям. Тема и текст поддерживают переменные вида <span class="gt-var-chip">{{ '{{ ticket_title }}' }}</span> — список переменных для каждого шаблона указан на странице редактирования.</p>
+
+<section class="gt-card">
+    <div class="gt-table-wrap"><div style="min-width:720px">
+        <div class="gt-t-head" style="grid-template-columns:minmax(220px,1fr) minmax(260px,1.3fr) 150px">
+            <span>Название</span><span>Тема</span><span></span>
+        </div>
+        {% for t in templates %}
+        <a href="{{ url_for('admin.email_template_edit', template_id=t.id) }}" class="gt-t-row" style="grid-template-columns:minmax(220px,1fr) minmax(260px,1.3fr) 150px">
+            <span class="d-flex align-items-center gap-3" style="min-width:0">
+                <span class="gt-template-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-10 6L2 7"></path></svg>
+                </span>
+                <span class="gt-t-name">{{ t.name }}</span>
+            </span>
+            <span style="font-size:14px;line-height:1.7;color:oklch(0.35 0.01 60)">{{ t.subject|highlight_vars }}</span>
+            <span class="d-flex justify-content-end">
+                <span class="gt-t-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    Редактировать
+                </span>
+            </span>
+        </a>
+        {% else %}
+        <div class="gt-t-empty">Шаблонов нет.</div>
+        {% endfor %}
+    </div></div>
+</section>
 {% endblock %}

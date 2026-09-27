@@ -50,6 +50,9 @@ def create_app(config_overrides=None):
     from .richtext import render_richtext
     app.jinja_env.filters['richtext'] = render_richtext
 
+    from .text_utils import highlight_template_vars
+    app.jinja_env.filters['highlight_vars'] = highlight_template_vars
+
     if not app.config.get('TESTING'):
         from .overdue import start_overdue_checker
         start_overdue_checker(app)

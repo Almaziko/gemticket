@@ -2,21 +2,98 @@
 {% from 'partials/richtext_macro.html' import richtext_editor %}
 {% block title %}{{ template.name }} — {{ site_name }}{% endblock %}
 {% block content %}
-<h3 class="mb-1">{{ template.name }}</h3>
-<p class="text-muted">Доступные переменные: {% for v in template.variables_hint.split(',') %}<code>{{ '{{ ' + v.strip() + ' }}' }}</code>{% if not loop.last %} {% endif %}{% endfor %}</p>
-<form method="post">
-    {{ form.hidden_tag() }}
-    <div class="mb-3">
-        {{ form.subject.label(class_='form-label') }}
-        {{ form.subject(class_='form-control') }}
-        <div class="form-text">В теме тоже можно использовать переменные.</div>
-        {% for e in form.subject.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Текст письма</label>
-        {{ richtext_editor('template-body-editor', form.body_html) }}
-    </div>
-    <button type="submit" class="btn btn-primary">Сохранить</button>
-    <a href="{{ url_for('admin.email_templates_list') }}" class="btn btn-outline-secondary">Отмена</a>
-</form>
+<div class="d-flex flex-column gap-3 mb-4">
+    <a class="gt-back-link" href="{{ url_for('admin.email_templates_list') }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Шаблоны писем
+    </a>
+    <h1 class="gt-form-title" style="font-size:44px">{{ template.name }}</h1>
+</div>
+
+<div class="gt-template-edit-grid">
+    <form method="post" class="gt-card gt-form-card" id="template-form">
+        {{ form.hidden_tag() }}
+        <div class="gt-form-field">
+            {{ form.subject.label() }}
+            {{ form.subject(class_='gt-form-input', id='subject-input') }}
+            <span class="gt-form-hint">В теме тоже можно использовать переменные.</span>
+            {% for e in form.subject.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="gt-form-field">
+            <span>Текст письма</span>
+            {{ richtext_editor('template-body-editor', form.body_html) }}
+        </div>
+        <div class="gt-form-footer">
+            <a href="{{ url_for('admin.email_templates_list') }}" class="gt-form-cancel-btn">Отмена</a>
+            <button type="submit" class="gt-form-save-btn">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                Сохранить
+            </button>
+        </div>
+    </form>
+
+    <aside class="gt-template-edit-aside">
+        <section class="gt-card p-3 d-flex flex-column gap-3">
+            <h3 class="gt-side-title">Доступные переменные</h3>
+            <div class="d-flex flex-column gap-2">
+                {% for v in template.variables_hint.split(',') %}
+                {% set token = '{{ ' ~ v.strip() ~ ' }}' %}
+                <button type="button" class="gt-var-insert-btn" data-token="{{ token }}" title="Вставить">
+                    <span class="gt-var-insert-token">{{ token }}</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="oklch(0.55 0.01 60)" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+                </button>
+                {% endfor %}
+            </div>
+            <span style="font-size:12px;line-height:1.5;color:oklch(0.55 0.01 60)">Вставится в тему или в текст письма — туда, где сейчас курсор.</span>
+        </section>
+
+        <section class="gt-card gt-preview-card">
+            <div class="gt-preview-head">
+                <h3 class="gt-side-title" style="margin:0">Предпросмотр</h3>
+                <span class="dot"></span>
+            </div>
+            <div class="gt-preview-body">
+                <div class="gt-preview-brand">
+                    <span class="gt-preview-brand-icon"><span class="dot"></span></span>
+                    <span style="font-size:13px;font-weight:600">{{ site_name }}</span>
+                </div>
+                <span class="gt-preview-subject" id="preview-subject">{{ form.subject.data }}</span>
+                <div class="gt-preview-content richtext-content" id="preview-body">{{ (form.body_html.data or '')|richtext|safe }}</div>
+            </div>
+        </section>
+    </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+    var subjectInput = document.getElementById('subject-input');
+    var bodyEditor = document.getElementById('template-body-editor');
+    var previewSubject = document.getElementById('preview-subject');
+    var previewBody = document.getElementById('preview-body');
+    var lastFocused = bodyEditor;
+
+    subjectInput.addEventListener('focus', function () { lastFocused = subjectInput; });
+    bodyEditor.addEventListener('focus', function () { lastFocused = bodyEditor; });
+    subjectInput.addEventListener('input', function () { previewSubject.textContent = subjectInput.value; });
+    bodyEditor.addEventListener('input', function () { previewBody.innerHTML = bodyEditor.innerHTML; });
+
+    document.querySelectorAll('.gt-var-insert-btn').forEach(function (btn) {
+        btn.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            var token = btn.getAttribute('data-token');
+            if (lastFocused === subjectInput) {
+                var start = subjectInput.selectionStart || subjectInput.value.length;
+                var end = subjectInput.selectionEnd || subjectInput.value.length;
+                subjectInput.focus();
+                subjectInput.setRangeText(token, start, end, 'end');
+                subjectInput.dispatchEvent(new Event('input'));
+            } else {
+                bodyEditor.focus();
+                document.execCommand('insertText', false, token);
+            }
+        });
+    });
+})();
+</script>
 {% endblock %}
