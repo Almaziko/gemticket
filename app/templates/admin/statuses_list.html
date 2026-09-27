@@ -20,9 +20,9 @@
 <div class="gt-t-row" style="grid-template-columns:64px minmax(150px,1fr) 88px 88px 80px 104px 140px">
     <span style="font-family:var(--gt-font-mono);font-size:13px;color:oklch(0.5 0.01 60)">{{ s.order }}</span>
     <span><span class="badge bg-{{ s.color or 'secondary' }} gt-status-pill gt-pill"><span class="gt-status-dot"></span>{{ s.name }}</span></span>
-    <span class="text-center">{% if s.is_default %}<span class="gt-bool-yes"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>{% else %}<span class="gt-bool-no">—</span>{% endif %}</span>
-    <span class="text-center">{% if s.is_final %}<span class="gt-bool-yes"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>{% else %}<span class="gt-bool-no">—</span>{% endif %}</span>
-    <span class="text-center"><span class="gt-t-switch-static {{ 'is-on' if s.is_active else 'is-off' }}" title="{{ 'Активен' if s.is_active else 'Неактивен' }}"><span class="knob"></span></span></span>
+    <span class="d-flex justify-content-center">{% if s.is_default %}<span class="gt-bool-yes"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>{% else %}<span class="gt-bool-no">—</span>{% endif %}</span>
+    <span class="d-flex justify-content-center">{% if s.is_final %}<span class="gt-bool-yes"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>{% else %}<span class="gt-bool-no">—</span>{% endif %}</span>
+    <span class="text-center {{ 'gt-t-status-ok' if s.is_active else 'gt-t-status-muted' }}" style="font-size:13px;font-weight:500">{{ 'Да' if s.is_active else 'Нет' }}</span>
     <span class="text-center {{ 'gt-t-status-ok' if s.in_use else 'gt-t-status-muted' }}" style="font-size:13px;font-weight:500">{{ 'Да' if s.in_use else 'Нет' }}</span>
     <span class="gt-t-actions">
         <form method="post" action="{{ url_for('admin.status_move', status_id=s.id, direction='up') }}">

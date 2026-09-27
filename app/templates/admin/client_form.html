@@ -70,16 +70,7 @@
 {% block scripts %}
 <script>
 (function () {
-    var eyeBtn = document.getElementById('password-eye-btn');
-    var input = document.getElementById('password-input');
-    var showing = false;
-    eyeBtn.addEventListener('click', function () {
-        showing = !showing;
-        input.type = showing ? 'text' : 'password';
-        eyeBtn.querySelector('.gt-eye-off').style.display = showing ? 'none' : '';
-        eyeBtn.querySelector('.gt-eye-on').style.display = showing ? '' : 'none';
-        eyeBtn.title = showing ? 'Скрыть пароль' : 'Показать пароль';
-    });
+    setupPasswordEyeToggle('password-input', 'password-eye-btn');
 
     var select = document.getElementById('admin-select');
     var avatar = document.getElementById('admin-select-avatar');

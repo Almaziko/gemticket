@@ -53,18 +53,5 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script>
-(function () {
-    var eyeBtn = document.getElementById('password-eye-btn');
-    var input = document.getElementById('password-input');
-    var showing = false;
-    eyeBtn.addEventListener('click', function () {
-        showing = !showing;
-        input.type = showing ? 'text' : 'password';
-        eyeBtn.querySelector('.gt-eye-off').style.display = showing ? 'none' : '';
-        eyeBtn.querySelector('.gt-eye-on').style.display = showing ? '' : 'none';
-        eyeBtn.title = showing ? 'Скрыть пароль' : 'Показать пароль';
-    });
-})();
-</script>
+<script>setupPasswordEyeToggle('password-input', 'password-eye-btn');</script>
 {% endblock %}

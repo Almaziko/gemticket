@@ -114,6 +114,23 @@ body {
     background-color: var(--gt-surface);
 }
 
+/* Само окно нативного <select> (открытый список) браузер и ОС рисуют
+   сами — CSS не может задать ему ни радиус, ни шрифт, ни тень. Это
+   общее ограничение веба, не наша недоработка. Максимум, что можно
+   поправить кросс-браузерно — цвета: color-scheme говорит браузеру,
+   что контрол светлый (иначе на тёмной теме ОС список может стать
+   тёмным сам по себе), а стили на option хотя бы приводят фон/цвет
+   пунктов списка к палитре сайта там, где браузер это позволяет
+   (Chrome/Edge — полностью, Firefox — частично). */
+select {
+    color-scheme: light;
+}
+
+select option {
+    background: var(--gt-surface);
+    color: var(--gt-ink);
+}
+
 .form-control:focus,
 .form-select:focus {
     border-color: var(--gt-ink);
@@ -944,7 +961,7 @@ body {
     color: oklch(0.4 0.01 60);
 }
 
-.gt-people .gt-avatar-mini {
+.gt-avatar-mini {
     width: 18px;
     height: 18px;
     border-radius: 50%;
@@ -1184,6 +1201,7 @@ body {
     border: 1px solid var(--gt-border);
     border-radius: var(--gt-radius-lg);
     box-shadow: var(--gt-shadow);
+    overflow: hidden;
 }
 
 .gt-desc-card {
@@ -2224,33 +2242,6 @@ body {
     color: oklch(0.55 0.01 60);
 }
 
-.gt-t-switch-static {
-    display: inline-flex;
-    align-items: center;
-    width: 36px;
-    height: 20px;
-    border-radius: var(--gt-radius-pill);
-    padding: 2px;
-}
-
-.gt-t-switch-static .knob {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: oklch(0.995 0.002 80);
-    box-shadow: 0 1px 2px oklch(0.2 0.01 60 / 0.3);
-}
-
-.gt-t-switch-static.is-on {
-    background: var(--gt-ink);
-    justify-content: flex-end;
-}
-
-.gt-t-switch-static.is-off {
-    background: oklch(0.9 0.006 70);
-    justify-content: flex-start;
-}
-
 /* ---------- Формы редактирования (постановщик / категория / админ / шаблон письма) ---------- */
 
 .gt-form-page {
@@ -2378,6 +2369,15 @@ body {
 
 .gt-form-eye:hover {
     background: oklch(0.95 0.005 70);
+}
+
+.gt-form-eye:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.gt-form-eye:disabled:hover {
+    background: transparent;
 }
 
 .gt-form-select-chip {

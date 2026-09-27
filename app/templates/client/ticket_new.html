@@ -52,7 +52,7 @@
                 <div class="gt-chip-pick-row">
                     {% for value, label in form.tracker_id.choices %}
                     <label class="gt-chip-pick">
-                        <input type="radio" name="tracker_id" value="{{ value }}" class="gt-chip-pick-input" {{ 'checked' if form.tracker_id.data == value }}>
+                        <input type="radio" name="tracker_id" value="{{ value }}" class="gt-chip-pick-input" {{ 'checked' if form.tracker_id.data == value or (not form.tracker_id.data and loop.first) }}>
                         <span class="gt-chip-pick-visual">{{ label }}</span>
                     </label>
                     {% endfor %}

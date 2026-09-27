@@ -21,9 +21,7 @@
         <div class="gt-t-row" style="grid-template-columns:72px minmax(180px,1fr) 90px 110px 240px;{{ 'opacity:0.5' if not t.is_active }}">
             <span style="font-family:var(--gt-font-mono);font-size:13px;color:oklch(0.5 0.01 60)">{{ t.order }}</span>
             <span><span class="gt-t-pill-name">{{ t.name }}</span></span>
-            <span class="text-center">
-                <span class="gt-t-switch-static {{ 'is-on' if t.is_active else 'is-off' }}" title="{{ 'Активна' if t.is_active else 'Неактивна' }}"><span class="knob"></span></span>
-            </span>
+            <span class="text-center {{ 'gt-t-status-ok' if t.is_active else 'gt-t-status-muted' }}" style="font-size:13px;font-weight:500">{{ 'Да' if t.is_active else 'Нет' }}</span>
             <span class="text-center {{ 'gt-t-status-ok' if t.in_use else 'gt-t-status-muted' }}" style="font-size:13px;font-weight:500">{{ 'Да' if t.in_use else 'Нет' }}</span>
             <span class="gt-t-actions">
                 <form method="post" action="{{ url_for('admin.tracker_move', tracker_id=t.id, direction='up') }}">
