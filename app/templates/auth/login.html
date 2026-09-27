@@ -1,24 +1,153 @@
 {% extends 'base.html' %}
 {% block title %}Вход — {{ site_name }}{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-4 mt-5">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h4 class="card-title mb-3 text-center">{{ site_name }}</h4>
-                <form method="post">
-                    {{ form.hidden_tag() }}
-                    <div class="mb-3">
-                        {{ form.password.label(class_='form-label') }}
-                        {{ form.password(class_='form-control', autofocus=true) }}
-                        {% for error in form.password.errors %}
-                            <div class="text-danger small">{{ error }}</div>
+{% set messages = get_flashed_messages(with_categories=true) %}
+{% set ns = namespace(flash_error=None) %}
+{% for category, message in messages %}
+    {% if category == 'danger' and not ns.flash_error %}{% set ns.flash_error = message %}{% endif %}
+{% endfor %}
+{% set server_error = ns.flash_error or (form.password.errors[0] if form.password.errors else None) %}
+<div class="gt-login-page">
+    <div class="gt-login-visual">
+        <div class="gt-login-lanes">
+            {% set lanes = [
+                [('1042','Обновить документацию'),('1043','Проверить форму обратной связи'),('1044','Новый раздел настроек'),('1045','Уточнить требования'),('1046','Исправить отступы в шапке'),('1047','Экспорт в таблицу'),('1048','Добавить фильтр по дате')],
+                [('1049','Оптимизировать загрузку'),('1050','Проверить уведомления'),('1051','Сменить иконку'),('1052','Сортировка списка'),('1053','Подсказки в полях'),('1054','Тёмная тема'),('1055','Импорт контактов')],
+                [('1056','Шаблон письма'),('1057','Поиск по разделам'),('1042','Обновить документацию'),('1043','Проверить форму обратной связи'),('1044','Новый раздел настроек'),('1045','Уточнить требования'),('1046','Исправить отступы в шапке')],
+                [('1047','Экспорт в таблицу'),('1048','Добавить фильтр по дате'),('1049','Оптимизировать загрузку'),('1050','Проверить уведомления'),('1051','Сменить иконку'),('1052','Сортировка списка'),('1053','Подсказки в полях')],
+            ] %}
+            {% set dot_colors = ['oklch(0.85 0.01 70)', 'oklch(0.7 0.15 275)', 'oklch(0.7 0.15 15)', 'oklch(0.78 0.14 70)', 'oklch(0.72 0.13 155)'] %}
+            {% for lane in lanes %}
+            <div class="gt-login-lane">
+                <div class="gt-login-lane-track" style="--dur:{{ 60 + loop.index0 * 11 }}s;--dir:{{ 'reverse' if loop.index0 is odd else 'normal' }}">
+                    {% for _ in (1, 2) %}
+                        {% for tid, title in lane %}
+                        <span class="gt-login-chip">
+                            <span class="gt-login-chip-dot" style="background:{{ dot_colors[loop.index0 % dot_colors|length] }}"></span>
+                            {{ title }}
+                            <span class="gt-login-chip-id">#{{ tid }}</span>
+                        </span>
                         {% endfor %}
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Войти</button>
-                </form>
+                    {% endfor %}
+                </div>
             </div>
+            {% endfor %}
+        </div>
+        <div class="gt-login-overlay"></div>
+        <div class="gt-login-brand">
+            <span class="gt-login-brand-icon">
+                {% if favicon_url %}<img src="{{ favicon_url }}" alt="">{% else %}<span class="gt-login-brand-dot"></span>{% endif %}
+            </span>
+            {{ site_name }}
         </div>
     </div>
+
+    <div class="gt-login-form-col">
+        <form method="post" class="gt-login-form" id="login-form" novalidate>
+            {{ form.hidden_tag() }}
+            <div class="gt-login-head">
+                <span class="gt-login-icon"><span></span></span>
+                <h1 class="gt-login-title">{{ site_name }}</h1>
+            </div>
+            <div class="gt-login-field">
+                <label class="gt-login-label">
+                    <span>Пароль</span>
+                    <div class="gt-login-input-wrap" id="login-input-wrap">
+                        {{ form.password(class_='gt-login-input' ~ (' is-invalid' if server_error else ''), autofocus=true, id='login-password', autocomplete='current-password') }}
+                        <button type="button" class="gt-login-eye" id="login-eye-btn" title="Показать пароль">
+                            <svg class="gt-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            <svg class="gt-eye-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><path d="M2 2l20 20"></path></svg>
+                        </button>
+                    </div>
+                </label>
+                <span class="gt-login-note {{ 'is-error' if server_error }}" id="login-note" {% if not server_error %}style="display:none"{% endif %}>
+                    <span class="gt-login-note-dot"></span>
+                    <span id="login-note-text">{{ server_error or '' }}</span>
+                </span>
+                <button type="submit" class="gt-login-submit" id="login-submit-btn">
+                    <span id="login-submit-idle">
+                        Войти
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+                    </span>
+                    <span id="login-submit-loading" class="d-none"><span class="gt-login-spinner"></span></span>
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+    var form = document.getElementById('login-form');
+    var input = document.getElementById('login-password');
+    var wrap = document.getElementById('login-input-wrap');
+    var eyeBtn = document.getElementById('login-eye-btn');
+    var note = document.getElementById('login-note');
+    var noteText = document.getElementById('login-note-text');
+    var submitBtn = document.getElementById('login-submit-btn');
+    var idleEl = document.getElementById('login-submit-idle');
+    var loadingEl = document.getElementById('login-submit-loading');
+    var hasServerError = {{ 'true' if server_error else 'false' }};
+    var showing = false;
+
+    function updateSpacing() {
+        input.style.letterSpacing = (showing || !input.value) ? '0' : '0.2em';
+    }
+    updateSpacing();
+
+    eyeBtn.addEventListener('click', function () {
+        showing = !showing;
+        input.type = showing ? 'text' : 'password';
+        eyeBtn.querySelector('.gt-eye-off').style.display = showing ? 'none' : '';
+        eyeBtn.querySelector('.gt-eye-on').style.display = showing ? '' : 'none';
+        eyeBtn.title = showing ? 'Скрыть пароль' : 'Показать пароль';
+        updateSpacing();
+        input.focus();
+    });
+
+    input.addEventListener('input', function () {
+        updateSpacing();
+        if (!hasServerError) note.style.display = 'none';
+    });
+
+    function shake() {
+        wrap.classList.remove('is-shaking');
+        void wrap.offsetWidth;
+        wrap.classList.add('is-shaking');
+    }
+
+    function checkCaps(e) {
+        if (hasServerError) return;
+        var caps = e.getModifierState && e.getModifierState('CapsLock');
+        if (caps) {
+            note.className = 'gt-login-note is-caps';
+            noteText.textContent = 'Включён Caps Lock';
+            note.style.display = 'flex';
+        } else {
+            note.style.display = 'none';
+        }
+    }
+    input.addEventListener('keyup', checkCaps);
+    input.addEventListener('keydown', checkCaps);
+
+    form.addEventListener('submit', function (e) {
+        if (!input.value) {
+            e.preventDefault();
+            hasServerError = false;
+            note.className = 'gt-login-note is-error';
+            noteText.textContent = 'Введите пароль';
+            note.style.display = 'flex';
+            shake();
+            input.focus();
+            return;
+        }
+        idleEl.classList.add('d-none');
+        loadingEl.classList.remove('d-none');
+        submitBtn.disabled = true;
+    });
+
+    if (hasServerError) shake();
+})();
+</script>
 {% endblock %}

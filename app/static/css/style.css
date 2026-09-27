@@ -1646,3 +1646,325 @@ body {
     background: oklch(0.58 0.2 25);
     color: oklch(0.99 0.005 80);
 }
+
+/* ---------- Страница логина ---------- */
+
+.gt-login-page {
+    min-height: 100vh;
+    max-width: 1360px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    padding: 16px;
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .gt-login-page {
+        grid-template-columns: 1fr;
+    }
+    .gt-login-visual {
+        display: none;
+    }
+}
+
+.gt-login-visual {
+    position: relative;
+    border-radius: 32px;
+    background: oklch(0.21 0.01 60);
+    overflow: hidden;
+    height: calc(100vh - 32px);
+    min-height: 560px;
+    max-height: 900px;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 36px 40px;
+}
+
+.gt-login-lanes {
+    position: absolute;
+    inset: -20% -30%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 14px;
+    transform: rotate(-8deg);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+}
+
+.gt-login-lane {
+    display: flex;
+    width: max-content;
+}
+
+.gt-login-lane-track {
+    display: flex;
+    gap: 14px;
+    padding-right: 14px;
+    animation: lane var(--dur, 70s) linear infinite;
+    animation-direction: var(--dir, normal);
+}
+
+.gt-login-chip {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: oklch(0.27 0.01 60);
+    border: 1px solid oklch(0.33 0.01 60);
+    color: oklch(0.93 0.005 80);
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.gt-login-chip-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.gt-login-chip-id {
+    font-family: var(--gt-font-mono);
+    font-size: 12px;
+    color: oklch(0.62 0.01 60);
+}
+
+.gt-login-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(60% 50% at 50% 55%, transparent, oklch(0.21 0.01 60 / 0.85));
+}
+
+.gt-login-brand {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: oklch(0.97 0.004 80);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+}
+
+.gt-login-brand-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--gt-accent);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.gt-login-brand-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gt-login-brand-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: oklch(0.99 0.005 80);
+}
+
+.gt-login-form-col {
+    display: grid;
+    place-items: center;
+    padding: 40px 24px;
+}
+
+.gt-login-form {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+}
+
+.gt-login-head {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.gt-login-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    background: var(--gt-accent);
+    display: grid;
+    place-items: center;
+    animation: pulse 2.8s ease-in-out infinite;
+}
+
+.gt-login-icon span {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: oklch(0.99 0.005 80);
+}
+
+.gt-login-title {
+    margin: 0;
+    font-size: 56px;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+}
+
+.gt-login-field {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.gt-login-label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gt-login-label > span {
+    font-size: 14px;
+    font-weight: 500;
+    color: oklch(0.4 0.01 60);
+}
+
+.gt-login-input-wrap {
+    position: relative;
+}
+
+.gt-login-input-wrap.is-shaking {
+    animation: shakeA .4s ease;
+}
+
+.gt-login-input {
+    width: 100%;
+    height: 60px;
+    padding: 0 60px 0 20px;
+    border-radius: 18px;
+    border: 1.5px solid var(--gt-border-strong);
+    background: var(--gt-surface);
+    font: inherit;
+    font-size: 18px;
+    color: var(--gt-ink);
+    outline: 0;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.gt-login-input:focus {
+    border-color: var(--gt-ink);
+    box-shadow: 0 0 0 4px oklch(0.93 0.006 70);
+}
+
+.gt-login-input.is-invalid {
+    border-color: oklch(0.62 0.19 25);
+    box-shadow: 0 0 0 4px oklch(0.94 0.04 25);
+}
+
+.gt-login-eye {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 0;
+    background: transparent;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: oklch(0.5 0.01 60);
+}
+
+.gt-login-eye:hover {
+    background: oklch(0.95 0.005 70);
+}
+
+.gt-login-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.gt-login-note-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+.gt-login-note.is-error {
+    color: oklch(0.55 0.19 25);
+}
+
+.gt-login-note.is-caps {
+    color: oklch(0.55 0.13 70);
+}
+
+.gt-login-submit {
+    margin-top: 8px;
+    width: 100%;
+    height: 60px;
+    border-radius: 18px;
+    border: 0;
+    background: var(--gt-ink);
+    color: oklch(0.98 0.004 80);
+    font: inherit;
+    font-size: 17px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background .2s;
+    box-shadow: 0 10px 30px -12px oklch(0.22 0.01 60 / 0.6);
+}
+
+.gt-login-submit:hover {
+    background: var(--gt-accent);
+}
+
+.gt-login-spinner {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid oklch(0.98 0.004 80 / 0.3);
+    border-top-color: oklch(0.98 0.004 80);
+    animation: spin .7s linear infinite;
+}
+
+@keyframes lane {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes shakeA {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+}

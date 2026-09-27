@@ -95,6 +95,7 @@
 </header>
 {% endif %}
 
+{% if current_user %}
 <div class="toast-container position-fixed p-3 toast-container-top-end">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
@@ -107,8 +108,9 @@
         {% endfor %}
     {% endwith %}
 </div>
+{% endif %}
 
-<div class="gt-container">
+<div class="{{ 'gt-container' if current_user else '' }}">
     {% block content %}{% endblock %}
 </div>
 
