@@ -307,5 +307,5 @@ def test_tracker_renamed_to_category_in_ui(admin_client, client_client, db):
     })
     resp = admin_client.get('/admin/')
     html = resp.data.decode('utf-8')
-    assert '>Категория<' in html
+    assert 'Баг' in html
     assert 'Трекер' not in html

@@ -232,7 +232,7 @@ def test_group_name_shown_even_when_only_one_group_has_tickets(admin_client, cli
     for client, url in ((client_client, '/client/tickets'), (admin_client, '/admin/')):
         text = client.get(url).data.decode('utf-8')
         assert 'Only finished' in text
-        assert re.search(r'card-header[^>]*>\s*Завершены', text), f'no group header on {url}'
+        assert re.search(r'gt-group-title[^>]*>\s*Завершены', text), f'no group header on {url}'
 
 
 def test_ticket_new_form_has_single_description_field(client_client):

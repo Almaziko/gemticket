@@ -365,68 +365,6 @@ body {
     margin-bottom: 0;
 }
 
-/* Каждая группа тикетов — отдельная <table> в своей карточке (для
-   визуального разделения блоков), но колонки между ними всё равно должны
-   совпадать. Все колонки, КРОМЕ "Название", садятся по самому широкому из
-   заголовка/контента (table-layout: auto при первом замере) — совпадение
-   их ширин между разными <table> групп обеспечивает JS
-   (ticket_table_align.js): он меряет и синхронизирует их после отрисовки,
-   а "Название" сознательно не трогает — ей отдаётся весь остаток ширины
-   таблицы (иначе одно длинное название тикета растягивало бы всю таблицу
-   и требовало горизонтальной прокрутки). Длинное название обрезается
-   многоточием, полный текст — во всплывающей подсказке (title). До отработки
-   JS (и если он вдруг не выполнится) каждая таблица просто сама сядет по
-   своему контенту. */
-.ticket-table {
-    table-layout: auto;
-}
-
-.ticket-table td,
-.ticket-table th {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding-top: .45rem;
-    padding-bottom: .45rem;
-    /* 10px с обеих сторон у соседних колонок в сумме дают 20px
-       отступа между ними (правый паддинг одной + левый паддинг другой). */
-    padding-left: 10px;
-    padding-right: 10px;
-    text-align: right;
-}
-
-/* "Обновлён" — последняя колонка, её правый паддинг ни с кем не складывается
-   (справа только край карточки), поэтому одних 10px маловато — увеличиваем. */
-.ticket-table td:last-child,
-.ticket-table th:last-child {
-    padding-right: 22px;
-}
-
-/* Название — единственная колонка, читаемая как текст слева направо,
-   поэтому она остаётся выровненной по левому краю; все остальные —
-   по правому (так граница между соседними колонками — всегда фиксированный
-   отступ, а не "плавающий" в зависимости от длины конкретной строки). Ей же
-   задан минимальный размер — чтобы не схлопывалась в ноль, если остальные
-   (фиксированные) колонки в сумме заняли почти всю ширину таблицы. */
-.ticket-table td:nth-child(2),
-.ticket-table th:nth-child(2) {
-    text-align: left;
-    min-width: 160px;
-}
-
-.ticket-table .badge {
-    /* 0.88rem от нового корня (82%) = те же ~11.5px, что были при 0.72rem от
-       старого 16px-корня — размер бейджей в таблице специально подбирался
-       под ширину колонок, не даём ему просесть вместе с общим уменьшением
-       шрифта на корне. */
-    font-size: 0.88rem;
-    padding: .3em .55em;
-}
-
-.ticket-row-final {
-    opacity: 0.75;
-}
-
 .ticket-overdue {
     color: #dc3545;
     font-weight: 600;
@@ -801,4 +739,295 @@ body {
 .gt-nav-pill.active {
     background: oklch(0.93 0.006 70);
     color: var(--gt-ink);
+}
+
+/* ---------- Список тикетов (сетка вместо <table> из макета) ---------- */
+
+.gt-page-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.gt-page-title {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin: 0;
+    color: var(--gt-ink);
+}
+
+.gt-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.gt-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.gt-tab-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border-radius: var(--gt-radius-pill);
+    background: oklch(0.955 0.005 75);
+}
+
+.gt-tab-group + .gt-tab-group {
+    margin-left: 6px;
+    padding-left: 10px;
+    border-left: 1px solid var(--gt-border-strong);
+}
+
+.gt-tab {
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: var(--gt-radius-pill);
+    font-size: 13px;
+    font-weight: 500;
+    color: oklch(0.48 0.01 60);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.gt-tab:hover {
+    color: var(--gt-ink);
+}
+
+.gt-tab.active {
+    background: var(--gt-surface);
+    color: var(--gt-ink);
+    box-shadow: var(--gt-shadow);
+}
+
+.gt-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    min-width: 240px;
+    padding: 0 14px;
+    border-radius: var(--gt-radius-pill);
+    border: 1px solid var(--gt-border-strong);
+    background: var(--gt-surface);
+    color: oklch(0.55 0.01 60);
+}
+
+.gt-search svg {
+    flex-shrink: 0;
+}
+
+.gt-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    color: var(--gt-ink);
+}
+
+.gt-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.gt-group-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+}
+
+.gt-group-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gt-ink);
+    flex-shrink: 0;
+}
+
+.card.status-group-muted .gt-group-dot { background: #9ca3af; }
+.card.status-group-accent-blue .gt-group-dot { background: #3730a3; }
+.card.status-group-accent-yellow .gt-group-dot { background: #92400e; }
+.card.status-group-accent-red .gt-group-dot { background: #991b1b; }
+.card.status-group-accent-green .gt-group-dot { background: #166534; }
+.card.status-group-accent-gray .gt-group-dot { background: #374151; }
+
+.gt-group-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.gt-group-count {
+    font-family: var(--gt-font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 9px;
+    border-radius: var(--gt-radius-pill);
+    background: var(--gt-surface);
+    color: inherit;
+}
+
+/* Колонки шапки и строк тикетов — одна и та же сетка на обеих, поэтому
+   ширины колонок между группами всегда совпадают сами по себе, без JS
+   (в отличие от прежних отдельных <table> на каждую группу). */
+.gt-cols,
+.gt-row {
+    display: grid;
+    grid-template-columns: minmax(200px, 1fr) 110px 150px 100px 130px;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 24px;
+}
+
+.gt-cols {
+    border-top: 1px solid var(--gt-border);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: oklch(0.58 0.01 60);
+}
+
+.gt-row {
+    padding-top: 14px;
+    padding-bottom: 14px;
+    border-top: 1px solid var(--gt-border);
+    color: inherit;
+    text-decoration: none;
+}
+
+.gt-row:hover {
+    background: oklch(0.975 0.005 75);
+    color: inherit;
+}
+
+.gt-row.ticket-row-final {
+    opacity: 0.6;
+}
+
+.gt-col-priority,
+.gt-col-status,
+.gt-col-deadline {
+    text-align: center;
+}
+
+.gt-col-updated {
+    text-align: right;
+    font-family: var(--gt-font-mono);
+    font-size: 12px;
+    color: oklch(0.55 0.01 60);
+}
+
+.gt-cell-title {
+    min-width: 0;
+}
+
+.gt-cell-title-text {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--gt-ink);
+}
+
+.gt-cell-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 12px;
+    color: oklch(0.55 0.01 60);
+}
+
+.gt-cell-meta .gt-meta-id {
+    font-family: var(--gt-font-mono);
+}
+
+.gt-cell-meta .gt-meta-dot {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.6;
+}
+
+.gt-people {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    color: oklch(0.4 0.01 60);
+}
+
+.gt-people .gt-avatar-mini {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: inline-grid;
+    place-items: center;
+    font-size: 8px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.gt-cell-priority {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 13px;
+    color: oklch(0.4 0.01 60);
+}
+
+.gt-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 12px;
+}
+
+.gt-bars span {
+    display: block;
+    width: 3px;
+    border-radius: 1px;
+    background: oklch(0.88 0.006 70);
+}
+
+.gt-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gt-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.gt-empty {
+    padding: 64px 24px;
+    text-align: center;
+    color: var(--gt-muted);
 }

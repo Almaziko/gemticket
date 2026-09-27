@@ -1,73 +1,93 @@
 {% extends 'base.html' %}
 {% block title %}Тикеты — {{ site_name }}{% endblock %}
 
-{% macro ticket_table(group_tickets) %}
-<div class="table-responsive">
-<table class="table table-hover align-middle mb-0 ticket-table">
-    <colgroup>
-        <col><col><col><col><col><col><col><col><col>
-    </colgroup>
-    <thead class="table-light">
-        <tr><th>#</th><th>Название</th><th>Постановщик</th><th>Исполнитель</th><th>Приоритет</th><th>Категория</th><th>Статус</th><th>Дедлайн</th><th>Обновлён</th></tr>
-    </thead>
-    <tbody>
-    {% for t in group_tickets %}
-        {% set overdue = t.deadline and t.deadline < today and not t.status.is_final %}
-        <tr onclick="location.href='{{ url_for('tickets.detail', ticket_id=t.id) }}'" style="cursor:pointer;">
-            <td class="text-muted">#{{ t.id }}</td>
-            <td title="{{ t.title }}">{{ t.title }}</td>
-            <td>{{ t.client.name }}</td>
-            <td>{{ t.assignee.name }}</td>
-            <td><span class="badge bg-{{ t.priority_color }}">{{ t.priority_label }}</span></td>
-            <td><span class="badge bg-secondary">{{ t.tracker.name }}</span></td>
-            <td><span class="badge bg-{{ t.status.color or 'secondary' }}">{{ t.status.name }}</span></td>
-            <td class="{{ 'ticket-overdue' if overdue }}">{{ t.deadline.strftime('%d.%m.%Y') if t.deadline else '—' }}</td>
-            <td class="text-muted">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+{% macro priority_bars(t) %}
+{% set bc = {'danger': 'oklch(0.62 0.19 25)', 'warning': 'oklch(0.72 0.15 70)', 'secondary': 'oklch(0.6 0.01 60)'}[t.priority_color] %}
+<span class="gt-bars">
+    <span style="height:5px;background:{{ bc }}"></span>
+    <span style="height:8px{{ (';background:' ~ bc) if t.priority >= 2 else '' }}"></span>
+    <span style="height:12px{{ (';background:' ~ bc) if t.priority >= 3 else '' }}"></span>
+</span>
+{% endmacro %}
+
+{% macro avatar_mini(user) %}
+<span class="gt-avatar-mini" style="background:oklch(0.92 0.04 {{ user.avatar_hue }});color:oklch(0.42 0.12 {{ user.avatar_hue }})">{{ user.initials }}</span>
+{% endmacro %}
+
+{% macro ticket_group(group_tickets) %}
+<div class="gt-cols">
+    <span>Название</span>
+    <span class="gt-col-priority">Приоритет</span>
+    <span class="gt-col-status">Статус</span>
+    <span class="gt-col-deadline">Дедлайн</span>
+    <span class="gt-col-updated">Обновлён</span>
 </div>
+{% for t in group_tickets %}
+{% set overdue = t.deadline and t.deadline < today and not t.status.is_final %}
+<a class="gt-row {{ 'ticket-row-final' if t.status.is_final }}" href="{{ url_for('tickets.detail', ticket_id=t.id) }}">
+    <div class="gt-cell-title">
+        <div class="gt-cell-title-text">{{ t.title }}</div>
+        <div class="gt-cell-meta">
+            <span class="gt-meta-id">#{{ t.id }}</span>
+            <span class="gt-meta-dot"></span>
+            <span>{{ t.tracker.name }}</span>
+            <span class="gt-people">
+                {{ avatar_mini(t.client) }}{{ t.client.name }}
+                <span>→</span>
+                {{ avatar_mini(t.assignee) }}{{ t.assignee.name }}
+            </span>
+        </div>
+    </div>
+    <div class="gt-cell-priority gt-col-priority">{{ priority_bars(t) }}{{ t.priority_label }}</div>
+    <div class="gt-col-status"><span class="badge bg-{{ t.status.color or 'secondary' }} gt-status-pill"><span class="gt-status-dot"></span>{{ t.status.name }}</span></div>
+    <div class="gt-col-deadline {{ 'ticket-overdue' if overdue }}">{{ t.deadline.strftime('%d.%m.%Y') if t.deadline else '—' }}</div>
+    <div class="gt-col-updated">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}</div>
+</a>
+{% endfor %}
 {% endmacro %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">{{ 'Все тикеты' if current_user.is_superadmin else 'Мои тикеты' }}</h3>
+<div class="gt-page-head">
+    <h1 class="gt-page-title">{{ 'Все тикеты' if current_user.is_superadmin else 'Мои тикеты' }}</h1>
     {% if current_user.is_superadmin %}
     <a href="{{ url_for('admin.ticket_new') }}" class="btn btn-primary">+ Новый тикет от имени постановщика</a>
     {% endif %}
 </div>
 
-<div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
-    <div class="d-flex flex-wrap align-items-center gap-3">
-        <ul class="nav nav-pills mb-0">
-            <li class="nav-item"><a class="nav-link {% if not status_filter %}active{% endif %}" href="{{ url_for('admin.dashboard', q=search) }}">Все</a></li>
-        </ul>
+<div class="gt-toolbar">
+    <div class="gt-tabs">
+        <div class="gt-tab-group">
+            <a class="gt-tab {% if not status_filter %}active{% endif %}" href="{{ url_for('admin.dashboard', q=search) }}">Все</a>
+        </div>
         {% for group_number, group_statuses in status_groups %}
-        <ul class="nav nav-pills mb-0 {{ 'border-start ps-3' if not loop.first }}">
+        <div class="gt-tab-group">
             {% for s in group_statuses %}
-            <li class="nav-item"><a class="nav-link {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('admin.dashboard', status=s.id, q=search) }}">{{ s.name }}</a></li>
+            <a class="gt-tab {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('admin.dashboard', status=s.id, q=search) }}">{{ s.name }}</a>
             {% endfor %}
-        </ul>
+        </div>
         {% endfor %}
     </div>
-    <form method="get" class="d-flex" style="min-width: 220px;">
+    <form method="get" class="gt-search">
         {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
-        <input type="search" name="q" value="{{ search }}" class="form-control form-control-sm" placeholder="Поиск по названию..." onsearch="this.form.submit()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="search" name="q" value="{{ search }}" placeholder="Поиск по названию...">
     </form>
 </div>
 
 {% if tickets %}
+<div class="gt-groups">
     {% for group_number, group_tickets in ticket_groups %}
-    <div class="card mb-4 status-group-{{ group_themes.get(group_number, 'default') }}">
-        <div class="card-header fw-semibold d-flex align-items-center justify-content-between">
-            {{ group_names.get(group_number, 'Группа ' ~ group_number) }}
-            <span class="badge bg-secondary rounded-pill">{{ group_tickets|length }}</span>
+    <div class="card status-group-{{ group_themes.get(group_number, 'default') }}">
+        <div class="card-header gt-group-header">
+            <span class="gt-group-dot"></span>
+            <span class="gt-group-title">{{ group_names.get(group_number, 'Группа ' ~ group_number) }}</span>
+            <span class="gt-group-count">{{ group_tickets|length }}</span>
         </div>
-        {{ ticket_table(group_tickets) }}
+        {{ ticket_group(group_tickets) }}
     </div>
     {% endfor %}
+</div>
 {% else %}
-<p class="text-muted">Тикетов нет.</p>
+<p class="gt-empty">Тикетов нет.</p>
 {% endif %}
 {% endblock %}
