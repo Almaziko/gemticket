@@ -1,33 +1,66 @@
 {% extends 'base.html' %}
 {% block title %}Файлы — {{ site_name }}{% endblock %}
 {% block content %}
-<h3 class="mb-3">Файлы</h3>
-<p><strong>Суммарный вес всех файлов:</strong> {{ total_size|filesizeformat }}</p>
-<div class="mb-3">
-    <a href="{{ url_for('admin.files_list', sort='date') }}" class="btn btn-sm btn-outline-secondary {{ 'active' if sort == 'date' }}">По дате</a>
-    <a href="{{ url_for('admin.files_list', sort='size') }}" class="btn btn-sm btn-outline-secondary {{ 'active' if sort == 'size' }}">По размеру</a>
+{% set ns = namespace(max_size=1) %}
+{% for a in attachments %}{% if a.size_bytes > ns.max_size %}{% set ns.max_size = a.size_bytes %}{% endif %}{% endfor %}
+<div class="gt-list-head">
+    <div class="gt-list-title-row">
+        <h1 class="gt-list-title">Файлы</h1>
+        <span class="gt-list-count">{{ attachments|length }}</span>
+    </div>
+    <div class="d-flex align-items-center gap-2 px-3 py-2 gt-card" style="flex-shrink:0">
+        <span style="font-size:13px;color:oklch(0.5 0.01 60);white-space:nowrap">Суммарный вес всех файлов:</span>
+        <span style="font-family:var(--gt-font-mono);font-size:15px;font-weight:500;white-space:nowrap">{{ total_size|filesizeformat }}</span>
+    </div>
 </div>
-<table class="table bg-white align-middle">
-    <thead><tr><th>Файл</th><th>Тикет</th><th>Загрузил</th><th>Дата</th><th>Размер</th><th></th></tr></thead>
-    <tbody>
-    {% for a in attachments %}
-    <tr>
-        <td>{{ a.filename_original }}</td>
-        <td>{% if a.parent_ticket %}<a href="{{ url_for('tickets.detail', ticket_id=a.parent_ticket.id) }}">#{{ a.parent_ticket.id }}</a>{% endif %}</td>
-        <td>{{ a.uploaded_by.name }}</td>
-        <td>{{ a.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-        <td>{{ a.size_bytes|filesizeformat }}</td>
-        <td class="text-end">
-            <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary">Скачать</a>
-            <form method="post" action="{{ url_for('admin.file_delete', attachment_id=a.id) }}" class="d-inline" onsubmit="return confirm('Удалить файл?');">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-danger">Удалить</button>
-            </form>
-        </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="6" class="text-muted">Файлов пока нет.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
+
+<div class="gt-tab-group mb-3" style="align-self:flex-start;display:inline-flex">
+    <a class="gt-tab {{ 'active' if sort == 'date' }}" href="{{ url_for('admin.files_list', sort='date') }}">По дате</a>
+    <a class="gt-tab {{ 'active' if sort == 'size' }}" href="{{ url_for('admin.files_list', sort='size') }}">По размеру</a>
+</div>
+
+<section class="gt-card">
+    <div class="gt-table-wrap"><div style="min-width:760px">
+        <div class="gt-t-head" style="grid-template-columns:minmax(240px,1fr) 140px 150px 170px">
+            <span>Файл</span><span>Дата</span><span>Размер</span><span></span>
+        </div>
+        {% for a in attachments %}
+        <div class="gt-t-row" style="grid-template-columns:minmax(240px,1fr) 140px 150px 170px">
+            <span class="d-flex align-items-center gap-3" style="min-width:0">
+                <span style="width:44px;height:44px;border-radius:12px;flex-shrink:0;background:repeating-linear-gradient(135deg,oklch(0.95 0.004 70) 0 5px,oklch(0.915 0.006 70) 5px 10px);border:1px solid var(--gt-border-strong);display:grid;place-items:center;font-family:var(--gt-font-mono);font-size:9px;font-weight:500;color:oklch(0.45 0.01 60)">{{ a.filename_original.rsplit('.', 1)[-1]|upper }}</span>
+                <span class="d-flex flex-column gap-1" style="min-width:0">
+                    <span style="font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.filename_original }}</span>
+                    <span class="d-flex align-items-center gap-2" style="font-size:12px;color:oklch(0.5 0.01 60)">
+                        {% if a.parent_ticket %}<a href="{{ url_for('tickets.detail', ticket_id=a.parent_ticket.id) }}" style="font-family:var(--gt-font-mono);padding:1px 7px;border-radius:6px;background:oklch(0.94 0.03 42);color:oklch(0.48 0.14 42);text-decoration:none">#{{ a.parent_ticket.id }}</a>{% endif %}
+                        <span class="gt-avatar-mini md" style="background:oklch(0.92 0.04 {{ a.uploaded_by.avatar_hue }});color:oklch(0.42 0.12 {{ a.uploaded_by.avatar_hue }})">{{ a.uploaded_by.initials }}</span>
+                        <span style="white-space:nowrap">{{ a.uploaded_by.name }}</span>
+                    </span>
+                </span>
+            </span>
+            <span class="d-flex flex-column gap-1" style="font-family:var(--gt-font-mono);font-size:12px">
+                <span style="color:oklch(0.3 0.01 60)">{{ a.created_at.strftime('%d.%m.%Y') }}</span>
+                <span style="color:oklch(0.58 0.01 60)">{{ a.created_at.strftime('%H:%M') }}</span>
+            </span>
+            <span class="d-flex flex-column gap-2">
+                <span style="font-family:var(--gt-font-mono);font-size:13px;color:oklch(0.25 0.01 60)">{{ a.size_bytes|filesizeformat }}</span>
+                <span style="height:4px;width:100px;border-radius:999px;background:oklch(0.93 0.005 70);overflow:hidden"><span style="display:block;height:100%;width:{{ [3, (a.size_bytes / ns.max_size * 100)|round|int]|max }}%;border-radius:999px;background:var(--gt-accent)"></span></span>
+            </span>
+            <span class="gt-t-actions">
+                <a href="{{ url_for('tickets.download_attachment', attachment_id=a.id) }}" target="_blank" rel="noopener" class="gt-t-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></svg>
+                    Скачать
+                </a>
+                <form method="post" action="{{ url_for('admin.file_delete', attachment_id=a.id) }}" onsubmit="return confirm('Удалить файл?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="gt-t-icon-btn gt-t-danger" title="Удалить">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg>
+                    </button>
+                </form>
+            </span>
+        </div>
+        {% else %}
+        <div class="gt-t-empty">Файлов нет.</div>
+        {% endfor %}
+    </div></div>
+</section>
 {% endblock %}

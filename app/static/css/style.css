@@ -1179,15 +1179,18 @@ body {
     color: oklch(0.35 0.01 60);
 }
 
-.gt-desc-card {
+.gt-card {
     background: var(--gt-surface);
     border: 1px solid var(--gt-border);
     border-radius: var(--gt-radius-lg);
+    box-shadow: var(--gt-shadow);
+}
+
+.gt-desc-card {
     padding: 28px 32px;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    box-shadow: var(--gt-shadow);
 }
 
 .gt-desc-card .richtext-content {
@@ -1967,4 +1970,577 @@ body {
     40% { transform: translateX(8px); }
     60% { transform: translateX(-6px); }
     80% { transform: translateX(6px); }
+}
+
+/* ---------- Списки в админке (постановщики / категории / файлы / письма) ---------- */
+
+.gt-list-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.gt-list-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+}
+
+.gt-list-title {
+    margin: 0;
+    font-size: 52px;
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+}
+
+.gt-list-count {
+    font-family: var(--gt-font-mono);
+    font-size: 14px;
+    padding: 3px 10px;
+    border-radius: var(--gt-radius-pill);
+    background: oklch(0.93 0.005 70);
+    color: oklch(0.45 0.01 60);
+}
+
+.gt-list-new-btn {
+    height: 48px;
+    padding: 0 22px 0 18px;
+    border-radius: var(--gt-radius-pill);
+    border: 0;
+    background: var(--gt-ink);
+    color: oklch(0.98 0.004 80);
+    font-size: 15px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 20px -8px oklch(0.22 0.01 60 / 0.5);
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.gt-list-new-btn:hover {
+    background: var(--gt-accent);
+    color: oklch(0.98 0.004 80);
+}
+
+.gt-table-wrap {
+    overflow-x: auto;
+}
+
+.gt-t-head,
+.gt-t-row {
+    display: grid;
+    gap: 16px;
+    align-items: center;
+    padding: 16px 24px;
+}
+
+.gt-t-head {
+    padding-top: 14px;
+    padding-bottom: 14px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: oklch(0.56 0.01 60);
+    background: oklch(0.985 0.003 75);
+    border-bottom: 1px solid oklch(0.93 0.005 70);
+}
+
+.gt-t-row {
+    border-top: 1px solid oklch(0.95 0.004 70);
+    transition: background .12s, opacity .15s;
+}
+
+.gt-t-row:hover {
+    background: oklch(0.98 0.004 75);
+}
+
+.gt-t-empty {
+    padding: 56px 24px;
+    text-align: center;
+    font-size: 15px;
+    color: oklch(0.55 0.01 60);
+}
+
+.gt-t-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.gt-t-btn {
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid var(--gt-border-strong);
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: oklch(0.3 0.01 60);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.gt-t-btn:hover {
+    background: oklch(0.95 0.005 70);
+    color: oklch(0.3 0.01 60);
+}
+
+.gt-t-icon-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--gt-border-strong);
+    background: transparent;
+    display: grid;
+    place-items: center;
+    color: oklch(0.4 0.01 60);
+    flex-shrink: 0;
+}
+
+.gt-t-icon-btn:hover {
+    background: oklch(0.95 0.005 70);
+}
+
+.gt-t-icon-btn.gt-t-danger {
+    border-color: oklch(0.88 0.05 25);
+    color: oklch(0.55 0.18 25);
+}
+
+.gt-t-icon-btn.gt-t-danger:hover {
+    background: oklch(0.58 0.2 25);
+    color: oklch(0.99 0.005 80);
+}
+
+.gt-t-mini-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    border: 1px solid var(--gt-border-strong);
+    background: transparent;
+    display: grid;
+    place-items: center;
+    color: oklch(0.4 0.01 60);
+    flex-shrink: 0;
+}
+
+.gt-t-mini-btn:hover:not(:disabled) {
+    background: oklch(0.95 0.005 70);
+}
+
+.gt-t-mini-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.gt-avatar-md {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.gt-t-name {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.gt-t-email-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.gt-t-email {
+    font-family: var(--gt-font-mono);
+    font-size: 12px;
+    color: oklch(0.5 0.01 60);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gt-t-copy-btn {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    border-radius: 6px;
+    border: 0;
+    background: transparent;
+    display: grid;
+    place-items: center;
+    color: oklch(0.5 0.01 60);
+    cursor: pointer;
+}
+
+.gt-t-copy-btn:hover {
+    background: oklch(0.94 0.005 70);
+}
+
+.gt-t-copy-btn.is-copied {
+    color: oklch(0.5 0.15 155);
+}
+
+.gt-t-pill-name {
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: var(--gt-radius-pill);
+    border: 1px solid var(--gt-border-strong);
+    background: oklch(0.985 0.003 75);
+    color: oklch(0.25 0.01 60);
+}
+
+.gt-t-status-ok {
+    color: oklch(0.45 0.14 155);
+}
+
+.gt-t-status-muted {
+    color: oklch(0.55 0.01 60);
+}
+
+.gt-t-switch-static {
+    display: inline-flex;
+    align-items: center;
+    width: 36px;
+    height: 20px;
+    border-radius: var(--gt-radius-pill);
+    padding: 2px;
+}
+
+.gt-t-switch-static .knob {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: oklch(0.995 0.002 80);
+    box-shadow: 0 1px 2px oklch(0.2 0.01 60 / 0.3);
+}
+
+.gt-t-switch-static.is-on {
+    background: var(--gt-ink);
+    justify-content: flex-end;
+}
+
+.gt-t-switch-static.is-off {
+    background: oklch(0.9 0.006 70);
+    justify-content: flex-start;
+}
+
+/* ---------- Формы редактирования (постановщик / категория / админ / шаблон письма) ---------- */
+
+.gt-form-page {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.gt-form-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.gt-form-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+.gt-form-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.gt-form-title {
+    margin: 0;
+    font-size: 36px;
+    line-height: 1.05;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+}
+
+.gt-form-subtitle {
+    font-family: var(--gt-font-mono);
+    font-size: 13px;
+    color: oklch(0.52 0.01 60);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gt-form-card {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.gt-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gt-form-field > span:first-child,
+.gt-form-field > label {
+    font-size: 13px;
+    font-weight: 500;
+    color: oklch(0.4 0.01 60);
+}
+
+.gt-form-input,
+.gt-form-select {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: 14px;
+    border: 1px solid var(--gt-border-strong);
+    background: oklch(0.985 0.003 75);
+    font: inherit;
+    font-size: 16px;
+    color: var(--gt-ink);
+    outline: 0;
+}
+
+.gt-form-input:focus,
+.gt-form-select:focus {
+    border-color: var(--gt-ink);
+}
+
+.gt-form-input.mono {
+    font-family: var(--gt-font-mono);
+    font-size: 14px;
+}
+
+.gt-form-hint {
+    font-size: 12px;
+    color: oklch(0.55 0.01 60);
+}
+
+.gt-form-password-wrap {
+    position: relative;
+    display: block;
+}
+
+.gt-form-password-wrap input {
+    padding-right: 52px;
+}
+
+.gt-form-eye {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 0;
+    background: transparent;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: oklch(0.5 0.01 60);
+}
+
+.gt-form-eye:hover {
+    background: oklch(0.95 0.005 70);
+}
+
+.gt-form-select-chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 56px;
+    padding: 0 44px 0 12px;
+    border-radius: 14px;
+    border: 1px solid var(--gt-border-strong);
+    background: oklch(0.985 0.003 75);
+}
+
+.gt-form-select-chip:hover {
+    border-color: oklch(0.8 0.01 70);
+}
+
+.gt-form-select-chevron {
+    position: absolute;
+    right: 16px;
+    top: 20px;
+    pointer-events: none;
+    color: oklch(0.5 0.01 60);
+}
+
+.gt-form-select-chip select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    font: inherit;
+}
+
+.gt-form-select-chip-name {
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.gt-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 6px;
+    border-top: 1px solid var(--gt-border);
+}
+
+.gt-form-cancel-btn {
+    height: 48px;
+    padding: 0 18px;
+    border-radius: var(--gt-radius-pill);
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    color: oklch(0.45 0.01 60);
+    cursor: pointer;
+}
+
+.gt-form-cancel-btn:hover {
+    background: oklch(0.95 0.005 70);
+}
+
+.gt-form-save-btn {
+    height: 48px;
+    padding: 0 26px;
+    border-radius: var(--gt-radius-pill);
+    border: 0;
+    background: var(--gt-ink);
+    color: oklch(0.98 0.004 80);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.gt-form-save-btn:hover {
+    background: var(--gt-accent);
+    color: oklch(0.98 0.004 80);
+}
+
+.gt-stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gt-stepper-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    border: 1px solid var(--gt-border-strong);
+    background: var(--gt-surface);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    color: oklch(0.35 0.01 60);
+    flex-shrink: 0;
+}
+
+.gt-stepper-btn:hover {
+    background: oklch(0.95 0.005 70);
+}
+
+.gt-stepper input {
+    width: 100px;
+    height: 48px;
+    padding: 0 12px;
+    border-radius: 14px;
+    border: 1px solid var(--gt-border-strong);
+    background: oklch(0.985 0.003 75);
+    font-family: var(--gt-font-mono);
+    font-size: 15px;
+    text-align: center;
+    color: var(--gt-ink);
+    outline: 0;
+}
+
+.gt-toggle-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.gt-toggle-btn {
+    position: relative;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    height: 48px;
+    padding: 0 18px 0 14px;
+    border-radius: 14px;
+    border: 1px solid var(--gt-border-strong);
+    background: var(--gt-surface);
+    font-size: 15px;
+    font-weight: 500;
+    color: oklch(0.25 0.01 60);
+    cursor: pointer;
+}
+
+.gt-toggle-track {
+    width: 36px;
+    height: 20px;
+    border-radius: var(--gt-radius-pill);
+    padding: 2px;
+    background: oklch(0.9 0.006 70);
+    display: flex;
+    justify-content: flex-start;
+    transition: background .15s;
+}
+
+.gt-toggle-knob {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: oklch(0.995 0.002 80);
+    box-shadow: 0 1px 2px oklch(0.2 0.01 60 / 0.3);
+}
+
+.gt-toggle-input:checked ~ .gt-toggle-track {
+    background: var(--gt-ink);
+    justify-content: flex-end;
 }

@@ -1,38 +1,60 @@
 {% extends 'base.html' %}
 {% block title %}Категории — {{ site_name }}{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Категории</h3>
-    <a href="{{ url_for('admin.tracker_new') }}" class="btn btn-primary">Новая категория</a>
+<div class="gt-list-head">
+    <div class="gt-list-title-row">
+        <h1 class="gt-list-title">Категории</h1>
+        <span class="gt-list-count">{{ trackers|length }}</span>
+    </div>
+    <a href="{{ url_for('admin.tracker_new') }}" class="gt-list-new-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        Новая категория
+    </a>
 </div>
-<table class="table bg-white align-middle">
-    <thead><tr><th>Порядок</th><th>Название</th><th>Активна</th><th>Используется</th><th></th></tr></thead>
-    <tbody>
-    {% for t in trackers %}
-    <tr>
-        <td>{{ t.order }}</td>
-        <td>{{ t.name }}</td>
-        <td>{{ '✓' if t.is_active else '—' }}</td>
-        <td>{{ 'да' if t.in_use else 'нет' }}</td>
-        <td class="text-end">
-            <form method="post" action="{{ url_for('admin.tracker_move', tracker_id=t.id, direction='up') }}" class="d-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-secondary">&uarr;</button>
-            </form>
-            <form method="post" action="{{ url_for('admin.tracker_move', tracker_id=t.id, direction='down') }}" class="d-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-secondary">&darr;</button>
-            </form>
-            <a href="{{ url_for('admin.tracker_edit', tracker_id=t.id) }}" class="btn btn-sm btn-outline-secondary">Изменить</a>
-            {% if not t.in_use %}
-            <form method="post" action="{{ url_for('admin.tracker_delete', tracker_id=t.id) }}" class="d-inline" onsubmit="return confirm('Удалить категорию?');">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-danger">Удалить</button>
-            </form>
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
+
+<section class="gt-card">
+    <div class="gt-table-wrap"><div style="min-width:780px">
+        <div class="gt-t-head" style="grid-template-columns:72px minmax(180px,1fr) 90px 110px 240px">
+            <span>Порядок</span><span>Название</span><span class="text-center">Активна</span><span class="text-center">Используется</span><span></span>
+        </div>
+        {% for t in trackers %}
+        <div class="gt-t-row" style="grid-template-columns:72px minmax(180px,1fr) 90px 110px 240px;{{ 'opacity:0.5' if not t.is_active }}">
+            <span style="font-family:var(--gt-font-mono);font-size:13px;color:oklch(0.5 0.01 60)">{{ t.order }}</span>
+            <span><span class="gt-t-pill-name">{{ t.name }}</span></span>
+            <span class="text-center">
+                <span class="gt-t-switch-static {{ 'is-on' if t.is_active else 'is-off' }}" title="{{ 'Активна' if t.is_active else 'Неактивна' }}"><span class="knob"></span></span>
+            </span>
+            <span class="text-center {{ 'gt-t-status-ok' if t.in_use else 'gt-t-status-muted' }}" style="font-size:13px;font-weight:500">{{ 'Да' if t.in_use else 'Нет' }}</span>
+            <span class="gt-t-actions">
+                <form method="post" action="{{ url_for('admin.tracker_move', tracker_id=t.id, direction='up') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="gt-t-mini-btn" title="Выше" {{ 'disabled' if loop.first }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>
+                    </button>
+                </form>
+                <form method="post" action="{{ url_for('admin.tracker_move', tracker_id=t.id, direction='down') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="gt-t-mini-btn" title="Ниже" {{ 'disabled' if loop.last }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"></path></svg>
+                    </button>
+                </form>
+                <a href="{{ url_for('admin.tracker_edit', tracker_id=t.id) }}" class="gt-t-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    Изменить
+                </a>
+                {% if not t.in_use %}
+                <form method="post" action="{{ url_for('admin.tracker_delete', tracker_id=t.id) }}" onsubmit="return confirm('Удалить категорию?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="gt-t-icon-btn gt-t-danger" title="Удалить">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg>
+                    </button>
+                </form>
+                {% endif %}
+            </span>
+        </div>
+        {% else %}
+        <div class="gt-t-empty">Категорий пока нет.</div>
+        {% endfor %}
+    </div></div>
+</section>
 {% endblock %}

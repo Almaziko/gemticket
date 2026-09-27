@@ -1,32 +1,79 @@
 {% extends 'base.html' %}
 {% block title %}Постановщики — {{ site_name }}{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Постановщики</h3>
-    <a href="{{ url_for('admin.client_new') }}" class="btn btn-primary">Новый постановщик</a>
+<div class="gt-list-head">
+    <div class="gt-list-title-row">
+        <h1 class="gt-list-title">Постановщики</h1>
+        <span class="gt-list-count">{{ clients|length }}</span>
+    </div>
+    <a href="{{ url_for('admin.client_new') }}" class="gt-list-new-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        Новый постановщик
+    </a>
 </div>
-<table class="table bg-white align-middle">
-    <thead><tr><th>Имя</th><th>Email</th><th>Админ-исполнитель</th><th></th></tr></thead>
-    <tbody>
-    {% for c in clients %}
-    <tr>
-        <td>{{ c.name }}</td>
-        <td>{{ c.email }}</td>
-        <td>{{ c.assigned_admin.name }}</td>
-        <td class="text-end">
-            <a href="{{ url_for('admin.client_edit', client_id=c.id) }}" class="btn btn-sm btn-outline-secondary">Изменить</a>
-            <a href="{{ url_for('admin.client_show_password', client_id=c.id) }}" class="btn btn-sm btn-outline-info">Показать пароль</a>
-            {% if current_user.is_superadmin %}
-            <form method="post" action="{{ url_for('admin.client_delete', client_id=c.id) }}" class="d-inline" onsubmit="return confirm('Удалить постановщика?');">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-outline-danger">Удалить</button>
-            </form>
-            {% endif %}
-        </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="4" class="text-muted">Постановщиков пока нет.</td></tr>
-    {% endfor %}
-    </tbody>
-</table>
+
+<section class="gt-card">
+    <div class="gt-table-wrap"><div style="min-width:760px">
+        <div class="gt-t-head" style="grid-template-columns:minmax(240px,1fr) 200px 300px">
+            <span>Имя · Email</span><span>Админ-исполнитель</span><span></span>
+        </div>
+        {% for c in clients %}
+        <div class="gt-t-row" style="grid-template-columns:minmax(240px,1fr) 200px 300px">
+            <span class="d-flex align-items-center gap-3" style="min-width:0">
+                <span class="gt-avatar-md" style="background:oklch(0.92 0.04 {{ c.avatar_hue }});color:oklch(0.42 0.12 {{ c.avatar_hue }})">{{ c.initials }}</span>
+                <span class="d-flex flex-column gap-1" style="min-width:0">
+                    <span class="gt-t-name">{{ c.name }}</span>
+                    <span class="gt-t-email-row">
+                        <span class="gt-t-email">{{ c.email }}</span>
+                        <button type="button" class="gt-t-copy-btn" data-copy="{{ c.email }}" title="Скопировать">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        </button>
+                    </span>
+                </span>
+            </span>
+            <span class="d-flex align-items-center gap-2" style="font-size:14px;color:oklch(0.3 0.01 60)">
+                <span class="gt-avatar-mini md" style="background:oklch(0.92 0.04 {{ c.assigned_admin.avatar_hue }});color:oklch(0.42 0.12 {{ c.assigned_admin.avatar_hue }})">{{ c.assigned_admin.initials }}</span>
+                {{ c.assigned_admin.name }}
+            </span>
+            <span class="gt-t-actions">
+                <a href="{{ url_for('admin.client_edit', client_id=c.id) }}" class="gt-t-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                    Изменить
+                </a>
+                <a href="{{ url_for('admin.client_show_password', client_id=c.id) }}" class="gt-t-btn">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3L22 7l-3-3"></path></svg>
+                    Показать пароль
+                </a>
+                {% if current_user.is_superadmin %}
+                <form method="post" action="{{ url_for('admin.client_delete', client_id=c.id) }}" onsubmit="return confirm('Удалить постановщика?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="gt-t-icon-btn gt-t-danger" title="Удалить">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg>
+                    </button>
+                </form>
+                {% endif %}
+            </span>
+        </div>
+        {% else %}
+        <div class="gt-t-empty">Постановщиков пока нет.</div>
+        {% endfor %}
+    </div></div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var text = btn.getAttribute('data-copy');
+        if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
+        var original = btn.innerHTML;
+        btn.classList.add('is-copied');
+        btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>';
+        setTimeout(function () {
+            btn.classList.remove('is-copied');
+            btn.innerHTML = original;
+        }, 1400);
+    });
+});
+</script>
 {% endblock %}

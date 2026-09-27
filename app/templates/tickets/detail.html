@@ -35,7 +35,7 @@
             </div>
         </div>
 
-        <section class="gt-desc-card">
+        <section class="gt-card gt-desc-card">
             {% if can_edit_desc %}
             <form method="post" action="{{ url_for('tickets.edit_description', ticket_id=ticket.id) }}" enctype="multipart/form-data">
                 {{ description_form.hidden_tag() }}

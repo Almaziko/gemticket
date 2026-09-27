@@ -1,22 +1,65 @@
 {% extends 'base.html' %}
 {% block title %}Категория — {{ site_name }}{% endblock %}
 {% block content %}
-<h3 class="mb-3">{{ 'Новая категория' if not tracker else 'Редактирование категории' }}</h3>
-<form method="post">
-    {{ form.hidden_tag() }}
-    <div class="mb-3">
-        {{ form.name.label(class_='form-label') }}
-        {{ form.name(class_='form-control') }}
-        {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+<div class="gt-form-page">
+    <a class="gt-back-link" href="{{ url_for('admin.trackers_list') }}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Категории
+    </a>
+    <div class="gt-form-heading">
+        <h1 class="gt-form-title">{{ 'Новая категория' if not tracker else 'Редактирование категории' }}</h1>
+        {% if tracker %}
+        <div class="d-flex align-items-center gap-2">
+            <span style="font-family:var(--gt-font-mono);font-size:12px;padding:4px 10px;border-radius:999px;background:oklch(0.93 0.005 70);color:oklch(0.45 0.01 60)">#{{ tracker.order }}</span>
+            <span class="gt-t-pill-name">{{ tracker.name }}</span>
+        </div>
+        {% endif %}
     </div>
-    <div class="mb-3">
-        {{ form.order.label(class_='form-label') }}
-        {{ form.order(class_='form-control') }}
-    </div>
-    <div class="form-check mb-3">
-        {{ form.is_active(class_='form-check-input') }}
-        {{ form.is_active.label(class_='form-check-label') }}
-    </div>
-    <button type="submit" class="btn btn-primary">Сохранить</button>
-</form>
+
+    <form method="post" class="gt-card gt-form-card">
+        {{ form.hidden_tag() }}
+        <div class="gt-form-field">
+            {{ form.name.label() }}
+            {{ form.name(class_='gt-form-input') }}
+            {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="gt-form-field">
+            {{ form.order.label() }}
+            <div class="gt-stepper">
+                <button type="button" class="gt-stepper-btn" id="order-dec" title="Меньше">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"></path></svg>
+                </button>
+                {{ form.order(id='order-input') }}
+                <button type="button" class="gt-stepper-btn" id="order-inc" title="Больше">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+                </button>
+            </div>
+        </div>
+        <label class="gt-toggle-btn">
+            {{ form.is_active(class_='gt-toggle-input') }}
+            <span class="gt-toggle-track"><span class="gt-toggle-knob"></span></span>
+            Активен
+        </label>
+        <div class="gt-form-footer">
+            <button type="reset" class="gt-form-cancel-btn">Отменить</button>
+            <button type="submit" class="gt-form-save-btn">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                Сохранить
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+    var input = document.getElementById('order-input');
+    document.getElementById('order-dec').addEventListener('click', function () {
+        input.value = Math.max(0, (parseInt(input.value, 10) || 0) - 1);
+    });
+    document.getElementById('order-inc').addEventListener('click', function () {
+        input.value = (parseInt(input.value, 10) || 0) + 1;
+    });
+})();
+</script>
 {% endblock %}
