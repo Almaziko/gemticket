@@ -26,8 +26,8 @@ def test_statuses_admin_list_groups_by_group_field(admin_client):
     assert resp.status_code == 200
     text = resp.data.decode('utf-8')
 
-    group1_header = re.search(r'card-header[^>]*>\s*Группа 1', text)
-    group2_header = re.search(r'card-header[^>]*>\s*Группа 2', text)
+    group1_header = re.search(r'gt-group-table-label[^>]*>\s*Группа 1', text)
+    group2_header = re.search(r'gt-group-table-label[^>]*>\s*Группа 2', text)
     novy_idx = text.find('>Новый<')
     gotov_idx = text.find('>Готов<')
 

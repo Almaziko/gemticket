@@ -1,84 +1,134 @@
 {% extends 'base.html' %}
 {% block title %}Статусы — {{ site_name }}{% endblock %}
 
-{% macro status_row(s) %}
-<tr>
-    <td>{{ s.order }}</td>
-    <td><span class="badge bg-{{ s.color or 'secondary' }}">{{ s.name }}</span></td>
-    <td>{{ '✓' if s.is_default else '' }}</td>
-    <td>{{ '✓' if s.is_final else '' }}</td>
-    <td>{{ '✓' if s.is_active else '—' }}</td>
-    <td>{{ 'да' if s.in_use else 'нет' }}</td>
-    <td class="text-end">
-        <form method="post" action="{{ url_for('admin.status_move', status_id=s.id, direction='up') }}" class="d-inline">
+{% set group_theme_labels = {
+    'default': 'Обычная', 'muted': 'Приглушённая', 'accent-blue': 'Акцентная — синяя',
+    'accent-yellow': 'Акцентная — жёлтая', 'accent-red': 'Акцентная — красная',
+    'accent-green': 'Акцентная — зелёная', 'accent-gray': 'Акцентная — серая',
+} %}
+{% set group_tone = {
+    'default': {'head': 'oklch(0.995 0.002 80)', 'fg': 'oklch(0.22 0.01 60)', 'dot': 'oklch(0.22 0.01 60)', 'fill': 'oklch(0.995 0.002 80)'},
+    'muted': {'head': 'oklch(0.96 0.004 70)', 'fg': 'oklch(0.45 0.01 60)', 'dot': 'oklch(0.7 0.01 60)', 'fill': 'oklch(0.88 0.006 70)'},
+    'accent-blue': {'head': 'oklch(0.955 0.03 275)', 'fg': 'oklch(0.45 0.14 275)', 'dot': 'oklch(0.64 0.17 275)', 'fill': 'oklch(0.7 0.14 275)'},
+    'accent-yellow': {'head': 'oklch(0.955 0.03 70)', 'fg': 'oklch(0.45 0.14 70)', 'dot': 'oklch(0.64 0.17 70)', 'fill': 'oklch(0.7 0.14 70)'},
+    'accent-red': {'head': 'oklch(0.955 0.03 15)', 'fg': 'oklch(0.45 0.14 15)', 'dot': 'oklch(0.64 0.17 15)', 'fill': 'oklch(0.7 0.14 15)'},
+    'accent-green': {'head': 'oklch(0.955 0.03 155)', 'fg': 'oklch(0.45 0.14 155)', 'dot': 'oklch(0.64 0.17 155)', 'fill': 'oklch(0.7 0.14 155)'},
+    'accent-gray': {'head': 'oklch(0.945 0.005 70)', 'fg': 'oklch(0.28 0.01 60)', 'dot': 'oklch(0.3 0.01 60)', 'fill': 'oklch(0.3 0.01 60)'},
+} %}
+
+{% macro status_row(s, is_first, is_last) %}
+<div class="gt-t-row" style="grid-template-columns:64px minmax(150px,1fr) 88px 88px 80px 104px 140px">
+    <span style="font-family:var(--gt-font-mono);font-size:13px;color:oklch(0.5 0.01 60)">{{ s.order }}</span>
+    <span><span class="badge bg-{{ s.color or 'secondary' }} gt-status-pill gt-pill"><span class="gt-status-dot"></span>{{ s.name }}</span></span>
+    <span class="text-center">{% if s.is_default %}<span class="gt-bool-yes"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>{% else %}<span class="gt-bool-no">—</span>{% endif %}</span>
+    <span class="text-center">{% if s.is_final %}<span class="gt-bool-yes"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>{% else %}<span class="gt-bool-no">—</span>{% endif %}</span>
+    <span class="text-center"><span class="gt-t-switch-static {{ 'is-on' if s.is_active else 'is-off' }}" title="{{ 'Активен' if s.is_active else 'Неактивен' }}"><span class="knob"></span></span></span>
+    <span class="text-center {{ 'gt-t-status-ok' if s.in_use else 'gt-t-status-muted' }}" style="font-size:13px;font-weight:500">{{ 'Да' if s.in_use else 'Нет' }}</span>
+    <span class="gt-t-actions">
+        <form method="post" action="{{ url_for('admin.status_move', status_id=s.id, direction='up') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-sm btn-outline-secondary">&uarr;</button>
+            <button type="submit" class="gt-t-mini-btn" title="Выше" {{ 'disabled' if is_first }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>
+            </button>
         </form>
-        <form method="post" action="{{ url_for('admin.status_move', status_id=s.id, direction='down') }}" class="d-inline">
+        <form method="post" action="{{ url_for('admin.status_move', status_id=s.id, direction='down') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-sm btn-outline-secondary">&darr;</button>
+            <button type="submit" class="gt-t-mini-btn" title="Ниже" {{ 'disabled' if is_last }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"></path></svg>
+            </button>
         </form>
-        <a href="{{ url_for('admin.status_edit', status_id=s.id) }}" class="btn btn-sm btn-outline-secondary">Изменить</a>
+        <a href="{{ url_for('admin.status_edit', status_id=s.id) }}" class="gt-t-mini-btn" title="Изменить">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+        </a>
         {% if not s.in_use and not s.is_default %}
-        <form method="post" action="{{ url_for('admin.status_delete', status_id=s.id) }}" class="d-inline" onsubmit="return confirm('Удалить статус?');">
+        <form method="post" action="{{ url_for('admin.status_delete', status_id=s.id) }}" onsubmit="return confirm('Удалить статус?');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button class="btn btn-sm btn-outline-danger">Удалить</button>
+            <button type="submit" class="gt-t-icon-btn gt-t-danger" style="width:30px;height:30px;border-radius:9px" title="Удалить">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg>
+            </button>
         </form>
         {% endif %}
-    </td>
-</tr>
+    </span>
+</div>
 {% endmacro %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="mb-0">Статусы</h3>
-    <a href="{{ url_for('admin.status_new') }}" class="btn btn-primary">Новый статус</a>
+<div class="gt-list-head">
+    <h1 class="gt-list-title">Статусы</h1>
+    <a href="{{ url_for('admin.status_new') }}" class="gt-list-new-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        Новый статус
+    </a>
 </div>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <h6 class="card-title mb-1">Настройки групп</h6>
-        <p class="text-muted small">
-            Группа определяет, в каком блоке статус показывается в списках тикетов — группа 1
-            отображается первой, группа 5 последней. Название группы — своё; сортировка — чем
-            внутри блока упорядочены тикеты этой группы (по приоритету, дате создания, дате
-            закрытия или по ID).
-        </p>
-        <form method="post" action="{{ url_for('admin.status_groups_update') }}" class="row g-3">
-            {{ group_settings_form.hidden_tag() }}
+<section class="gt-card p-4 d-flex flex-column gap-4 mb-4">
+    <div class="gt-groups-save-row">
+        <div style="max-width:780px" class="d-flex flex-column gap-2">
+            <h2 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-0.02em">Настройки групп</h2>
+            <p style="margin:0;font-size:14px;line-height:1.55;color:oklch(0.5 0.01 60)">Группа определяет, в каком блоке статус показывается в списках тикетов — группа 1 отображается первой, группа 5 последней. Название группы — своё; сортировка — чем внутри блока упорядочены тикеты этой группы (по приоритету, дате создания, дате закрытия или по ID).</p>
+        </div>
+    </div>
+    <form method="post" action="{{ url_for('admin.status_groups_update') }}" class="d-flex flex-column gap-4">
+        {{ group_settings_form.hidden_tag() }}
+        <div class="gt-groups-cards">
             {% for n in [1, 2, 3, 4, 5] %}
             {% set name_field = group_settings_form['group_' ~ n] %}
             {% set sort_field = group_settings_form['sort_' ~ n] %}
             {% set theme_field = group_settings_form['theme_' ~ n] %}
-            <div class="col-md">
-                {{ name_field.label(class_='form-label small') }}
-                {{ name_field(class_='form-control form-control-sm mb-2') }}
-                {{ sort_field(class_='form-select form-select-sm mb-2') }}
-                {{ theme_field.label(class_='form-label small') }}
-                {{ theme_field(class_='form-select form-select-sm') }}
+            {% set tone = group_tone[theme_field.data] or group_tone['default'] %}
+            <div class="gt-group-card">
+                <div class="gt-group-card-head" style="background:{{ tone.head }};color:{{ tone.fg }}">
+                    <span class="dot" style="background:{{ tone.dot }}"></span>
+                    <span class="label">{{ name_field.data }}</span>
+                </div>
+                <div class="gt-group-card-body">
+                    <label>
+                        <span class="gt-group-field-label"><span class="gt-group-field-num">{{ n }}</span>Группа {{ n }}</span>
+                        {{ name_field(class_='gt-group-input', maxlength=80) }}
+                    </label>
+                    {{ sort_field(class_='gt-group-select') }}
+                    <div class="d-flex flex-column gap-2">
+                        <span class="gt-group-field-label">Оформление группы {{ n }}</span>
+                        <div class="gt-swatch-row">
+                            {% for value, label in [('default','Обычная'), ('muted','Приглушённая'), ('accent-blue','Акцентная — синяя'), ('accent-yellow','Акцентная — жёлтая'), ('accent-red','Акцентная — красная'), ('accent-green','Акцентная — зелёная'), ('accent-gray','Акцентная — серая')] %}
+                            <label class="gt-swatch" title="{{ label }}">
+                                <input type="radio" name="{{ theme_field.name }}" value="{{ value }}" class="gt-swatch-input" {{ 'checked' if theme_field.data == value }}>
+                                <span class="gt-swatch-fill" style="background:{{ group_tone[value].fill }}"></span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <span style="font-size:13px;color:oklch(0.3 0.01 60)">{{ group_theme_labels[theme_field.data] }}</span>
+                    </div>
+                </div>
             </div>
             {% endfor %}
-            <div class="col-12">
-                <button type="submit" class="btn btn-outline-primary btn-sm">Сохранить настройки групп</button>
-            </div>
-        </form>
-    </div>
-</div>
+        </div>
+        <button type="submit" class="gt-groups-save-btn" style="align-self:flex-start">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+            Сохранить настройки групп
+        </button>
+    </form>
+</section>
 
+<div class="d-flex flex-column gap-3">
 {% for g in [1, 2, 3, 4, 5] %}
     {% set group_statuses = statuses|selectattr('group', 'equalto', g)|sort(attribute='order')|list %}
     {% if group_statuses %}
-    <div class="card mb-4">
-        <div class="card-header bg-white fw-semibold">{{ group_settings_form['group_' ~ g].data }}</div>
-        <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light"><tr><th>Порядок</th><th>Название</th><th>Начальный</th><th>Финальный</th><th>Активен</th><th>Используется</th><th></th></tr></thead>
-            <tbody>
-            {% for s in group_statuses %}{{ status_row(s) }}{% endfor %}
-            </tbody>
-        </table>
+    {% set tone = group_tone[group_settings_form['theme_' ~ g].data] or group_tone['default'] %}
+    <section class="gt-card">
+        <div class="gt-group-table-head" style="background:{{ tone.head }};color:{{ tone.fg }}">
+            <span class="dot" style="background:{{ tone.dot }}"></span>
+            <span class="gt-group-table-label">{{ group_settings_form['group_' ~ g].data }}</span>
+            <span class="count">{{ group_statuses|length }}</span>
         </div>
-    </div>
+        <div class="gt-table-wrap"><div style="min-width:800px">
+            <div class="gt-t-head" style="grid-template-columns:64px minmax(150px,1fr) 88px 88px 80px 104px 140px;border-top:1px solid oklch(0.94 0.004 70)">
+                <span>Порядок</span><span>Название</span><span class="text-center">Начальный</span><span class="text-center">Финальный</span><span class="text-center">Активен</span><span class="text-center">Используется</span><span></span>
+            </div>
+            {% for s in group_statuses %}{{ status_row(s, loop.first, loop.last) }}{% endfor %}
+        </div></div>
+    </section>
     {% endif %}
 {% endfor %}
+</div>
 {% endblock %}

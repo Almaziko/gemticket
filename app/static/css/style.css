@@ -2544,3 +2544,197 @@ body {
     background: var(--gt-ink);
     justify-content: flex-end;
 }
+
+/* ---------- Настройки групп статусов ---------- */
+
+.gt-groups-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+}
+
+.gt-group-card {
+    border: 1px solid var(--gt-border);
+    border-radius: var(--gt-radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: oklch(0.985 0.003 75);
+}
+
+.gt-group-card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gt-border);
+    min-height: 46px;
+}
+
+.gt-group-card-head .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.gt-group-card-head span.label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gt-group-card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.gt-group-field-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: oklch(0.45 0.01 60);
+    margin-bottom: 6px;
+}
+
+.gt-group-field-num {
+    font-family: var(--gt-font-mono);
+    font-size: 11px;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: oklch(0.93 0.005 70);
+    display: grid;
+    place-items: center;
+    color: oklch(0.35 0.01 60);
+    flex-shrink: 0;
+}
+
+.gt-group-input,
+.gt-group-select {
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 12px;
+    border: 1px solid var(--gt-border-strong);
+    background: var(--gt-surface);
+    font: inherit;
+    font-size: 14px;
+    color: var(--gt-ink);
+    outline: 0;
+}
+
+.gt-swatch-row {
+    display: flex;
+    gap: 4px;
+}
+
+.gt-swatch {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 26px;
+    aspect-ratio: 1;
+    cursor: pointer;
+}
+
+.gt-swatch-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.gt-swatch-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1px solid oklch(0.86 0.006 70);
+    transition: box-shadow .12s;
+}
+
+.gt-swatch-input:checked ~ .gt-swatch-fill {
+    box-shadow: 0 0 0 2px oklch(0.995 0.002 80), 0 0 0 4px oklch(0.22 0.01 60);
+}
+
+.gt-groups-save-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.gt-groups-save-btn {
+    height: 44px;
+    padding: 0 20px;
+    border-radius: var(--gt-radius-pill);
+    border: 1px solid var(--gt-border-strong);
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    white-space: nowrap;
+    color: oklch(0.3 0.01 60);
+}
+
+.gt-groups-save-btn:hover {
+    background: oklch(0.95 0.005 70);
+}
+
+.gt-group-table-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+}
+
+.gt-group-table-head .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.gt-group-table-head .gt-group-table-label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.gt-group-table-head .count {
+    font-family: var(--gt-font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 9px;
+    border-radius: var(--gt-radius-pill);
+    background: oklch(0.995 0.002 80);
+}
+
+.gt-bool-yes {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: oklch(0.22 0.01 60);
+    color: oklch(0.98 0.004 80);
+    display: grid;
+    place-items: center;
+}
+
+.gt-bool-no {
+    color: oklch(0.78 0.01 60);
+}
