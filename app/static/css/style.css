@@ -754,7 +754,9 @@ select option {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
+    padding: 4px;
+    border-radius: var(--gt-radius-pill);
+    background: oklch(0.955 0.005 75);
 }
 
 .gt-tab-group {
@@ -764,6 +766,17 @@ select option {
     padding: 4px;
     border-radius: var(--gt-radius-pill);
     background: oklch(0.955 0.005 75);
+}
+
+/* Внутри .gt-tabs (список тикетов — несколько групп статусов рядом)
+   единый фон-плашка уже задан самим .gt-tabs — вложенные .gt-tab-group
+   здесь только группируют вкладки и подсвечивать себя отдельным фоном
+   не должны, иначе получается "рамка в рамке". Отдельно (например,
+   переключатель сортировки на странице "Файлы") .gt-tab-group как
+   раз и остаётся самостоятельной плашкой — см. правило выше. */
+.gt-tabs .gt-tab-group {
+    padding: 0;
+    background: transparent;
 }
 
 .gt-tab-group + .gt-tab-group {
