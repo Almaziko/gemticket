@@ -74,8 +74,8 @@ function setupAttachmentsPicker(fileInputSelector, listSelector, dropZoneSelecto
     }
 
     input.addEventListener('change', function () {
-        files = Array.prototype.slice.call(input.files);
-        render();
+        Array.prototype.forEach.call(input.files, function (f) { files.push(f); });
+        sync();
     });
 
     var dropZone = dropZoneSelector ? document.querySelector(dropZoneSelector) : null;
