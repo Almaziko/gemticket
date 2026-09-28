@@ -26,23 +26,26 @@
             <span class="gt-people">
                 {{ avatar_mini(t.client) }}{{ t.client.name }}
                 <span>→</span>
-                {{ avatar_mini(t.assignee) }}{{ t.assignee.name }}
+                {{ t.assignee.name }}
             </span>
         </div>
     </div>
     <div class="gt-cell-priority gt-col-priority">{{ priority_bars(t) }}{{ t.priority_label }}</div>
     <div class="gt-col-status"><span class="badge bg-{{ t.status.color or 'secondary' }} gt-status-pill"><span class="gt-status-dot"></span>{{ t.status.name }}</span></div>
     <div class="gt-col-deadline {{ 'ticket-overdue' if overdue }}">{{ t.deadline.strftime('%d.%m.%Y') if t.deadline else '—' }}</div>
-    <div class="gt-col-updated">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}</div>
+    <div class="gt-col-updated gt-cell-updated">{{ t.updated_at.strftime('%d.%m.%Y %H:%M') }}</div>
 </a>
 {% endfor %}
 {% endmacro %}
 
 {% block content %}
-<div class="gt-page-head">
-    <h1 class="gt-page-title">{{ 'Все тикеты' if current_user.is_superadmin else 'Мои тикеты' }}</h1>
+<div class="gt-list-head">
+    <h1 class="gt-list-title">{{ 'Все тикеты' if current_user.is_superadmin else 'Мои тикеты' }}</h1>
     {% if current_user.is_superadmin %}
-    <a href="{{ url_for('admin.ticket_new') }}" class="btn btn-primary">+ Новый тикет от имени постановщика</a>
+    <a href="{{ url_for('admin.ticket_new') }}" class="gt-list-new-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+        Новый тикет от имени постановщика
+    </a>
     {% endif %}
 </div>
 

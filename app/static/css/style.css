@@ -371,34 +371,34 @@ select option {
 }
 
 /* Оформление групп статусов — задаётся в админке (Статусы -> Настройки
-   групп), применяется только к карточкам групп на страницах со списками
-   тикетов (admin/dashboard.html, client/tickets_list.html). Цвета акцентов
-   переиспользуют палитру бейджей выше. */
-.card.status-group-muted {
-    border-left: 4px solid #d1d5db;
-    opacity: 0.4;
-    filter: grayscale(55%);
-}
+   групп), применяется к шапке карточки группы на страницах со списками
+   тикетов (admin/dashboard.html, client/tickets_list.html). Формулы цвета
+   — те же самые, что и в свотч-пикере "Оформление группы" на странице
+   Статусы (см. group_tone в statuses_list.html) — раньше здесь была
+   отдельная палитра с рамкой слева на всю карточку, которой в макете
+   нет вовсе: там тонируется только шапка группы, а у "приглушённой"
+   темы тускнеют (opacity) строки тикетов, а не сама шапка. */
+.card.status-group-default .card-header { background: oklch(0.995 0.002 80); color: oklch(0.22 0.01 60); }
+.card.status-group-default .gt-group-dot { background: oklch(0.22 0.01 60); }
 
-.card.status-group-muted .card-header {
-    font-weight: 400;
-    color: #9ca3af;
-}
+.card.status-group-muted .card-header { background: oklch(0.96 0.004 70); color: oklch(0.45 0.01 60); }
+.card.status-group-muted .gt-group-dot { background: oklch(0.7 0.01 60); }
+.card.status-group-muted .gt-row { opacity: 0.6; }
 
-.card.status-group-accent-blue { border-left: 4px solid #3730a3; }
-.card.status-group-accent-blue .card-header { background: #e0e7ff; }
+.card.status-group-accent-blue .card-header { background: oklch(0.955 0.03 275); color: oklch(0.45 0.14 275); }
+.card.status-group-accent-blue .gt-group-dot { background: oklch(0.64 0.17 275); }
 
-.card.status-group-accent-yellow { border-left: 4px solid #92400e; }
-.card.status-group-accent-yellow .card-header { background: #fef3c7; }
+.card.status-group-accent-yellow .card-header { background: oklch(0.955 0.03 70); color: oklch(0.45 0.14 70); }
+.card.status-group-accent-yellow .gt-group-dot { background: oklch(0.64 0.17 70); }
 
-.card.status-group-accent-red { border-left: 4px solid #991b1b; }
-.card.status-group-accent-red .card-header { background: #fee2e2; }
+.card.status-group-accent-red .card-header { background: oklch(0.955 0.03 15); color: oklch(0.45 0.14 15); }
+.card.status-group-accent-red .gt-group-dot { background: oklch(0.64 0.17 15); }
 
-.card.status-group-accent-green { border-left: 4px solid #166534; }
-.card.status-group-accent-green .card-header { background: #dcfce7; }
+.card.status-group-accent-green .card-header { background: oklch(0.955 0.03 155); color: oklch(0.45 0.14 155); }
+.card.status-group-accent-green .gt-group-dot { background: oklch(0.64 0.17 155); }
 
-.card.status-group-accent-gray { border-left: 4px solid #374151; }
-.card.status-group-accent-gray .card-header { background: #f3f4f6; }
+.card.status-group-accent-gray .card-header { background: oklch(0.945 0.005 70); color: oklch(0.28 0.01 60); }
+.card.status-group-accent-gray .gt-group-dot { background: oklch(0.3 0.01 60); }
 
 /* ---------- Шапка сайта (шапка+навигация из макетов Claude Design) ---------- */
 
@@ -725,22 +725,6 @@ select option {
 
 /* ---------- Список тикетов (сетка вместо <table> из макета) ---------- */
 
-.gt-page-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 24px;
-}
-
-.gt-page-title {
-    font-size: 32px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    margin: 0;
-    color: var(--gt-ink);
-}
-
 .gt-toolbar {
     display: flex;
     flex-wrap: wrap;
@@ -883,13 +867,6 @@ select option {
     flex-shrink: 0;
 }
 
-.card.status-group-muted .gt-group-dot { background: #9ca3af; }
-.card.status-group-accent-blue .gt-group-dot { background: #3730a3; }
-.card.status-group-accent-yellow .gt-group-dot { background: #92400e; }
-.card.status-group-accent-red .gt-group-dot { background: #991b1b; }
-.card.status-group-accent-green .gt-group-dot { background: #166534; }
-.card.status-group-accent-gray .gt-group-dot { background: #374151; }
-
 .gt-group-title {
     font-size: 13px;
     font-weight: 600;
@@ -953,6 +930,9 @@ select option {
 
 .gt-col-updated {
     text-align: right;
+}
+
+.gt-cell-updated {
     font-family: var(--gt-font-mono);
     font-size: 12px;
     color: oklch(0.55 0.01 60);
