@@ -48,15 +48,11 @@
 
 <div class="gt-toolbar">
     <div class="gt-tabs">
-        <div class="gt-tab-group">
-            <a class="gt-tab {% if not status_filter %}active{% endif %}" href="{{ url_for('admin.dashboard', q=search) }}">Все</a>
-        </div>
+        <a class="gt-tab {% if not status_filter %}active{% endif %}" href="{{ url_for('admin.dashboard', q=search) }}">Все<span class="gt-tab-count">{{ total_count }}</span></a>
         {% for group_number, group_statuses in status_groups %}
-        <div class="gt-tab-group">
-            {% for s in group_statuses %}
-            <a class="gt-tab {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('admin.dashboard', status=s.id, q=search) }}">{{ s.name }}</a>
-            {% endfor %}
-        </div>
+        {% for s in group_statuses %}
+        <a class="gt-tab {% if status_filter == s.id %}active{% endif %}" href="{{ url_for('admin.dashboard', status=s.id, q=search) }}">{{ s.name }}<span class="gt-tab-count">{{ status_counts.get(s.id, 0) }}</span></a>
+        {% endfor %}
         {% endfor %}
     </div>
     <form method="get" class="gt-search">
@@ -70,12 +66,17 @@
 <div class="gt-groups">
     {% for group_number, group_tickets in ticket_groups %}
     <div class="card status-group-{{ group_themes.get(group_number, 'default') }}">
-        <div class="card-header gt-group-header">
+        <button type="button" class="card-header gt-group-header" data-group-toggle aria-expanded="true">
             <span class="gt-group-dot"></span>
             <span class="gt-group-title">{{ group_names.get(group_number, 'Группа ' ~ group_number) }}</span>
             <span class="gt-group-count">{{ group_tickets|length }}</span>
+            <span class="gt-group-chevron">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+            </span>
+        </button>
+        <div class="gt-group-body">
+            {{ ticket_group(group_tickets) }}
         </div>
-        {{ ticket_group(group_tickets) }}
     </div>
     {% endfor %}
 </div>

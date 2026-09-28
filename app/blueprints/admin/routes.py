@@ -45,9 +45,10 @@ def _password_taken(password, exclude_user_id=None):
 def dashboard():
     status_filter = request.args.get('status', type=int)
     search = (request.args.get('q') or '').strip()
-    query = Ticket.query
+    base_query = Ticket.query
     if not g.current_user.is_superadmin:
-        query = query.filter_by(assignee_id=g.current_user.id)
+        base_query = base_query.filter_by(assignee_id=g.current_user.id)
+    query = base_query
     if status_filter:
         query = query.filter_by(status_id=status_filter)
     if search:
@@ -56,10 +57,17 @@ def dashboard():
     statuses = Status.query.order_by(Status.order).all()
     ticket_groups = group_tickets_sorted(tickets)
     status_groups = group_by_status_group(statuses, lambda s: s)
+    # Счётчики на вкладках-статусах — всегда по ПОЛНОМУ набору тикетов
+    # (в рамках видимости пользователя), а не по текущим фильтрам поиска/
+    # статуса, иначе цифры "прыгали" бы при вводе в поиск.
+    status_counts = dict(
+        base_query.with_entities(Ticket.status_id, db.func.count(Ticket.id))
+        .group_by(Ticket.status_id).all()
+    )
     return render_template(
         'admin/dashboard.html', tickets=tickets, statuses=statuses,
         ticket_groups=ticket_groups, status_groups=status_groups, group_names=get_group_names(),
-        group_themes=get_group_themes(),
+        group_themes=get_group_themes(), status_counts=status_counts, total_count=sum(status_counts.values()),
         status_filter=status_filter, search=search,
     )
 

@@ -750,10 +750,16 @@ select option {
     margin-bottom: 24px;
 }
 
+/* Список тикетов — плоский ряд вкладок-пилюль (Все + каждый статус по
+   порядку), без деления на группы и разделителей: один общий фон-трек
+   на .gt-tabs, как в макете. .gt-tab-group — самостоятельный компонент
+   (например, переключатель сортировки на странице "Файлы") — своя
+   плашка-пилюля у него остаётся, см. ниже. */
 .gt-tabs {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    gap: 4px;
     padding: 4px;
     border-radius: var(--gt-radius-pill);
     background: oklch(0.955 0.005 75);
@@ -768,30 +774,14 @@ select option {
     background: oklch(0.955 0.005 75);
 }
 
-/* Внутри .gt-tabs (список тикетов — несколько групп статусов рядом)
-   единый фон-плашка уже задан самим .gt-tabs — вложенные .gt-tab-group
-   здесь только группируют вкладки и подсвечивать себя отдельным фоном
-   не должны, иначе получается "рамка в рамке". Отдельно (например,
-   переключатель сортировки на странице "Файлы") .gt-tab-group как
-   раз и остаётся самостоятельной плашкой — см. правило выше. */
-.gt-tabs .gt-tab-group {
-    padding: 0;
-    background: transparent;
-}
-
-.gt-tab-group + .gt-tab-group {
-    margin-left: 6px;
-    padding-left: 10px;
-    border-left: 1px solid var(--gt-border-strong);
-}
-
 .gt-tab {
     display: inline-flex;
     align-items: center;
-    height: 32px;
+    gap: 8px;
+    height: 36px;
     padding: 0 14px;
     border-radius: var(--gt-radius-pill);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     color: oklch(0.48 0.01 60);
     text-decoration: none;
@@ -808,13 +798,24 @@ select option {
     box-shadow: var(--gt-shadow);
 }
 
+.gt-tab-count {
+    font-family: var(--gt-font-mono);
+    font-size: 11px;
+    color: oklch(0.62 0.01 60);
+}
+
+.gt-tab.active .gt-tab-count {
+    color: var(--gt-accent);
+}
+
 .gt-search {
     display: flex;
     align-items: center;
-    gap: 8px;
-    height: 40px;
-    min-width: 240px;
-    padding: 0 14px;
+    gap: 10px;
+    height: 44px;
+    width: 320px;
+    max-width: 100%;
+    padding: 0 16px;
     border-radius: var(--gt-radius-pill);
     border: 1px solid var(--gt-border-strong);
     background: var(--gt-surface);
@@ -848,6 +849,30 @@ select option {
     gap: 12px;
     width: 100%;
     text-align: left;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+    color: inherit;
+}
+
+.gt-group-chevron {
+    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: oklch(0.5 0.01 60);
+    flex-shrink: 0;
+    transition: transform .2s;
+}
+
+.gt-group-header[aria-expanded="false"] .gt-group-chevron {
+    transform: rotate(-90deg);
+}
+
+.gt-group-header[aria-expanded="false"] + .gt-group-body {
+    display: none;
 }
 
 .gt-group-dot {
@@ -1022,9 +1047,12 @@ select option {
 }
 
 .gt-empty {
-    padding: 64px 24px;
+    padding: 80px 0;
     text-align: center;
-    color: var(--gt-muted);
+    color: oklch(0.55 0.01 60);
+    font-size: 15px;
+    border: 1px dashed oklch(0.88 0.006 70);
+    border-radius: var(--gt-radius-lg);
 }
 
 /* ---------- Вложения (шапка-описание тикета + комментарии) ---------- */

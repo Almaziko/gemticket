@@ -21,7 +21,8 @@ client_bp = Blueprint('client', __name__, url_prefix='/client')
 def tickets_list():
     status_filter = request.args.get('status', type=int)
     search = (request.args.get('q') or '').strip()
-    query = Ticket.query.filter_by(client_id=g.current_user.id)
+    base_query = Ticket.query.filter_by(client_id=g.current_user.id)
+    query = base_query
     if status_filter:
         query = query.filter_by(status_id=status_filter)
     if search:
@@ -30,10 +31,17 @@ def tickets_list():
     statuses = Status.query.order_by(Status.order).all()
     ticket_groups = group_tickets_sorted(tickets)
     status_groups = group_by_status_group(statuses, lambda s: s)
+    # Счётчики на вкладках-статусах — по ПОЛНОМУ набору тикетов постановщика,
+    # не по текущим фильтрам поиска/статуса (иначе цифры "прыгали" бы при
+    # вводе в поиск).
+    status_counts = dict(
+        base_query.with_entities(Ticket.status_id, db.func.count(Ticket.id))
+        .group_by(Ticket.status_id).all()
+    )
     return render_template(
         'client/tickets_list.html', tickets=tickets, statuses=statuses,
         ticket_groups=ticket_groups, status_groups=status_groups, group_names=get_group_names(),
-        group_themes=get_group_themes(),
+        group_themes=get_group_themes(), status_counts=status_counts, total_count=sum(status_counts.values()),
         status_filter=status_filter, search=search,
     )
 
