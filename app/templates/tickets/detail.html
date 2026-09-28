@@ -200,7 +200,7 @@
 {% endif %}
 <script>
 document.querySelectorAll('[data-field-form]').forEach(function (form) {
-    var control = form.querySelector('select, input');
+    var control = form.querySelector('.gt-field-control select, .gt-field-control input');
     var btn = form.querySelector('[data-field-save]');
     if (!control || !btn) return;
     var initial = control.value;
