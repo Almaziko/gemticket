@@ -2834,6 +2834,12 @@ select option {
     min-width: 0;
 }
 
+.gt-settings-sections > form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 .gt-settings-section {
     padding: 28px;
     display: flex;
