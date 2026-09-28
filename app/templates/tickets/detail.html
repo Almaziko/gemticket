@@ -58,13 +58,13 @@
             {% if can_advance_status %}
             <form method="post" action="{{ url_for('tickets.advance_status', ticket_id=ticket.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-success">{{ ticket.status.auto_advance_button_text }}</button>
+                <button type="submit" class="gt-status-action-btn gt-status-advance-btn">{{ ticket.status.auto_advance_button_text }}</button>
             </form>
             {% endif %}
             {% if can_revert_status %}
             <form method="post" action="{{ url_for('tickets.revert_status', ticket_id=ticket.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-outline-danger">{{ ticket.status.auto_revert_button_text }}</button>
+                <button type="submit" class="gt-status-action-btn gt-status-revert-btn">{{ ticket.status.auto_revert_button_text }}</button>
             </form>
             {% endif %}
         </div>
@@ -86,8 +86,8 @@
             {% if can_comment %}
             <form method="post" action="{{ url_for('tickets.add_comment', ticket_id=ticket.id) }}" enctype="multipart/form-data" class="gt-composer">
                 {{ comment_form.hidden_tag() }}
-                <div>
-                    <label class="form-label">Комментарий</label>
+                <div class="gt-form-field">
+                    <label>Комментарий</label>
                     {{ richtext_editor('comment-editor', comment_form.body, '#comment-submit-btn') }}
                 </div>
                 {{ file_picker_list('comment-attachments-list') }}
