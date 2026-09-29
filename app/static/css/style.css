@@ -862,8 +862,9 @@ select option {
 .gt-group-header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     width: 100%;
+    padding: 14px 24px;
     text-align: left;
     border: 0;
     font: inherit;
@@ -903,7 +904,7 @@ select option {
     font-size: 13px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
 }
 
 .gt-group-count {
