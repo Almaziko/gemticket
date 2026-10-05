@@ -146,14 +146,11 @@ body {
     background-color: var(--gt-surface);
 }
 
-/* Само окно нативного <select> (открытый список) браузер и ОС рисуют
-   сами — CSS не может задать ему ни радиус, ни шрифт, ни тень. Это
-   общее ограничение веба, не наша недоработка. Максимум, что можно
-   поправить кросс-браузерно — цвета: color-scheme говорит браузеру,
-   что контрол светлый (иначе на тёмной теме ОС список может стать
-   тёмным сам по себе), а стили на option хотя бы приводят фон/цвет
-   пунктов списка к палитре сайта там, где браузер это позволяет
-   (Chrome/Edge — полностью, Firefox — частично). */
+/* Сам <select> везде спрятан под кастомную панель (см.
+   custom_select.js/.gt-select-panel) — это лишь запасной вариант на
+   случай, если по какой-то причине JS не отработал и список открылся
+   нативно (color-scheme — чтобы список не стал тёмным поверх светлой
+   темы ОС). */
 select {
     color-scheme: light;
 }
@@ -1732,7 +1729,8 @@ select option {
 }
 
 .gt-field-control select,
-.gt-field-control input {
+.gt-field-control input,
+.gt-field-control .gt-select-trigger {
     width: 100%;
     height: 40px;
     padding: 0 14px;
@@ -1745,7 +1743,8 @@ select option {
 }
 
 .gt-field-control select:focus,
-.gt-field-control input:focus {
+.gt-field-control input:focus,
+.gt-field-control .gt-select-trigger:focus {
     outline: 0;
     border-color: var(--gt-ink);
 }
@@ -3640,4 +3639,98 @@ select option {
     font-size: 14px;
     line-height: 1.6;
     color: oklch(0.3 0.01 60);
+}
+
+/* ---------- Кастомный выпадающий список (замена нативного <select>) ----------
+   Нативный <select> нельзя стилизовать кроссбраузерно (ни радиус, ни тень,
+   ни шрифт открытого списка — это рисует ОС/браузер). Поэтому сам <select>
+   прячем (но оставляем в DOM под тем же name — он по-прежнему участвует в
+   отправке формы), а поверх строим свою кнопку-триггер и свою панель
+   вариантов на чистом JS (см. custom_select.js). Для уже существующих
+   "чипов" (gt-avatar-select-chip/gt-form-select-chip) сама кнопка — это
+   сам чип, его визуал не меняется, меняется только то, что открывается
+   по клику. */
+
+.gt-select-native {
+    display: none !important;
+}
+
+.gt-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    background-image: none !important;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.gt-select-trigger-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gt-select-trigger-chevron {
+    flex-shrink: 0;
+    color: oklch(0.5 0.01 60);
+    transition: transform .15s;
+}
+
+.gt-select-trigger[aria-expanded="true"] .gt-select-trigger-chevron,
+.gt-avatar-select-chip[aria-expanded="true"] .gt-form-select-chevron,
+.gt-form-select-chip[aria-expanded="true"] .gt-form-select-chevron {
+    transform: rotate(180deg);
+}
+
+.gt-avatar-select-chip,
+.gt-form-select-chip {
+    cursor: pointer;
+}
+
+.gt-select-panel {
+    position: fixed;
+    z-index: 1200;
+    overflow-y: auto;
+    padding: 6px;
+    background: var(--gt-surface);
+    border: 1px solid var(--gt-border);
+    border-radius: var(--gt-radius-lg);
+    box-shadow: 0 30px 80px -24px oklch(0.2 0.01 60 / 0.3), 0 2px 6px oklch(0.2 0.01 60 / 0.06);
+}
+
+.gt-select-option {
+    padding: 9px 12px;
+    border-radius: var(--gt-radius-md);
+    font-size: 14px;
+    color: var(--gt-ink);
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gt-select-option.is-active {
+    background: oklch(0.95 0.005 70);
+}
+
+.gt-select-option.is-selected {
+    font-weight: 600;
+}
+
+.gt-select-option.is-selected::after {
+    content: '✓';
+    float: right;
+    color: var(--gt-accent-strong);
+}
+
+.gt-select-option.is-disabled {
+    color: oklch(0.72 0.01 60);
+    cursor: default;
 }
