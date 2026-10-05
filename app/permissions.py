@@ -1,4 +1,5 @@
 """Проверки доступа к тикетам/вложениям, общие для нескольких blueprint'ов."""
+from datetime import datetime
 
 
 def can_view_ticket(user, ticket):
@@ -62,6 +63,16 @@ def can_edit_description(user, ticket):
 def can_view_attachment(user, attachment):
     ticket = attachment.parent_ticket
     return ticket is not None and can_view_ticket(user, ticket)
+
+
+def can_edit_comment(user, comment):
+    """Автор может поправить свой комментарий только первые несколько минут
+    после публикации (см. Comment.edit_deadline) — дальше форма правки
+    скрывается и сервер тоже отказывает, чтобы история переписки не
+    переписывалась задним числом."""
+    if user is None or comment.author_id != user.id:
+        return False
+    return datetime.now() < comment.edit_deadline
 
 
 def can_comment(user, ticket):

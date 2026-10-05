@@ -1224,6 +1224,43 @@ select option {
     margin-left: 6px;
 }
 
+.gt-copy-link-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    width: 32px;
+    height: 32px;
+    margin-left: 10px;
+    border: 1px solid var(--gt-border);
+    border-radius: 50%;
+    background: var(--gt-surface);
+    color: oklch(0.5 0.01 60);
+    cursor: pointer;
+}
+
+.gt-copy-link-btn:hover {
+    background: oklch(0.95 0.005 70);
+    color: var(--gt-ink);
+}
+
+.gt-copy-link-btn.is-copied {
+    color: oklch(0.55 0.14 155);
+    border-color: oklch(0.55 0.14 155);
+}
+
+.gt-copy-link-btn .gt-copy-icon-check {
+    display: none;
+}
+
+.gt-copy-link-btn.is-copied .gt-copy-icon-link {
+    display: none;
+}
+
+.gt-copy-link-btn.is-copied .gt-copy-icon-check {
+    display: block;
+}
+
 .gt-pills-row {
     display: flex;
     align-items: center;
@@ -1306,6 +1343,7 @@ select option {
 }
 
 .gt-comment {
+    scroll-margin-top: 96px;
     border-radius: var(--gt-radius-lg);
     padding: 18px 22px;
     display: flex;
@@ -1313,6 +1351,11 @@ select option {
     gap: 12px;
     border: 1px solid var(--gt-border);
     background: var(--gt-surface);
+    transition: box-shadow .3s;
+}
+
+.gt-comment.is-highlighted {
+    box-shadow: 0 0 0 3px oklch(0.7 0.15 275 / 0.45);
 }
 
 .gt-comment.role-admin {
@@ -1356,12 +1399,63 @@ select option {
     color: oklch(0.42 0.12 275);
 }
 
-.gt-comment-date {
+.gt-comment-edited {
+    font-size: 11px;
+    font-style: italic;
+    color: oklch(0.58 0.01 60);
+}
+
+.gt-comment-head-right {
     margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gt-comment-date {
     font-family: var(--gt-font-mono);
     font-size: 11px;
     color: oklch(0.55 0.01 60);
     white-space: nowrap;
+}
+
+.gt-comment-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: oklch(0.55 0.01 60);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.gt-comment-action-btn:hover {
+    background: oklch(0.93 0.01 70 / 0.6);
+    color: var(--gt-ink);
+}
+
+.gt-comment.role-admin .gt-comment-action-btn:hover {
+    background: oklch(0.9 0.03 275 / 0.5);
+}
+
+.gt-comment-action-btn.is-copied {
+    color: oklch(0.55 0.14 155);
+}
+
+.gt-comment-action-btn .gt-copy-icon-check {
+    display: none;
+}
+
+.gt-comment-action-btn.is-copied .gt-copy-icon-link {
+    display: none;
+}
+
+.gt-comment-action-btn.is-copied .gt-copy-icon-check {
+    display: block;
 }
 
 .gt-comment-body {
@@ -1372,6 +1466,52 @@ select option {
 
 .gt-comment .gt-files {
     margin-top: 6px;
+}
+
+.gt-comment-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.gt-comment-edit-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.gt-comment-edit-save {
+    height: 36px;
+    padding: 0 18px;
+    border-radius: var(--gt-radius-pill);
+    border: 0;
+    background: oklch(0.22 0.01 60);
+    color: oklch(0.98 0.004 80);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.gt-comment-edit-save:hover {
+    background: var(--gt-accent);
+}
+
+.gt-comment-edit-cancel {
+    height: 36px;
+    padding: 0 16px;
+    border-radius: var(--gt-radius-pill);
+    border: 1px solid var(--gt-border-strong);
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: oklch(0.4 0.01 60);
+}
+
+.gt-comment-edit-cancel:hover {
+    background: oklch(0.95 0.005 70);
 }
 
 /* ---------- Композер комментария ---------- */

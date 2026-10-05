@@ -312,7 +312,8 @@ def test_comment_badge_shows_executor_for_admin_author(admin_client, client_clie
     resp = client_client.get(f'/tickets/{ticket_id}')
     html = resp.data.decode('utf-8')
     idx = html.find('admin reply')
-    surrounding = html[max(0, idx - 400):idx]
+    comment_start = html.rfind('gt-comment role-admin', 0, idx)
+    surrounding = html[comment_start:idx]
     assert 'Исполнитель' in surrounding
     assert '>Админ<' not in surrounding
 

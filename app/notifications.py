@@ -10,9 +10,10 @@ from .models import Notification, Settings, EmailTemplate
 from .security import decrypt_secret
 
 
-def _build_link(settings, ticket):
+def _build_link(settings, ticket, anchor=None):
     base = (settings.base_url or '').rstrip('/')
-    return f"{base}/tickets/{ticket.id}"
+    link = f"{base}/tickets/{ticket.id}"
+    return f"{link}#{anchor}" if anchor else link
 
 
 def _send_email_sync(settings, to_address, subject, body, content_type='plain'):
@@ -80,13 +81,17 @@ def render_email(template_key, context):
     return subject, body
 
 
-def _create(recipient, ticket, bell_message, template_key, context):
-    notification = Notification(recipient_id=recipient.id, ticket_id=ticket.id, message=bell_message)
+def _create(recipient, ticket, bell_message, template_key, context, comment=None):
+    notification = Notification(
+        recipient_id=recipient.id, ticket_id=ticket.id, message=bell_message,
+        comment_id=comment.id if comment else None,
+    )
     db.session.add(notification)
     db.session.commit()
 
+    anchor = f'comment-{comment.id}' if comment else None
     settings = Settings.query.first()
-    link = _build_link(settings, ticket) if settings else f'/tickets/{ticket.id}'
+    link = _build_link(settings, ticket, anchor) if settings else f'/tickets/{ticket.id}' + (f'#{anchor}' if anchor else '')
     full_context = dict(context, ticket_title=ticket.title, ticket_link=link)
     subject, body = render_email(template_key, full_context)
     if subject and body:
@@ -100,7 +105,7 @@ def notify_ticket_created(ticket):
     )
 
 
-def notify_comment_added(ticket, author):
+def notify_comment_added(ticket, author, comment):
     recipient = ticket.assignee if author.role == 'client' else ticket.client
     if recipient.id == author.id:
         return
@@ -108,6 +113,7 @@ def notify_comment_added(ticket, author):
     _create(
         recipient, ticket, f'{role_label} {author.name} оставил(а) комментарий к тикету',
         'comment_added', {'author_name': author.name, 'author_role': role_label},
+        comment=comment,
     )
 
 

@@ -15,7 +15,7 @@ from ...decorators import login_required, superadmin_required
 from ...permissions import (
     can_view_ticket, can_manage_ticket_fields, can_reassign_ticket, can_delete_ticket,
     can_edit_description, can_view_attachment, can_comment, can_change_priority,
-    can_advance_status, can_revert_status,
+    can_advance_status, can_revert_status, can_edit_comment,
 )
 from ...attachments import (
     check_files_size, check_files_extensions, save_attachments, delete_attachment_file,
@@ -121,12 +121,36 @@ def add_comment(ticket_id):
         db.session.flush()
         save_attachments(files, g.current_user, comment=comment)
         db.session.commit()
-        notif.notify_comment_added(ticket, g.current_user)
+        notif.notify_comment_added(ticket, g.current_user, comment)
         flash('Комментарий добавлен', 'success')
-        return redirect(url_for('tickets.detail', ticket_id=ticket.id) + '#comments')
+        return redirect(url_for('tickets.detail', ticket_id=ticket.id) + f'#comment-{comment.id}')
 
     flash('Не удалось добавить комментарий', 'danger')
     return _render_detail(ticket, comment_form=form)
+
+
+@tickets_bp.route('/tickets/<int:ticket_id>/comment/<int:comment_id>/edit', methods=['POST'])
+@login_required
+def edit_comment(ticket_id, comment_id):
+    ticket = _get_ticket_or_403(ticket_id)
+    comment = Comment.query.get_or_404(comment_id)
+    if comment.ticket_id != ticket.id:
+        abort(404)
+    if comment.author_id != g.current_user.id:
+        abort(403)
+    if not can_edit_comment(g.current_user, comment):
+        flash('Время редактирования комментария истекло', 'danger')
+        return redirect(url_for('tickets.detail', ticket_id=ticket.id) + f'#comment-{comment.id}')
+
+    form = CommentForm()
+    if form.validate_on_submit():
+        comment.body = clean_html(form.body.data)
+        comment.edited_at = datetime.now()
+        db.session.commit()
+        flash('Комментарий обновлён', 'success')
+    else:
+        flash('Не удалось сохранить комментарий', 'danger')
+    return redirect(url_for('tickets.detail', ticket_id=ticket.id) + f'#comment-{comment.id}')
 
 
 @tickets_bp.route('/tickets/<int:ticket_id>/description', methods=['POST'])
@@ -395,7 +419,8 @@ def open_notification(notification_id):
         abort(403)
     notification.is_read = True
     db.session.commit()
-    return redirect(url_for('tickets.detail', ticket_id=notification.ticket_id))
+    anchor = f'#comment-{notification.comment_id}' if notification.comment_id else ''
+    return redirect(url_for('tickets.detail', ticket_id=notification.ticket_id) + anchor)
 
 
 @tickets_bp.route('/notifications/mark-all-read', methods=['POST'])

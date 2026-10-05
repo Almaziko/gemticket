@@ -98,6 +98,12 @@ def run_light_migrations():
     if not _has_column('settings', 's3_secret_key_encrypted'):
         db.session.execute(text('ALTER TABLE settings ADD COLUMN s3_secret_key_encrypted BLOB'))
 
+    if not _has_column('comments', 'edited_at'):
+        db.session.execute(text('ALTER TABLE comments ADD COLUMN edited_at DATETIME'))
+
+    if not _has_column('notifications', 'comment_id'):
+        db.session.execute(text('ALTER TABLE notifications ADD COLUMN comment_id INTEGER'))
+
     db.session.commit()
 
     if added_is_final:

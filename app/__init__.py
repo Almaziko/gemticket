@@ -53,6 +53,9 @@ def create_app(config_overrides=None):
     from .text_utils import highlight_template_vars
     app.jinja_env.filters['highlight_vars'] = highlight_template_vars
 
+    from .permissions import can_edit_comment
+    app.jinja_env.globals['can_edit_comment'] = can_edit_comment
+
     if not app.config.get('TESTING'):
         from .overdue import start_overdue_checker
         start_overdue_checker(app)

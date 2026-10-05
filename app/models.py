@@ -1,6 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from .extensions import db
+
+#: Окно, в течение которого автор может редактировать свой комментарий —
+#: см. Comment.edit_deadline / permissions.can_edit_comment.
+COMMENT_EDIT_WINDOW = timedelta(minutes=5)
 
 
 class User(db.Model):
@@ -275,6 +279,7 @@ class Comment(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     body = db.Column(db.Text, nullable=False, default='')
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    edited_at = db.Column(db.DateTime, nullable=True)
 
     ticket = db.relationship('Ticket', back_populates='comments')
     author = db.relationship('User')
@@ -282,6 +287,10 @@ class Comment(db.Model):
         'Attachment', back_populates='comment', cascade='all, delete-orphan',
         foreign_keys='Attachment.comment_id'
     )
+
+    @property
+    def edit_deadline(self):
+        return self.created_at + COMMENT_EDIT_WINDOW
 
 
 class Attachment(db.Model):
@@ -329,12 +338,16 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     ticket_id = db.Column(db.Integer, db.ForeignKey('tickets.id'), nullable=False)
+    #: Заполняется только для уведомлений о новом комментарии — ссылка
+    #: тогда ведёт сразу на якорь комментария, а не просто на тикет.
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'), nullable=True)
     message = db.Column(db.String(500), nullable=False)
     is_read = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
     recipient = db.relationship('User')
     ticket = db.relationship('Ticket')
+    comment = db.relationship('Comment')
 
 
 class Settings(db.Model):

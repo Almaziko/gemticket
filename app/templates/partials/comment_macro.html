@@ -1,13 +1,38 @@
 {% from 'partials/attachments_macro.html' import render_attachments %}
-{% macro render_comment(comment) %}
-<div class="gt-comment role-{{ comment.author.role }}">
+{% from 'partials/richtext_macro.html' import richtext_editor %}
+{% macro render_comment(comment, current_user) %}
+<div class="gt-comment role-{{ comment.author.role }}" id="comment-{{ comment.id }}">
     <div class="gt-comment-head">
         <span class="gt-comment-avatar" style="background:oklch(0.92 0.04 {{ comment.author.avatar_hue }});color:oklch(0.42 0.12 {{ comment.author.avatar_hue }})">{{ comment.author.initials }}</span>
         <span class="gt-comment-author">{{ comment.author.name }}</span>
         <span class="gt-comment-role">{{ 'Исполнитель' if comment.author.role == 'admin' else comment.author.role_label }}</span>
-        <span class="gt-comment-date">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+        {% if comment.edited_at %}<span class="gt-comment-edited">изменено</span>{% endif %}
+        <span class="gt-comment-head-right">
+            <span class="gt-comment-date">{{ comment.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+            <button type="button" class="gt-comment-action-btn" data-copy-link data-anchor="comment-{{ comment.id }}" title="Скопировать ссылку на комментарий">
+                <svg class="gt-copy-icon-link" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.2 1.1"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.2-1.1"></path></svg>
+                <svg class="gt-copy-icon-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M20 6 9 17l-5-5"></path></svg>
+            </button>
+            {% if can_edit_comment(current_user, comment) %}
+            <button type="button" class="gt-comment-action-btn" data-comment-edit-toggle="comment-{{ comment.id }}" data-edit-deadline="{{ comment.edit_deadline.isoformat() }}" title="Редактировать комментарий">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+            </button>
+            {% endif %}
+        </span>
     </div>
-    <div class="richtext-content gt-comment-body">{{ comment.body|richtext|safe }}</div>
+    <div class="richtext-content gt-comment-body" data-comment-display>{{ comment.body|richtext|safe }}</div>
     {{ render_attachments(comment.attachments) }}
+
+    {% if can_edit_comment(current_user, comment) %}
+    <form method="post" action="{{ url_for('tickets.edit_comment', ticket_id=comment.ticket_id, comment_id=comment.id) }}" class="gt-comment-edit-form" data-comment-edit-form hidden>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% set edit_field = {'data': comment.body, 'name': 'body', 'errors': []} %}
+        {{ richtext_editor('edit-comment-' ~ comment.id, edit_field) }}
+        <div class="gt-comment-edit-actions">
+            <button type="button" class="gt-comment-edit-cancel" data-comment-edit-cancel="comment-{{ comment.id }}">Отмена</button>
+            <button type="submit" class="gt-comment-edit-save">Сохранить</button>
+        </div>
+    </form>
+    {% endif %}
 </div>
 {% endmacro %}
