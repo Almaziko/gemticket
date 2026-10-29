@@ -83,6 +83,13 @@ def send_test_email(settings, to_address):
 def _send_email_async(recipient_email, subject, body, content_type='html'):
     settings = Settings.query.first()
     if not settings or not settings.smtp_host:
+        # Раньше это было абсолютно тихо — ни строки в логе, что письмо
+        # даже не попыталось уйти (не настроен SMTP). Со стороны выглядело
+        # неотличимо от "ушло, но не долетело".
+        current_app.logger.warning(
+            'Email-уведомление "%s" для %s не отправлено: SMTP не настроен (нет settings/smtp_host)',
+            subject, recipient_email,
+        )
         return
     app = current_app._get_current_object()
 
@@ -91,8 +98,13 @@ def _send_email_async(recipient_email, subject, body, content_type='html'):
             try:
                 fresh_settings = Settings.query.first()
                 _send_email_sync(fresh_settings, recipient_email, subject, body, content_type=content_type)
+                app.logger.info(
+                    'Email-уведомление "%s" для %s: SMTP принял (250 OK) — если письмо всё равно не дошло, '
+                    'искать дальше нужно на стороне Unisender Go (спам/фильтры/репутация отправителя), не в коде',
+                    subject, recipient_email,
+                )
             except Exception:
-                app.logger.exception('Не удалось отправить email-уведомление')
+                app.logger.exception('Не удалось отправить email-уведомление "%s" для %s', subject, recipient_email)
 
     threading.Thread(target=worker, daemon=True).start()
 
@@ -130,6 +142,15 @@ def _create(recipient, ticket, bell_message, template_key, context, comment=None
     subject, body = render_email(template_key, full_context)
     if subject and body:
         _send_email_async(recipient.email, subject, body)
+    elif subject is not None or body is not None:
+        # Шаблон найден (иначе render_email уже залогировал бы это сам),
+        # но после рендера тема или тело оказались пустой строкой —
+        # например, шаблон случайно очистили в редакторе. Раньше здесь
+        # тоже было тихое ничего.
+        current_app.logger.warning(
+            'Шаблон письма "%s" отрендерился в пустую тему/тело — письмо %s не отправлено',
+            template_key, recipient.email,
+        )
 
 
 def notify_ticket_created(ticket):

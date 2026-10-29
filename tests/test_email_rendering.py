@@ -1,9 +1,10 @@
 import email
+import logging
 from unittest.mock import patch, MagicMock
 
 from app.extensions import db as _db
 from app.models import EmailTemplate, Settings
-from app.notifications import render_email, _send_email_sync, _append_footer
+from app.notifications import render_email, _send_email_sync, _append_footer, _send_email_async, _create
 
 
 def _decoded_body(raw_message):
@@ -25,13 +26,18 @@ def _make_template(app, key='unit_test_tpl', subject='Тема {{ ticket_title }
 
 
 def _make_settings(app):
+    """create_app() всегда сидирует ровно одну строку Settings(id=1) без
+    smtp_host — заполняем именно её, а не добавляем вторую: иначе
+    Settings.query.first() (как в _send_email_async) находит ту, первую,
+    пустую строку, а не нашу."""
     with app.app_context():
-        settings = Settings(
-            smtp_host='smtp.example.com', smtp_port=587,
-            smtp_username='user', smtp_from_address='from@example.com',
-            smtp_use_tls=True, smtp_use_ssl=False,
-        )
-        _db.session.add(settings)
+        settings = Settings.query.first()
+        settings.smtp_host = 'smtp.example.com'
+        settings.smtp_port = 587
+        settings.smtp_username = 'user'
+        settings.smtp_from_address = 'from@example.com'
+        settings.smtp_use_tls = True
+        settings.smtp_use_ssl = False
         _db.session.commit()
         return settings.id
 
@@ -139,3 +145,52 @@ def test_send_email_header_configurable_without_code_change(mock_smtp_cls, app):
     raw_message = mock_server.sendmail.call_args[0][2]
     assert 'skip_unsubscribe' in raw_message
     assert 'Отключить уведомления' not in raw_message
+
+
+@patch('app.notifications.smtplib.SMTP')
+def test_send_email_async_logs_success(mock_smtp_cls, app, caplog):
+    """Раньше успешная фоновая отправка не оставляла в логе ни строки —
+    неотличимо от того, что письмо вообще не пыталось уйти."""
+    settings_id = _make_settings(app)
+    mock_server = MagicMock()
+    mock_smtp_cls.return_value = mock_server
+
+    with app.app_context(), caplog.at_level(logging.INFO, logger='app'):
+        _send_email_async('to@example.com', 'Subject', 'Body', content_type='plain')
+        for t in list(__import__('threading').enumerate()):
+            if t is not __import__('threading').current_thread():
+                t.join(timeout=5)
+
+    assert mock_server.sendmail.called
+    assert any('SMTP принял' in r.message for r in caplog.records)
+
+
+def test_send_email_async_without_smtp_logs_warning(app, caplog):
+    """Нет настроенного SMTP — раньше тихо ничего не делал."""
+    with app.app_context(), caplog.at_level(logging.WARNING, logger='app'):
+        _send_email_async('to@example.com', 'Subject', 'Body')
+    assert any('SMTP не настроен' in r.message for r in caplog.records)
+
+
+def test_create_logs_warning_when_template_renders_blank(app, client_client, db, caplog):
+    """Шаблон существует (иначе render_email сам бы залогировал "не найден"),
+    но после очистки в редакторе тема/тело пустые — раньше письмо тихо не
+    отправлялось без единого следа в логе."""
+    resp = client_client.post('/client/tickets/new', data={
+        'title': 'Blank template check', 'description': '<p>d</p>', 'tracker_id': '1',
+    }, follow_redirects=False)
+    ticket_id = int(resp.headers['Location'].rstrip('/').split('/')[-1])
+
+    with app.app_context():
+        tpl = EmailTemplate.query.filter_by(key='ticket_created').first()
+        tpl.subject = ''
+        tpl.body_html = ''
+        _db.session.commit()
+
+        from app.models import Ticket
+        import app.notifications as notif_module
+        ticket = _db.session.get(Ticket, ticket_id)
+        with caplog.at_level(logging.WARNING, logger='app'):
+            notif_module.notify_ticket_created(ticket)
+
+    assert any('отрендерился в пустую тему/тело' in r.message for r in caplog.records)
