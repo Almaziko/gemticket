@@ -31,6 +31,34 @@ class Config:
 
     PORT = int(os.environ.get('PORT', 5000))
 
+    # SMTP-релей — Unisender Go, у которого свой шаблонизатор с тем же
+    # синтаксисом {{ }} (например, {{UnsubscribeUrl}} он сам подставляет
+    # при отправке). Этот заголовок просит его не переписывать ссылки и не
+    # вставлять пиксель трекинга; когда Unisender разрешит skip_unsubscribe
+    # — поменять только значение здесь (или через env EMAIL_UNISENDER_GO_HEADER),
+    # без правки кода, и одновременно обнулить EMAIL_FOOTER_HTML/_PLAIN ниже,
+    # раз обязательную ссылку отписки будет вставлять сам Unisender.
+    EMAIL_UNISENDER_GO_HEADER = os.environ.get(
+        'EMAIL_UNISENDER_GO_HEADER',
+        '{"track_links":0,"track_read":0}',
+    )
+
+    # Дописывается ко ВСЕМ исходящим письмам после рендера шаблона (и в
+    # html, и в plain-текст — какая версия есть у конкретного письма), сам
+    # шаблон его не содержит и не хранит. {{UnsubscribeUrl}} здесь — тот же
+    # сквозной плейсхолдер Unisender Go (см. PASSTHROUGH_TEMPLATE_VARS в
+    # notifications.py), в рендер шаблона эта строка не попадает вообще,
+    # поэтому дополнительно защищать её не нужно.
+    EMAIL_FOOTER_HTML = os.environ.get(
+        'EMAIL_FOOTER_HTML',
+        '<p style="font-size:12px;color:#888;margin-top:24px">Вы получили это письмо как участник заявки. '
+        '<a href="{{UnsubscribeUrl}}" style="color:#888">Отключить уведомления</a></p>',
+    )
+    EMAIL_FOOTER_PLAIN = os.environ.get(
+        'EMAIL_FOOTER_PLAIN',
+        'Отключить уведомления: {{UnsubscribeUrl}}',
+    )
+
     # Дефолтный запасной потолок на тело запроса (в дополнение к проверке
     # размера каждого файла по настройке max_upload_mb из БД). Пересчитывается
     # в create_app() после загрузки настроек.

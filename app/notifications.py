@@ -9,6 +9,17 @@ from .extensions import db
 from .models import Notification, Settings, EmailTemplate
 from .security import decrypt_secret
 
+#: Переменные, которые рендер шаблона обязан оставлять в тексте нетронутыми,
+#: байт в байт, вместо того чтобы (как для любой другой неизвестной
+#: переменной) стирать в пустую строку — их подставляет сам Unisender Go
+#: при отправке, своим шаблонизатором с тем же синтаксисом {{ }}. Значение
+#: каждой переменной — её же литеральная запись без пробелов: Jinja просто
+#: подставит эту строку на место {{ UnsubscribeUrl }}/{{UnsubscribeUrl}} в
+#: шаблоне, и до Unisender долетит ровно {{UnsubscribeUrl}}.
+PASSTHROUGH_TEMPLATE_VARS = {
+    'UnsubscribeUrl': '{{UnsubscribeUrl}}',
+}
+
 
 def _build_link(settings, ticket, anchor=None):
     base = (settings.base_url or '').rstrip('/')
@@ -16,10 +27,26 @@ def _build_link(settings, ticket, anchor=None):
     return f"{link}#{anchor}" if anchor else link
 
 
+def _append_footer(body, content_type):
+    """Системный футер (ссылка отписки и т.п.) — дописывается к уже
+    отрендеренному телу письма, а не хранится в самом шаблоне, поэтому в
+    редакторе шаблонов (и в его живом превью) не виден. {{UnsubscribeUrl}}
+    в футере через render_template_string не проходит вообще, так что
+    отдельно защищать его как сквозную переменную не нужно — это обычная
+    строка, добавленная уже после рендера."""
+    footer = (
+        current_app.config['EMAIL_FOOTER_HTML'] if content_type == 'html'
+        else current_app.config['EMAIL_FOOTER_PLAIN']
+    )
+    return body + footer if footer else body
+
+
 def _send_email_sync(settings, to_address, subject, body, content_type='plain'):
     password = ''
     if settings.smtp_password_encrypted:
         password = decrypt_secret(settings.smtp_password_encrypted)
+
+    body = _append_footer(body, content_type)
 
     if settings.smtp_use_ssl:
         server = smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=10)
@@ -34,6 +61,7 @@ def _send_email_sync(settings, to_address, subject, body, content_type='plain'):
         msg['From'] = settings.smtp_from_address or settings.smtp_username
         msg['To'] = to_address
         msg['Subject'] = subject
+        msg['X-UNISENDER-GO'] = current_app.config['EMAIL_UNISENDER_GO_HEADER']
         msg.attach(MIMEText(body, content_type, 'utf-8'))
         server.sendmail(msg['From'], [to_address], msg.as_string())
     finally:
@@ -71,13 +99,19 @@ def _send_email_async(recipient_email, subject, body, content_type='html'):
 
 def render_email(template_key, context):
     """Рендерит тему/тело шаблона письма с подстановкой переменных (Jinja).
-    Возвращает (None, None), если шаблон почему-то отсутствует в базе."""
+    Неизвестные Jinja-переменные по умолчанию стираются в пустую строку —
+    кроме тех, что в PASSTHROUGH_TEMPLATE_VARS: они обязаны долететь до
+    Unisender Go нетронутыми, поэтому их значение — их же литеральная
+    запись, подставляемая вместо себя же. Возвращает (None, None), если
+    шаблон почему-то отсутствует в базе."""
     tpl = EmailTemplate.query.filter_by(key=template_key).first()
     if not tpl:
         current_app.logger.error('Не найден шаблон письма "%s"', template_key)
         return None, None
-    subject = render_template_string(tpl.subject, **context)
-    body = render_template_string(tpl.body_html, **context)
+    full_context = dict(context)
+    full_context.update(PASSTHROUGH_TEMPLATE_VARS)
+    subject = render_template_string(tpl.subject, **full_context)
+    body = render_template_string(tpl.body_html, **full_context)
     return subject, body
 
 
